@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Segredos e dados de cliente — nunca versionar
+.env
+backend/.env
+backend/dados_clientes/
+dados_clientes/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Sistema
+.DS_Store
+~$*
