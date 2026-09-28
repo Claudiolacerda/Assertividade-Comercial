@@ -1,0 +1,48 @@
+services:
+  banco:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-assert_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-assertividade}
+    volumes:
+      - dados_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-assert_app} -d ${POSTGRES_DB:-assertividade}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Sem "ports": o banco não fica exposto na internet, só na rede interna.
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-assert_app}:${POSTGRES_PASSWORD}@banco:5432/${POSTGRES_DB:-assertividade}
+      JWT_SECRET: ${JWT_SECRET:?gere com python3 -c "import secrets; print(secrets.token_urlsafe(48))"}
+      AMBIENTE: producao
+      DIR_UPLOADS: /dados_clientes
+      ORIGENS_PERMITIDAS: ${ORIGENS_PERMITIDAS:-http://localhost:8080}
+      PERMITIR_AUTOCADASTRO: ${PERMITIR_AUTOCADASTRO:-False}
+    volumes:
+      - planilhas:/dados_clientes
+    depends_on:
+      banco:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # A build do frontend embute só caminhos relativos (/api), então o nginx
+        # do próprio contêiner faz o proxy para a api.
+        VITE_BASE: /
+    ports:
+      - "${PORTA_WEB:-8080}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  dados_postgres:
+  planilhas:
