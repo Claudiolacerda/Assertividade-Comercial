@@ -107,6 +107,42 @@ npm run dev                   # http://localhost:5173
 As tabelas do schema `public` são criadas sozinhas na primeira subida; o schema de cada
 empresa é criado no cadastro dela.
 
+## Abrindo no VS Code
+
+O repositório já vem com `.vscode/` configurado. Ao abrir a pasta, o VS Code
+sugere as extensões necessárias (Python, Pylance, Debugpy, ESLint, Docker) —
+aceite e siga:
+
+**Primeira vez** — `Ctrl+Shift+P` → `Tasks: Run Task` → **Instalar dependências
+(primeira vez)**. Cria o ambiente Python, instala o backend e o frontend.
+
+Depois crie o `backend/.env` a partir do `.env.example` (é ele que guarda a
+senha do banco e a chave dos tokens; nunca vai para o Git).
+
+**No dia a dia** — `Ctrl+Shift+B` roda a tarefa **▶ Subir tudo**: liga o Postgres
+no Docker, sobe a API em `localhost:8000` e o front em `localhost:5173`.
+
+As demais tarefas (`Ctrl+Shift+P` → `Tasks: Run Task`):
+
+| Tarefa | O que faz |
+|---|---|
+| `1 · Banco (Docker)` | Sobe ou religa o contêiner do Postgres |
+| `2 · API (backend)` | FastAPI com recarga automática |
+| `3 · Front (frontend)` | Vite com recarga automática |
+| `Testes do backend` | Os 49 testes (também roda pela aba Testing) |
+| `Build do frontend` | Gera `frontend/dist` para publicar |
+
+**Depurar** — na aba Run and Debug:
+
+- **API (depurar)** — ponto de parada em qualquer lugar do backend, inclusive
+  dentro do motor de análise, enquanto o navegador usa o sistema.
+- **Motor de análise (arquivo atual)** — roda o arquivo Python aberto, útil para
+  testar uma mudança no motor sem subir a API.
+- **API + Front** — sobe os dois e abre o navegador já anexado.
+
+A aba **Testing** lista os 49 testes individualmente: dá para rodar um só e ver
+onde parou, o que ajuda quando um KPI muda de valor.
+
 ### Testes
 
 ```bash
