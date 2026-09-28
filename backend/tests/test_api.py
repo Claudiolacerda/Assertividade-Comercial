@@ -511,3 +511,45 @@ def test_planilha_modelo_e_lida_pelo_proprio_motor(client, org, tmp_path):
     assert cob["encontrados"] == 13, f"o modelo deveria destravar tudo, destravou {cob['encontrados']}"
     assert cob["faltando_alto_impacto"] == []
     assert resp.json()["resultado"]["kpis"]["roas"]["valor"] > 0
+
+
+# --------------------------------------------------------------------- #
+# Modo agência: desligado por padrão, ligável depois
+# --------------------------------------------------------------------- #
+def test_conta_nasce_sem_modo_agencia(client, org):
+    """Quem não marcou agência no cadastro não vê carteira nenhuma."""
+    dados = org("Empresa Simples")
+    assert dados["usuario"]["organizacao"]["tipo"] == "direta"
+    assert len(dados["usuario"]["empresas"]) == 1
+
+
+def test_ligar_modo_agencia_libera_a_carteira(client, org):
+    """A saída para quem passa a atender outros clientes depois de assinar."""
+    dados = org("Vira Agência")
+    assert client.get("/api/organizacao", headers=cab(dados)).json()["tipo"] == "direta"
+
+    r = client.put("/api/organizacao/tipo", headers=cab(dados), json={"tipo": "agencia"})
+    assert r.status_code == 200 and r.json()["tipo"] == "agencia"
+
+    novo = client.post("/api/empresas", headers=cab(dados), json={"nome": "Cliente Novo"})
+    assert novo.status_code == 201
+    assert client.get("/api/auth/eu", headers=cab(dados)).json()["organizacao"]["tipo"] == "agencia"
+
+
+def test_desligar_agencia_com_carteira_cheia_e_recusado(client, org):
+    ag = org("Agência Ômicron", tipo="agencia", empresa="Cliente 1")
+    client.post("/api/empresas", headers=cab(ag), json={"nome": "Cliente 2"})
+    r = client.put("/api/organizacao/tipo", headers=cab(ag), json={"tipo": "direta"})
+    assert r.status_code == 400
+    assert "Arquive" in r.json()["detail"]
+
+
+def test_so_admin_liga_modo_agencia(client, org):
+    dados = org("Agência Pi")
+    membro = _criar_usuario(client, dados, "membro")
+    assert client.put("/api/organizacao/tipo", headers=cab(membro), json={"tipo": "agencia"}).status_code == 403
+
+
+def test_tipo_invalido_e_recusado(client, org):
+    dados = org()
+    assert client.put("/api/organizacao/tipo", headers=cab(dados), json={"tipo": "qualquer"}).status_code == 422

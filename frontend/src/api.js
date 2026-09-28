@@ -119,6 +119,12 @@ export const api = {
 
   criarUsuario: (dados) => requisitar("/auth/usuarios", { method: "POST", body: JSON.stringify(dados) }),
 
+  // ---- organização ----
+  organizacao: () => requisitar("/organizacao"),
+
+  mudarTipoOrganizacao: (tipo) =>
+    requisitar("/organizacao/tipo", { method: "PUT", body: JSON.stringify({ tipo }) }),
+
   // ---- carteira ----
   empresas: () => requisitar("/empresas"),
 

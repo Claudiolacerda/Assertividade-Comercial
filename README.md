@@ -54,10 +54,16 @@ Postgres
    └── schema tenant_beta     análises, arquivos    (cliente B da carteira)
 ```
 
-**Modo agência.** Uma *organização* é quem assina: pode ser uma agência com vários
-clientes na carteira ou uma empresa que usa para si. Os usuários pertencem à
-organização, não à empresa — é isso que permite um gestor de tráfego abrir dez
-clientes com um login só. Três papéis:
+**Modo agência — desligado por padrão.** Uma *organização* é quem assina. Quem se
+cadastra como empresa analisa só o próprio comercial e não vê carteira nenhuma:
+a tela fica com Histórico, Nova análise, Configuração e Equipe. Quem marca
+"agência ou gestor de tráfego" no cadastro ganha a **Carteira** e o seletor de
+cliente. Quem passar a atender outros clientes depois liga o modo em
+Configuração → *Você atende outros clientes?* (sem isso ficaria preso, porque a
+tela de adicionar cliente mora dentro da carteira).
+
+Os usuários pertencem à organização, não à empresa — é isso que permite um gestor
+de tráfego abrir dez clientes com um login só. Três papéis:
 
 | Papel | Enxerga | Pode |
 |---|---|---|

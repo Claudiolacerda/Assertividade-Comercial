@@ -45,6 +45,12 @@ class NovoUsuario(BaseModel):
     _v = field_validator("senha")(_senha_forte)
 
 
+class TipoOrganizacao(BaseModel):
+    """Liga/desliga o modo agência."""
+
+    tipo: str = Field(pattern="^(agencia|direta)$")
+
+
 class NovaEmpresa(BaseModel):
     nome: str = Field(min_length=2, max_length=160)
     segmento: str | None = Field(default=None, max_length=80)

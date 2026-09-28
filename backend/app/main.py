@@ -46,6 +46,7 @@ app.include_router(auth.router)
 app.include_router(analises.router)
 app.include_router(analises.config_router)
 app.include_router(empresas.router)
+app.include_router(empresas.org_router)
 app.include_router(modelo.router)
 
 
