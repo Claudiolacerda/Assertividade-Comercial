@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 
+import Marca from "./components/Marca";
 import { useAuth } from "./auth";
 import Analise from "./pages/Analise";
 import Configuracao from "./pages/Configuracao";
 import Entrada from "./pages/Entrada";
 import Equipe from "./pages/Equipe";
 import Historico from "./pages/Historico";
+import Site from "./pages/Site";
 import Upload from "./pages/Upload";
 
-const CHAVE_TEMA = "assertividade_tema";
+const CHAVE_TEMA = "neriah_tema";
 
 function BotaoTema() {
   const [tema, setTema] = useState(() => {
@@ -31,26 +33,35 @@ function BotaoTema() {
     }
   }, [tema]);
 
-  const proximo = tema === "dark" ? "light" : "dark";
   return (
-    <button className="discreto" onClick={() => setTema(proximo)} title="Alternar tema">
+    <button className="discreto" onClick={() => setTema(tema === "dark" ? "light" : "dark")} title="Alternar tema">
       {tema === "dark" ? "☀️ claro" : "🌙 escuro"}
     </button>
   );
 }
 
-export default function App() {
-  const { usuario, carregando, sair } = useAuth();
+/** O site público e a entrada usam sempre o tema escuro da marca, independente
+ *  da preferência do sistema — são superfícies de marca, não de leitura. */
+function ForcarClaro({ children }) {
+  useEffect(() => {
+    const anterior = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+    return () => {
+      if (anterior) document.documentElement.setAttribute("data-theme", anterior);
+      else document.documentElement.removeAttribute("data-theme");
+    };
+  }, []);
+  return children;
+}
 
-  if (carregando) return <div className="vazio">Carregando…</div>;
-  if (!usuario) return <Entrada />;
-
+function Produto() {
+  const { usuario, sair } = useAuth();
   return (
     <div className="app">
       <nav className="barra-lateral">
-        <div className="marca">
-          Assertividade
-          <small>{usuario.empresa.nome}</small>
+        <div className="marca-barra">
+          <Marca tamanho={17} />
+          <span className="empresa">{usuario.empresa.nome}</span>
         </div>
         <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
           Histórico
@@ -84,4 +95,24 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+export default function App() {
+  const { usuario, carregando } = useAuth();
+
+  if (carregando) return <div className="vazio">Carregando…</div>;
+
+  if (!usuario) {
+    return (
+      <ForcarClaro>
+        <Routes>
+          <Route path="/entrar" element={<Entrada />} />
+          <Route path="/" element={<Site />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ForcarClaro>
+    );
+  }
+
+  return <Produto />;
 }
