@@ -1,0 +1,119 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1 · Banco (Docker)",
+      "detail": "Sobe o Postgres. Se o contêiner já existe, apenas religa.",
+      "type": "shell",
+      "command": "docker start pg-assertividade || docker run --name pg-assertividade -e POSTGRES_PASSWORD=assert123 -e POSTGRES_DB=assertividade -p 5432:5432 -d postgres:16",
+      "windows": {
+        "command": "docker start pg-assertividade; if ($LASTEXITCODE -ne 0) { docker run --name pg-assertividade -e POSTGRES_PASSWORD=assert123 -e POSTGRES_DB=assertividade -p 5432:5432 -d postgres:16 }",
+        "options": {
+          "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] }
+        }
+      },
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated", "reveal": "silent", "close": true }
+    },
+    {
+      "label": "2 · API (backend)",
+      "detail": "FastAPI com recarga automática em http://localhost:8000",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/python -m uvicorn app.main:app --reload --port 8000",
+      "windows": {
+        "command": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000"
+      },
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [{ "regexp": "^\\s*$", "file": 1, "location": 2, "message": 3 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Started reloader.*",
+          "endsPattern": ".*Application startup complete.*"
+        }
+      },
+      "presentation": { "panel": "dedicated", "group": "servidores" }
+    },
+    {
+      "label": "3 · Front (frontend)",
+      "detail": "Vite em http://localhost:5173",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [{ "regexp": "^\\s*$", "file": 1, "location": 2, "message": 3 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*Local:.*"
+        }
+      },
+      "presentation": { "panel": "dedicated", "group": "servidores" }
+    },
+    {
+      "label": "▶ Subir tudo",
+      "detail": "Banco + API + front, na ordem",
+      "dependsOrder": "sequence",
+      "dependsOn": ["1 · Banco (Docker)", "2 · API (backend)", "3 · Front (frontend)"],
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Testes do backend",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/python -m pytest -q",
+      "windows": {
+        "command": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe -m pytest -q"
+      },
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": [],
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "label": "Instalar dependências (primeira vez)",
+      "detail": "Cria o ambiente Python, instala o backend e o frontend",
+      "dependsOrder": "sequence",
+      "dependsOn": ["_venv", "_pip", "_npm"],
+      "problemMatcher": []
+    },
+    {
+      "label": "_venv",
+      "hide": true,
+      "type": "shell",
+      "command": "python3 -m venv .venv",
+      "windows": { "command": "python -m venv .venv" },
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "_pip",
+      "hide": true,
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/python -m pip install -r requirements.txt --timeout 120 --retries 10",
+      "windows": {
+        "command": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt --timeout 120 --retries 10"
+      },
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "_npm",
+      "hide": true,
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build do frontend",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    }
+  ]
+}

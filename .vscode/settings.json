@@ -1,0 +1,41 @@
+{
+  // O VS Code encontra sozinho o ambiente em backend/.venv; isto só evita a pergunta.
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.testing.pytestArgs": ["tests"],
+
+  "editor.formatOnSave": false,
+  "editor.rulers": [110],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "[python]": { "editor.tabSize": 4 },
+  "[javascriptreact]": { "editor.tabSize": 2 },
+  "[javascript]": { "editor.tabSize": 2 },
+  "[css]": { "editor.tabSize": 2 },
+  "[json]": { "editor.tabSize": 2 },
+
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/*.pyc": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.venv": true,
+    "**/dados_clientes": true,
+    "**/package-lock.json": true
+  },
+
+  // dados_clientes guarda planilha de cliente: não deve ser indexado nem versionado
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.venv/**": true,
+    "**/dados_clientes/**": true
+  }
+}
