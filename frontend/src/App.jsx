@@ -90,7 +90,7 @@ function SeletorCliente() {
 }
 
 function Produto() {
-  const { usuario, empresa, sair, temCarteira, ehCliente } = useAuth();
+  const { usuario, empresa, sair, temCarteira, ehCliente, rotuloCarteira } = useAuth();
   return (
     <div className="app">
       <nav className="barra-lateral">
@@ -101,9 +101,9 @@ function Produto() {
 
         <SeletorCliente />
 
-        {temCarteira && !ehCliente && (
+        {temCarteira && (
           <NavLink to="/carteira" className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
-            Carteira
+            {rotuloCarteira}
           </NavLink>
         )}
         <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
