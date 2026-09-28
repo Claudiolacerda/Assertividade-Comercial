@@ -19,7 +19,8 @@ const paraTela = (v, tipo) => (tipo === "pct" ? Math.round(v * 1000) / 10 : v);
 const paraApi = (v, tipo) => (tipo === "pct" ? Number(v) / 100 : Number(v));
 
 export default function Configuracao() {
-  const { ehAdmin } = useAuth();
+  const { ehAdmin, ehAgencia } = useAuth();
+  const [virando, setVirando] = useState(false);
   const [config, setConfig] = useState(null);
   const [erro, setErro] = useState("");
   const [salvo, setSalvo] = useState("");
@@ -215,6 +216,35 @@ export default function Configuracao() {
             </label>
           </div>
         </section>
+
+        {!ehAgencia && ehAdmin && (
+          <section className="cartao" style={{ marginBottom: 16 }}>
+            <h2>Você atende outros clientes?</h2>
+            <p style={{ color: "var(--ink-2)", fontSize: 14, margin: "8px 0 14px", maxWidth: "70ch" }}>
+              Hoje esta conta analisa só o seu comercial. Ligando o modo agência aparece a{" "}
+              <strong>Carteira</strong>: você cadastra quantos clientes quiser, cada um com dados
+              isolados, e alterna entre eles com um seletor. Nada do que já existe se perde.
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm("Ligar o modo agência? Você poderá adicionar outros clientes.")) return;
+                setVirando(true);
+                try {
+                  await api.mudarTipoOrganizacao("agencia");
+                  window.location.reload();
+                } catch (e) {
+                  setErro(e.message);
+                } finally {
+                  setVirando(false);
+                }
+              }}
+              disabled={virando}
+            >
+              {virando ? "Ligando…" : "Ligar modo agência"}
+            </button>
+          </section>
+        )}
 
         {salvo && (
           <div className="aviso ok" style={{ marginBottom: 14 }}>

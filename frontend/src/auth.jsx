@@ -99,11 +99,11 @@ export function ProvedorAuth({ children }) {
       recarregarEmpresas,
       ehAdmin: usuario?.papel === "admin",
       ehCliente: usuario?.papel === "cliente",
-      // Quem não é cliente final sempre vê a lista: é de lá que se adiciona o
-      // próximo cliente. Escondê-la com um cliente só criava um beco sem saída.
-      temCarteira: usuario ? usuario.papel !== "cliente" : false,
-      // O nome muda com o tipo: "Carteira" é linguagem de agência
-      rotuloCarteira: usuario?.organizacao?.tipo === "agencia" ? "Carteira" : "Clientes",
+      // A carteira só existe para quem se declarou agência no cadastro. Quem
+      // analisa o próprio comercial não vê nada disso — e liga depois, na
+      // Configuração, se passar a atender outros clientes.
+      ehAgencia: usuario?.organizacao?.tipo === "agencia",
+      temCarteira: usuario?.organizacao?.tipo === "agencia" && usuario?.papel !== "cliente",
     };
   }, [usuario, carregando, entrar, cadastrar, sair, empresaId, trocarEmpresa, recarregarEmpresas]);
 

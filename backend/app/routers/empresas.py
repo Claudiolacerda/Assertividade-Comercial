@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db, sessao_tenant
 from ..deps import Sessao, admin_sessao, empresas_visiveis, sessao_atual
-from ..models import Analise, Empresa
-from ..schemas import EmpresaOut, ItemCarteira, NovaEmpresa
+from ..models import Analise, Empresa, Organizacao
+from ..schemas import EmpresaOut, ItemCarteira, NovaEmpresa, TipoOrganizacao
 from .auth import criar_empresa
 
 router = APIRouter(prefix="/api/empresas", tags=["carteira"])
@@ -114,3 +114,45 @@ def arquivar(empresa_id: int, sessao: Sessao = Depends(admin_sessao), db: Sessio
         )
     empresa.ativa = False
     db.commit()
+
+
+# --------------------------------------------------------------------------- #
+# A organização
+# --------------------------------------------------------------------------- #
+org_router = APIRouter(prefix="/api/organizacao", tags=["organização"])
+
+
+@org_router.get("")
+def ler_organizacao(sessao: Sessao = Depends(sessao_atual), db: Session = Depends(get_db)):
+    o = sessao.organizacao
+    total = db.scalar(
+        select(func.count(Empresa.id)).where(Empresa.organizacao_id == o.id, Empresa.ativa.is_(True))
+    )
+    return {"id": o.id, "nome": o.nome, "tipo": o.tipo, "plano": o.plano, "clientes": total}
+
+
+@org_router.put("/tipo")
+def mudar_tipo(
+    dados: TipoOrganizacao, sessao: Sessao = Depends(admin_sessao), db: Session = Depends(get_db)
+):
+    """Liga ou desliga o modo agência.
+
+    Quem se cadastrou como empresa não vê carteira nenhuma — e é assim que deve
+    ser. Mas sem este botão, quem passasse a atender outros clientes ficaria
+    preso: a tela de adicionar cliente mora dentro da carteira.
+    """
+    organizacao = db.get(Organizacao, sessao.organizacao.id)
+    if dados.tipo == "direta":
+        total = db.scalar(
+            select(func.count(Empresa.id)).where(
+                Empresa.organizacao_id == organizacao.id, Empresa.ativa.is_(True)
+            )
+        )
+        if total > 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Você tem {total} clientes na carteira. Arquive os outros antes de desligar o modo agência.",
+            )
+    organizacao.tipo = dados.tipo
+    db.commit()
+    return {"tipo": organizacao.tipo}

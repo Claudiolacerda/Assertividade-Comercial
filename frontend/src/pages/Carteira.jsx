@@ -38,7 +38,7 @@ function Variacao({ valor, formato, melhorQuando }) {
 
 export default function Carteira() {
   const navegar = useNavigate();
-  const { ehAdmin, trocarEmpresa, recarregarEmpresas, rotuloCarteira } = useAuth();
+  const { ehAdmin, trocarEmpresa, recarregarEmpresas } = useAuth();
   const [itens, setItens] = useState(null);
   const [erro, setErro] = useState("");
   const [novo, setNovo] = useState("");
@@ -102,7 +102,7 @@ export default function Carteira() {
     <>
       <div className="cabecalho-pagina">
         <div>
-          <h1>{rotuloCarteira}</h1>
+          <h1>Carteira</h1>
           <p>
             {itens?.length || 0} cliente(s) · {comAnalise.length} com análise. A variação compara com o
             mês anterior de cada um.
