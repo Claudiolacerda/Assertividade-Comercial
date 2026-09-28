@@ -182,3 +182,102 @@ class ConfigAnalise:
         if "regras_status" in limpo and isinstance(limpo["regras_status"], list):
             limpo["regras_status"] = [(r[0], list(r[1])) for r in limpo["regras_status"]]
         return cls(**limpo)
+
+
+# --------------------------------------------------------------------------- #
+# Metadados dos campos comerciais: o que cada coluna destrava.
+# Alimenta a "nota da planilha" mostrada ao cliente e a planilha-modelo.
+# --------------------------------------------------------------------------- #
+CAMPOS_REUNIOES_INFO: dict[str, dict] = {
+    "cliente": {
+        "rotulo": "Cliente",
+        "destrava": "Base de tudo — sem isso não há análise",
+        "impacto": "obrigatorio",
+        "exemplo": "Padaria do Zé",
+    },
+    "status": {
+        "rotulo": "Etapa do Funil",
+        "destrava": "Base de tudo — assertividade, funil e pipeline",
+        "impacto": "obrigatorio",
+        "exemplo": "Fechado",
+    },
+    "data_reuniao": {
+        "rotulo": "Data da Reunião Realizada",
+        "destrava": "Evolução por semana e por dia da semana",
+        "impacto": "alto",
+        "exemplo": "05/03/2026",
+    },
+    "valor": {
+        "rotulo": "Valor",
+        "destrava": "Receita, ticket médio, ROAS, ROI e forecast do pipeline",
+        "impacto": "alto",
+        "exemplo": "2500,00",
+    },
+    "campanha": {
+        "rotulo": "Campanha",
+        "destrava": "CAC e ROAS por campanha — qual anúncio realmente vende",
+        "impacto": "alto",
+        "exemplo": "[GT] [WPP] [VENDAS]",
+    },
+    "origem": {
+        "rotulo": "Origem",
+        "destrava": "Separar tráfego pago de indicação (CAC real do anúncio)",
+        "impacto": "alto",
+        "exemplo": "Facebook Ads",
+    },
+    "motivo_perda": {
+        "rotulo": "Motivo da perda",
+        "destrava": "Motivos de perda e win rate confiável",
+        "impacto": "alto",
+        "exemplo": "Achou caro",
+    },
+    "responsavel": {
+        "rotulo": "Responsável",
+        "destrava": "Comparação de assertividade entre vendedores",
+        "impacto": "medio",
+        "exemplo": "Marina",
+    },
+    "data_agendamento": {
+        "rotulo": "Data do Agendamento",
+        "destrava": "Tempo entre agendar e a reunião acontecer",
+        "impacto": "medio",
+        "exemplo": "03/03/2026",
+    },
+    "data_fechamento": {
+        "rotulo": "Data de fechamento",
+        "destrava": "Ciclo de venda — quantos dias leva para fechar",
+        "impacto": "medio",
+        "exemplo": "08/03/2026",
+    },
+    "observacoes": {
+        "rotulo": "Observações",
+        "destrava": "Objeções, sinais de compra e temperatura do pipeline",
+        "impacto": "medio",
+        "exemplo": "Gostou, mas vai falar com o sócio",
+    },
+    "produto": {
+        "rotulo": "Produto",
+        "destrava": "Assertividade por produto ou plano",
+        "impacto": "baixo",
+        "exemplo": "Plano ME",
+    },
+    "data_lead": {
+        "rotulo": "Data do lead",
+        "destrava": "Tempo de resposta ao lead",
+        "impacto": "baixo",
+        "exemplo": "01/03/2026",
+    },
+}
+
+# Valores aceitos na coluna de etapa. Viram lista suspensa na planilha-modelo,
+# o que acaba com "Nao fechou" convivendo com "Perdeu" na mesma planilha.
+ETAPAS_SUGERIDAS = [
+    "Agendado",
+    "Reunião Feita",
+    "Follow Up",
+    "Fechado",
+    "Perdido",
+    "No-show",
+    "Remarcado",
+    "Cancelado",
+]

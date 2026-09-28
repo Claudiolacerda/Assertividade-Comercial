@@ -110,6 +110,19 @@ export default function Upload() {
             arquivos={reunioes}
             onArquivos={setReunioes}
           />
+          <div className="aviso" style={{ borderLeftColor: "var(--verde)" }}>
+            Não tem uma planilha organizada?{" "}
+            <button
+              type="button"
+              className="discreto"
+              onClick={() => api.baixarModelo()}
+              style={{ color: "var(--verde)", fontWeight: 650, padding: 0 }}
+            >
+              Baixe a planilha-modelo
+            </button>{" "}
+            — ela já vem com todas as colunas que liberam ROAS, CAC por campanha e ciclo de venda.
+          </div>
+
           <div style={{ maxWidth: 240 }}>
             <label htmlFor="mes">Mês de referência (opcional)</label>
             <input id="mes" type="month" value={mes} onChange={(e) => setMes(e.target.value)} />

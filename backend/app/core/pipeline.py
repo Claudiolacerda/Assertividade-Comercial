@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .config_analise import DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
+from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
 from .leitura import ler_arquivos, padronizar
 from .metricas import (
     TAXAS_COMERCIAIS,
@@ -54,6 +54,7 @@ class Resultado:
     tabelas: dict[str, pd.DataFrame] = field(default_factory=dict)
     avisos: list[str] = field(default_factory=list)
     tipos_resultado: list[str] = field(default_factory=list)
+    cobertura: dict[str, Any] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -68,6 +69,7 @@ class Resultado:
             "tem_origem": self.tem_origem,
             "avisos": self.avisos,
             "tipos_resultado": self.tipos_resultado,
+            "cobertura": self.cobertura,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),
@@ -138,6 +140,7 @@ def analisar(
     _kpis(ctx)
     _diagnostico(ctx)
     _qualidade(ctx, log_meta, log_reun)
+    _cobertura(res, log_reun)
     return res
 
 
@@ -282,7 +285,9 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
     # data usada no filtro/semana: data da reunião; se vazia, a do agendamento
     reun["data_referencia"] = reun["data_reuniao"].fillna(reun["data_agendamento"])
 
-    tem_valor = "valor" in reun and para_numero(reun["valor"]).notna().any()
+    # bool() é obrigatório: .any() devolve numpy.bool_, que não serializa em JSON
+    # e derruba a gravação no banco — só aparece quando a planilha TEM a coluna.
+    tem_valor = bool("valor" in reun and para_numero(reun["valor"]).notna().any())
     reun["valor"] = para_numero(reun["valor"]) if "valor" in reun else np.nan
     for c in ["cliente", "responsavel", "origem", "campanha", "produto", "motivo_perda", "observacoes"]:
         if c not in reun:
@@ -1131,3 +1136,47 @@ def _qualidade(ctx: _Contexto, log_meta: pd.DataFrame, log_reun: pd.DataFrame) -
         else pd.DataFrame({"Problema": ["Nenhum problema encontrado ✅"], "Ocorrências": [0]})
     )
     res.mapeamento = pd.concat([log_meta, log_reun], ignore_index=True)
+
+
+# ---------------------------------------------------------------------- #
+# 10. Nota da planilha — o que falta e o que aquilo destrava
+# ---------------------------------------------------------------------- #
+def _cobertura(res: Resultado, log_reun: pd.DataFrame) -> None:
+    """Transforma o mapeamento de colunas em tarefa para o cliente.
+
+    O sistema já sabia quais colunas não achou; faltava dizer, em português, o
+    que cada ausência está custando em indicador.
+    """
+    PESO = {"obrigatorio": 0, "alto": 1, "medio": 2, "baixo": 3}
+    encontrados = {
+        linha["Campo do sistema"]: linha["Coluna encontrada no arquivo"]
+        for _, linha in log_reun.iterrows()
+        if linha["Coluna encontrada no arquivo"] != "— NÃO ENCONTRADA —"
+    }
+    campos = []
+    for campo, info in CAMPOS_REUNIOES_INFO.items():
+        achou = campo in encontrados
+        # a coluna existe mas veio vazia: conta como ausente, senão a nota mente
+        if achou and campo == "valor" and not res.tem_valor:
+            achou = False
+        if achou and campo == "origem" and not res.tem_origem:
+            achou = False
+        campos.append(
+            {
+                "campo": campo,
+                "rotulo": info["rotulo"],
+                "destrava": info["destrava"],
+                "impacto": info["impacto"],
+                "encontrado": achou,
+                "coluna": encontrados.get(campo) if achou else None,
+            }
+        )
+    campos.sort(key=lambda c: (c["encontrado"], PESO[c["impacto"]]))
+    tem = sum(1 for c in campos if c["encontrado"])
+    res.cobertura = {
+        "encontrados": tem,
+        "total": len(campos),
+        "percentual": round(tem / len(campos), 4),
+        "campos": campos,
+        "faltando_alto_impacto": [c["rotulo"] for c in campos if not c["encontrado"] and c["impacto"] == "alto"],
+    }

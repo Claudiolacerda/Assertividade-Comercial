@@ -9,6 +9,7 @@ import {
   GraficoSemanas,
   GraficoStatus,
 } from "../components/Charts";
+import NotaPlanilha from "../components/NotaPlanilha";
 import { Diagnostico, TabelaDados, Tile } from "../components/Painel";
 
 const ABAS = [
@@ -108,6 +109,7 @@ export default function Analise() {
             <Tile kpi={kpis.fec} />
           </div>
           <Diagnostico itens={r.diagnostico} />
+          <NotaPlanilha cobertura={r.cobertura} />
           <div className="grade dois">
             <GraficoFunil funil={tabela("funil")} />
             <GraficoStatus porStatus={tabela("por_status")} />
@@ -221,6 +223,7 @@ export default function Analise() {
 
       {aba === "qualidade" && (
         <div className="grade">
+          <NotaPlanilha cobertura={r.cobertura} />
           <TabelaDados
             titulo="Resumo dos problemas"
             subtitulo="Corrija na origem e os números do próximo mês ficam mais confiáveis."

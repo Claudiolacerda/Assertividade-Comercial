@@ -1,6 +1,8 @@
-/* Cliente HTTP: guarda o token e traduz erro da API em mensagem legível. */
+/* Cliente HTTP: guarda o token, diz qual cliente da carteira está em foco e
+   traduz erro da API em mensagem legível. */
 
-const CHAVE_TOKEN = "assertividade_token";
+const CHAVE_TOKEN = "neriah_token";
+const CHAVE_EMPRESA = "neriah_empresa";
 
 export function lerToken() {
   try {
@@ -19,6 +21,27 @@ export function guardarToken(token) {
   }
 }
 
+/* Cliente em foco: vai no cabeçalho X-Empresa de toda requisição. O backend
+   ainda confere se ele pertence à organização — isto aqui é conveniência, não
+   controle de acesso. */
+export function lerEmpresa() {
+  try {
+    const v = localStorage.getItem(CHAVE_EMPRESA);
+    return v ? Number(v) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function guardarEmpresa(id) {
+  try {
+    if (id) localStorage.setItem(CHAVE_EMPRESA, String(id));
+    else localStorage.removeItem(CHAVE_EMPRESA);
+  } catch {
+    /* idem */
+  }
+}
+
 export class ErroApi extends Error {
   constructor(mensagem, status) {
     super(mensagem);
@@ -31,7 +54,6 @@ async function mensagemDeErro(resposta) {
     const corpo = await resposta.json();
     const d = corpo?.detail;
     if (typeof d === "string") return d;
-    // Erro de validação do FastAPI vem como lista
     if (Array.isArray(d)) return d.map((e) => e.msg || String(e)).join(" ");
   } catch {
     /* resposta sem JSON */
@@ -40,17 +62,24 @@ async function mensagemDeErro(resposta) {
   return `Falha na requisição (${resposta.status}).`;
 }
 
-async function requisitar(caminho, opcoes = {}) {
+function cabecalhos(extra = {}, comCorpo = false) {
+  const h = { ...extra };
   const token = lerToken();
-  const cabecalhos = { ...(opcoes.headers || {}) };
-  if (token) cabecalhos.Authorization = `Bearer ${token}`;
-  if (opcoes.body && !(opcoes.body instanceof FormData)) {
-    cabecalhos["Content-Type"] = "application/json";
-  }
+  if (token) h.Authorization = `Bearer ${token}`;
+  const empresa = lerEmpresa();
+  if (empresa) h["X-Empresa"] = String(empresa);
+  if (comCorpo) h["Content-Type"] = "application/json";
+  return h;
+}
 
+async function requisitar(caminho, opcoes = {}) {
+  const temCorpoJson = opcoes.body && !(opcoes.body instanceof FormData);
   let resposta;
   try {
-    resposta = await fetch(`/api${caminho}`, { ...opcoes, headers: cabecalhos });
+    resposta = await fetch(`/api${caminho}`, {
+      ...opcoes,
+      headers: cabecalhos(opcoes.headers, temCorpoJson),
+    });
   } catch {
     throw new ErroApi("Não consegui falar com o servidor. Verifique sua conexão.", 0);
   }
@@ -63,7 +92,22 @@ async function requisitar(caminho, opcoes = {}) {
   return resposta.json();
 }
 
+async function baixar(caminho, nome) {
+  const resposta = await fetch(`/api${caminho}`, { headers: cabecalhos() });
+  if (!resposta.ok) throw new ErroApi(await mensagemDeErro(resposta), resposta.status);
+  const blob = await resposta.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = nome;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
+  // ---- autenticação ----
   login: (email, senha) =>
     requisitar("/auth/login", { method: "POST", body: JSON.stringify({ email, senha }) }),
 
@@ -73,9 +117,18 @@ export const api = {
 
   usuarios: () => requisitar("/auth/usuarios"),
 
-  criarUsuario: (dados) =>
-    requisitar("/auth/usuarios", { method: "POST", body: JSON.stringify(dados) }),
+  criarUsuario: (dados) => requisitar("/auth/usuarios", { method: "POST", body: JSON.stringify(dados) }),
 
+  // ---- carteira ----
+  empresas: () => requisitar("/empresas"),
+
+  carteira: () => requisitar("/empresas/carteira"),
+
+  criarEmpresa: (dados) => requisitar("/empresas", { method: "POST", body: JSON.stringify(dados) }),
+
+  arquivarEmpresa: (id) => requisitar(`/empresas/${id}`, { method: "DELETE" }),
+
+  // ---- análises ----
   analises: () => requisitar("/analises"),
 
   analise: (id) => requisitar(`/analises/${id}`),
@@ -97,20 +150,10 @@ export const api = {
     return requisitar("/analises", { method: "POST", body: form });
   },
 
-  async baixarExcel(id, nome) {
-    const token = lerToken();
-    const resposta = await fetch(`/api/analises/${id}/excel`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!resposta.ok) throw new ErroApi(await mensagemDeErro(resposta), resposta.status);
-    const blob = await resposta.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = nome;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  },
+  baixarExcel: (id, nome) => baixar(`/analises/${id}/excel`, nome),
+
+  // ---- planilha-modelo (público) ----
+  baixarModelo: () => baixar("/modelo/planilha-comercial.xlsx", "Modelo_Comercial_Neriah.xlsx"),
+
+  urlModelo: "/api/modelo/planilha-comercial.xlsx",
 };

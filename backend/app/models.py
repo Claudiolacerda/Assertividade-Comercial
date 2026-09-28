@@ -1,12 +1,17 @@
 """Modelo de dados.
 
-Dois níveis, conforme a decisão de arquitetura:
+Três níveis:
 
-* **schema `public`** — o cadastro global: empresas (tenants) e usuários. Precisa ser
-  global porque o login acontece antes de sabermos de qual empresa o usuário é.
-* **schema `tenant_<slug>`** — os dados de cada cliente: uploads e análises. Cada empresa
-  tem o seu, no mesmo servidor Postgres. Um `schema_translate_map` por requisição decide
-  em qual schema a consulta cai, então nenhuma query de análise consegue ler outra empresa.
+* **schema `public`** — o cadastro global. Uma `Organizacao` é quem assina o Neriah:
+  pode ser uma agência com vários clientes na carteira, ou uma empresa que usa
+  para si. Cada cliente analisado é uma `Empresa`. Os usuários pertencem à
+  organização, não à empresa — é isso que permite um gestor de tráfego abrir dez
+  clientes com um login só.
+* **schema `tenant_<slug>`** — os dados de cada `Empresa`: uploads e análises. Um
+  `schema_translate_map` por requisição decide em qual schema a consulta cai, então
+  nenhuma query de análise consegue ler outra empresa.
+* **`AcessoEmpresa`** — a exceção: o cliente final da agência, que enxerga só o
+  próprio painel.
 """
 
 from __future__ import annotations
@@ -35,38 +40,84 @@ class BasePublic(DeclarativeBase):
     metadata = MetaData(schema="public")
 
 
-class Empresa(BasePublic):
-    """Um cliente seu (tenant)."""
+class Organizacao(BasePublic):
+    """Quem assina o Neriah. Agência (vários clientes) ou empresa direta (um)."""
 
-    __tablename__ = "empresas"
+    __tablename__ = "organizacoes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(160), nullable=False)
     slug: Mapped[str] = mapped_column(String(63), unique=True, nullable=False, index=True)
-    schema_banco: Mapped[str] = mapped_column(String(63), unique=True, nullable=False)
+    tipo: Mapped[str] = mapped_column(String(20), default="direta", nullable=False)  # agencia | direta
     plano: Mapped[str] = mapped_column(String(40), default="basico", nullable=False)
     ativa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    # Configuração da análise específica desta empresa (metas, vocabulário de status...)
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    empresas: Mapped[list["Empresa"]] = relationship(back_populates="organizacao", cascade="all, delete-orphan")
+    usuarios: Mapped[list["Usuario"]] = relationship(back_populates="organizacao", cascade="all, delete-orphan")
+
+
+class Empresa(BasePublic):
+    """Um cliente analisado. Tem schema próprio no banco."""
+
+    __tablename__ = "empresas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organizacao_id: Mapped[int] = mapped_column(
+        ForeignKey("public.organizacoes.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    nome: Mapped[str] = mapped_column(String(160), nullable=False)
+    slug: Mapped[str] = mapped_column(String(63), unique=True, nullable=False, index=True)
+    schema_banco: Mapped[str] = mapped_column(String(63), unique=True, nullable=False)
+    segmento: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Configuração da análise desta empresa (metas, vocabulário de status...)
     config_analise: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    usuarios: Mapped[list["Usuario"]] = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    organizacao: Mapped[Organizacao] = relationship(back_populates="empresas")
 
 
 class Usuario(BasePublic):
     __tablename__ = "usuarios"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    empresa_id: Mapped[int] = mapped_column(ForeignKey("public.empresas.id", ondelete="CASCADE"), index=True)
+    organizacao_id: Mapped[int] = mapped_column(
+        ForeignKey("public.organizacoes.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     nome: Mapped[str] = mapped_column(String(160), nullable=False)
     senha_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    papel: Mapped[str] = mapped_column(String(20), default="membro", nullable=False)  # admin | membro
+    # admin  = gerencia clientes, metas e usuários da organização
+    # membro = analisa todos os clientes da carteira, não gerencia
+    # cliente = enxerga só as empresas listadas em AcessoEmpresa, sem alterar nada
+    papel: Mapped[str] = mapped_column(String(20), default="membro", nullable=False)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ultimo_acesso: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    empresa: Mapped[Empresa] = relationship(back_populates="usuarios")
+    organizacao: Mapped[Organizacao] = relationship(back_populates="usuarios")
+    acessos: Mapped[list["AcessoEmpresa"]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class AcessoEmpresa(BasePublic):
+    """Quais empresas um usuário de papel 'cliente' pode ver.
+
+    Para admin e membro esta tabela é ignorada: eles enxergam toda a carteira.
+    """
+
+    __tablename__ = "acessos_empresa"
+    __table_args__ = (UniqueConstraint("usuario_id", "empresa_id", name="uq_acesso_usuario_empresa"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        ForeignKey("public.usuarios.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    empresa_id: Mapped[int] = mapped_column(
+        ForeignKey("public.empresas.id", ondelete="CASCADE"), index=True, nullable=False
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -76,14 +127,14 @@ class BaseTenant(DeclarativeBase):
     """Tabelas sem schema fixo: o schema real é resolvido por requisição.
 
     `schema="tenant"` é apenas um apelido — `db.sessao_tenant()` traduz esse apelido
-    para `tenant_<slug>` da empresa do usuário autenticado.
+    para `tenant_<slug>` da empresa que está sendo consultada.
     """
 
     metadata = MetaData(schema="tenant")
 
 
 class Arquivo(BaseTenant):
-    """Um arquivo enviado pelo cliente (CSV da Meta ou planilha comercial)."""
+    """Um arquivo enviado (CSV da Meta ou planilha comercial)."""
 
     __tablename__ = "arquivos"
 
@@ -112,11 +163,10 @@ class Analise(BaseTenant):
     mes_referencia: Mapped[str] = mapped_column(String(7), nullable=False, index=True)  # "2026-09"
     versao: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="processando", nullable=False)
-    # processando | concluida | erro
     erro: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # Resultado completo (KPIs, diagnóstico, tabelas) — o painel lê daqui, sem reprocessar
+    # Resultado completo (KPIs, diagnóstico, tabelas) — o painel lê daqui
     resultado: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    # KPIs achatados para o gráfico de evolução entre meses
+    # KPIs achatados para o gráfico de evolução e para a carteira da agência
     kpis_resumo: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     config_usada: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     caminho_excel: Mapped[str | None] = mapped_column(Text, nullable=True)

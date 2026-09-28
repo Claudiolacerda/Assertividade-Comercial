@@ -8,19 +8,25 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
+def _senha_forte(v: str) -> str:
+    if v.isdigit() or v.isalpha():
+        raise ValueError("A senha deve misturar letras e números.")
+    return v
+
+
 # ---- Autenticação ----------------------------------------------------------- #
-class CadastroEmpresa(BaseModel):
-    empresa: str = Field(min_length=2, max_length=160)
+class CadastroOrganizacao(BaseModel):
+    """Cria a organização e o primeiro cliente da carteira."""
+
+    organizacao: str = Field(min_length=2, max_length=160)
+    tipo: str = Field(default="direta", pattern="^(agencia|direta)$")
+    # Para tipo "direta" costuma ser o mesmo nome da organização; para agência, o 1º cliente.
+    empresa: str | None = Field(default=None, max_length=160)
     nome: str = Field(min_length=2, max_length=160)
     email: EmailStr
     senha: str = Field(min_length=8, max_length=72)
 
-    @field_validator("senha")
-    @classmethod
-    def senha_forte(cls, v: str) -> str:
-        if v.isdigit() or v.isalpha():
-            raise ValueError("A senha deve misturar letras e números.")
-        return v
+    _v = field_validator("senha")(_senha_forte)
 
 
 class Login(BaseModel):
@@ -32,7 +38,26 @@ class NovoUsuario(BaseModel):
     nome: str = Field(min_length=2, max_length=160)
     email: EmailStr
     senha: str = Field(min_length=8, max_length=72)
-    papel: str = Field(default="membro", pattern="^(admin|membro)$")
+    papel: str = Field(default="membro", pattern="^(admin|membro|cliente)$")
+    # Obrigatório quando papel = "cliente": quais empresas ele enxerga
+    empresas: list[int] = Field(default_factory=list)
+
+    _v = field_validator("senha")(_senha_forte)
+
+
+class NovaEmpresa(BaseModel):
+    nome: str = Field(min_length=2, max_length=160)
+    segmento: str | None = Field(default=None, max_length=80)
+
+
+class OrganizacaoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nome: str
+    slug: str
+    tipo: str
+    plano: str
 
 
 class EmpresaOut(BaseModel):
@@ -41,7 +66,7 @@ class EmpresaOut(BaseModel):
     id: int
     nome: str
     slug: str
-    plano: str
+    segmento: str | None = None
 
 
 class UsuarioOut(BaseModel):
@@ -51,13 +76,27 @@ class UsuarioOut(BaseModel):
     nome: str
     email: EmailStr
     papel: str
-    empresa: EmpresaOut
+    organizacao: OrganizacaoOut
+    empresas: list[EmpresaOut] = Field(default_factory=list)
 
 
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     usuario: UsuarioOut
+
+
+# ---- Carteira --------------------------------------------------------------- #
+class ItemCarteira(BaseModel):
+    """Uma linha do painel multicliente da agência."""
+
+    empresa: EmpresaOut
+    ultima_analise_id: int | None = None
+    ultimo_mes: str | None = None
+    total_analises: int = 0
+    kpis: dict[str, Any] | None = None
+    variacao: dict[str, float] | None = None
+    erro: str | None = None
 
 
 # ---- Análises --------------------------------------------------------------- #
