@@ -3,10 +3,16 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 
+const PAPEIS = {
+  admin: "Administrador — gerencia clientes, metas e usuários",
+  membro: "Membro — analisa toda a carteira, não gerencia",
+  cliente: "Cliente — vê apenas os clientes liberados, sem alterar nada",
+};
+
 export default function Equipe() {
-  const { ehAdmin } = useAuth();
+  const { ehAdmin, empresas } = useAuth();
   const [usuarios, setUsuarios] = useState(null);
-  const [novo, setNovo] = useState({ nome: "", email: "", senha: "", papel: "membro" });
+  const [novo, setNovo] = useState({ nome: "", email: "", senha: "", papel: "membro", empresas: [] });
   const [erro, setErro] = useState("");
   const [salvo, setSalvo] = useState("");
 
@@ -23,11 +29,7 @@ export default function Equipe() {
   }, [ehAdmin]);
 
   if (!ehAdmin) {
-    return (
-      <div className="aviso">
-        Só o administrador da empresa pode gerenciar usuários.
-      </div>
-    );
+    return <div className="aviso">Só o administrador da organização pode gerenciar usuários.</div>;
   }
 
   async function criar(e) {
@@ -37,7 +39,7 @@ export default function Equipe() {
     try {
       await api.criarUsuario(novo);
       setSalvo(`${novo.nome} já pode entrar com o e-mail ${novo.email}.`);
-      setNovo({ nome: "", email: "", senha: "", papel: "membro" });
+      setNovo({ nome: "", email: "", senha: "", papel: "membro", empresas: [] });
       await carregar();
     } catch (err) {
       setErro(err.message);
@@ -46,12 +48,22 @@ export default function Equipe() {
 
   const campo = (k) => (e) => setNovo((n) => ({ ...n, [k]: e.target.value }));
 
+  function alternarEmpresa(id) {
+    setNovo((n) => ({
+      ...n,
+      empresas: n.empresas.includes(id) ? n.empresas.filter((x) => x !== id) : [...n.empresas, id],
+    }));
+  }
+
   return (
     <>
       <div className="cabecalho-pagina">
         <div>
           <h1>Equipe</h1>
-          <p>Quem tem acesso ao painel da sua empresa.</p>
+          <p>
+            Quem acessa a sua organização. Use o papel <strong>Cliente</strong> para liberar o painel
+            ao cliente final, restrito ao que é dele.
+          </p>
         </div>
       </div>
 
@@ -68,6 +80,7 @@ export default function Equipe() {
                     <th>Nome</th>
                     <th>E-mail</th>
                     <th>Papel</th>
+                    <th>Enxerga</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -75,7 +88,12 @@ export default function Equipe() {
                     <tr key={u.id}>
                       <td>{u.nome}</td>
                       <td>{u.email}</td>
-                      <td>{u.papel === "admin" ? "Administrador" : "Membro"}</td>
+                      <td style={{ textTransform: "capitalize" }}>{u.papel}</td>
+                      <td className="texto">
+                        {u.papel === "cliente"
+                          ? u.empresas.map((e) => e.nome).join(", ") || "—"
+                          : `toda a carteira (${u.empresas.length})`}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -111,12 +129,55 @@ export default function Equipe() {
               <div>
                 <label htmlFor="n-papel">Papel</label>
                 <select id="n-papel" value={novo.papel} onChange={campo("papel")}>
-                  <option value="membro">Membro — vê os painéis</option>
-                  <option value="admin">Administrador — também edita metas e exclui análises</option>
+                  {Object.entries(PAPEIS).map(([v, rotulo]) => (
+                    <option key={v} value={v}>
+                      {rotulo}
+                    </option>
+                  ))}
                 </select>
               </div>
+
+              {novo.papel === "cliente" && (
+                <div>
+                  <label>Clientes que ele pode ver</label>
+                  <div
+                    style={{
+                      border: "1px solid var(--borda)",
+                      borderRadius: 9,
+                      padding: 10,
+                      maxHeight: 180,
+                      overflowY: "auto",
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    {empresas.map((e) => (
+                      <label
+                        key={e.id}
+                        style={{ display: "flex", gap: 9, alignItems: "center", fontWeight: 500, margin: 0 }}
+                      >
+                        <input
+                          type="checkbox"
+                          style={{ width: "auto" }}
+                          checked={novo.empresas.includes(e.id)}
+                          onChange={() => alternarEmpresa(e.id)}
+                        />
+                        <span style={{ color: "var(--ink)" }}>{e.nome}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "6px 0 0" }}>
+                    Escolha pelo menos um — é o que ele vai enxergar ao entrar.
+                  </p>
+                </div>
+              )}
             </div>
-            {salvo && <div className="aviso ok" style={{ marginBottom: 12 }}>{salvo}</div>}
+
+            {salvo && (
+              <div className="aviso ok" style={{ marginBottom: 12 }}>
+                {salvo}
+              </div>
+            )}
             {erro && (
               <div className="aviso erro" style={{ marginBottom: 12 }} role="alert">
                 {erro}

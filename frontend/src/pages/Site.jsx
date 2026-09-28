@@ -360,6 +360,14 @@ export default function Site() {
                 </span>
               </li>
             </ul>
+            <div style={{ marginTop: 26 }}>
+              <a className="botao verde" href="/api/modelo/planilha-comercial.xlsx">
+                Baixar a planilha-modelo
+              </a>
+              <p style={{ fontSize: 12.5, color: "var(--ink-muted)", margin: "10px 0 0" }}>
+                Excel pronto, com a lista de etapas e uma aba explicando o que cada coluna destrava.
+              </p>
+            </div>
           </div>
 
           <div>

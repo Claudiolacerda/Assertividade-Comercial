@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .db import criar_schemas_base
-from .routers import analises, auth
+from .routers import analises, auth, empresas, modelo
 
 log = logging.getLogger("assertividade")
 
@@ -45,6 +45,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(analises.router)
 app.include_router(analises.config_router)
+app.include_router(empresas.router)
+app.include_router(modelo.router)
 
 
 @app.exception_handler(ValueError)

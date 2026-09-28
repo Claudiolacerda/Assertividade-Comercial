@@ -43,21 +43,41 @@ uma meta e a coluna Situação recalcula sozinha.
 
 ```
 Navegador (React + Recharts)
-        │  /api
+        │  /api   + cabeçalho X-Empresa (qual cliente da carteira)
         ▼
 FastAPI ── motor de análise (pandas + openpyxl)   ← o notebook original, agora biblioteca
         │
         ▼
 Postgres
-   ├── schema public          empresas, usuários         (cadastro global)
-   ├── schema tenant_acme     análises, arquivos         (dados do cliente A)
-   └── schema tenant_beta     análises, arquivos         (dados do cliente B)
+   ├── schema public          organizações, empresas, usuários, acessos
+   ├── schema tenant_acme     análises, arquivos    (cliente A da carteira)
+   └── schema tenant_beta     análises, arquivos    (cliente B da carteira)
 ```
 
+**Modo agência.** Uma *organização* é quem assina: pode ser uma agência com vários
+clientes na carteira ou uma empresa que usa para si. Os usuários pertencem à
+organização, não à empresa — é isso que permite um gestor de tráfego abrir dez
+clientes com um login só. Três papéis:
+
+| Papel | Enxerga | Pode |
+|---|---|---|
+| `admin` | toda a carteira | gerenciar clientes, metas e usuários |
+| `membro` | toda a carteira | analisar, não gerencia |
+| `cliente` | só as empresas liberadas | ver o próprio painel |
+
+O cliente em foco viaja no cabeçalho `X-Empresa`. O backend só o aceita depois de
+confirmar que pertence à organização do usuário — mandar o id alheio devolve 404,
+e há teste para isso.
+
 **Isolamento.** Nenhuma consulta de análise nomeia o schema; a sessão é aberta com um
-`schema_translate_map` que resolve o schema a partir da empresa do usuário autenticado, lida do
-banco (nunca do token). Não existe caminho de código em que uma empresa alcance a outra — há
-testes que provam isso, inclusive o caso em que duas empresas têm uma análise com o mesmo `id`.
+`schema_translate_map` que resolve o schema a partir da empresa em foco, sempre validada contra a
+organização lida do banco (nunca do token). Há testes para as duas fronteiras: entre organizações
+e, dentro da mesma organização, entre o que um usuário `cliente` pode ver.
+
+**Planilha-modelo e nota da planilha.** O gargalo real não é o motor, é a coluna que falta na
+planilha do cliente. Toda análise devolve uma `cobertura` — quantos dos 13 campos foram
+reconhecidos e o que cada ausência está custando em indicador — e `/api/modelo/planilha-comercial.xlsx`
+entrega um Excel pronto que destrava os 13.
 
 ```
 backend/
@@ -148,6 +168,19 @@ onde parou, o que ajuda quando um KPI muda de valor.
 ```bash
 cd backend && python3 -m pytest -q
 ```
+
+### Migrando um banco anterior ao modo agência
+
+Se o banco foi criado antes da carteira (usuário preso a uma empresa):
+
+```bash
+cd backend
+python3 scripts/migrar_para_agencia.py            # mostra o que faria
+python3 scripts/migrar_para_agencia.py --aplicar  # executa
+```
+
+Cada empresa vira uma organização do tipo `direta` com ela mesma na carteira.
+Logins, análises e schemas ficam como estavam. O script é idempotente.
 
 Os testes do motor usam as planilhas reais de `dados/` como referência: se um refactor mudar
 qualquer KPI, o teste quebra. Os testes de API precisam de um Postgres acessível (são pulados

@@ -8,7 +8,14 @@ export default function Entrada() {
   const { entrar, cadastrar } = useAuth();
   const [params] = useSearchParams();
   const [modo, setModo] = useState(params.get("modo") === "cadastro" ? "cadastro" : "login");
-  const [dados, setDados] = useState({ empresa: "", nome: "", email: "", senha: "" });
+  const [dados, setDados] = useState({
+    organizacao: "",
+    tipo: "direta",
+    empresa: "",
+    nome: "",
+    email: "",
+    senha: "",
+  });
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
@@ -74,7 +81,7 @@ export default function Entrada() {
           <p className="sub">
             {modo === "login"
               ? "Bem-vindo de volta. Suas análises estão onde você deixou."
-              : "Você será o administrador. Sua empresa ganha um espaço isolado no banco."}
+              : "Você será o administrador. Cada cliente ganha um espaço isolado no banco."}
           </p>
 
           <form onSubmit={enviar} style={{ marginTop: 26 }}>
@@ -82,17 +89,42 @@ export default function Entrada() {
               {modo === "cadastro" && (
                 <>
                   <div>
-                    <label htmlFor="empresa">Nome da empresa</label>
+                    <label htmlFor="tipo">Você é…</label>
+                    <select id="tipo" value={dados.tipo} onChange={campo("tipo")}>
+                      <option value="direta">Uma empresa analisando o próprio comercial</option>
+                      <option value="agencia">Uma agência ou gestor de tráfego com vários clientes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="organizacao">
+                      {dados.tipo === "agencia" ? "Nome da sua agência" : "Nome da empresa"}
+                    </label>
                     <input
-                      id="empresa"
-                      value={dados.empresa}
-                      onChange={campo("empresa")}
+                      id="organizacao"
+                      value={dados.organizacao}
+                      onChange={campo("organizacao")}
                       required
                       minLength={2}
                       autoComplete="organization"
-                      placeholder="Contabilidade Horizonte"
+                      placeholder={dados.tipo === "agencia" ? "Agência Ponto Verde" : "Contabilidade Horizonte"}
                     />
                   </div>
+                  {dados.tipo === "agencia" && (
+                    <div>
+                      <label htmlFor="empresa">Primeiro cliente da carteira</label>
+                      <input
+                        id="empresa"
+                        value={dados.empresa}
+                        onChange={campo("empresa")}
+                        required
+                        minLength={2}
+                        placeholder="Contabilidade Horizonte"
+                      />
+                      <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "7px 0 0" }}>
+                        Você adiciona os outros depois, na tela Carteira.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label htmlFor="nome">Seu nome</label>
                     <input
