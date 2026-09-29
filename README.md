@@ -133,6 +133,20 @@ npm run dev                   # http://localhost:5173
 As tabelas do schema `public` são criadas sozinhas na primeira subida; o schema de cada
 empresa é criado no cadastro dela.
 
+## Atalho no Windows
+
+Na raiz do projeto há dois scripts que dispensam decorar caminhos — eles
+descobrem sozinhos onde estão, então funcionam de qualquer pasta:
+
+```powershell
+.\iniciar.ps1   # sobe banco, API e site, e abre o navegador
+.\parar.ps1     # desliga tudo (os dados continuam salvos)
+```
+
+Dá para rodar clicando com o botão direito no arquivo → *Executar com o
+PowerShell*. Na primeira vez, se faltar o ambiente Python ou o `.env`, o script
+diz exatamente o que fazer em vez de falhar no meio.
+
 ## Abrindo no VS Code
 
 O repositório já vem com `.vscode/` configurado. Ao abrir a pasta, o VS Code
