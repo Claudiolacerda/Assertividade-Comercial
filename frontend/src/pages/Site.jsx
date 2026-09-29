@@ -8,6 +8,7 @@
 import { Link } from "react-router-dom";
 
 import Marca from "../components/Marca";
+import Planos, { BotaoZap, IconeZap, WHATSAPP_EXIBICAO, linkZap } from "../components/Planos";
 
 const FUNIL = [
   { etapa: "Cliques no link", valor: 516, pct: 100 },
@@ -128,6 +129,9 @@ export default function Site() {
               </a>
               <a href="#planilha" className="oculta-movel">
                 Sua planilha
+              </a>
+              <a href="#planos" className="oculta-movel">
+                Planos
               </a>
               <Link className="botao verde" to="/entrar" style={{ padding: "9px 18px", fontSize: 14 }}>
                 Entrar
@@ -451,6 +455,9 @@ export default function Site() {
         </div>
       </section>
 
+      {/* ---------------- planos ---------------- */}
+      <Planos />
+
       {/* ---------------- chamada final ---------------- */}
       <div className="escuro sobre-escuro">
         <section className="chamada-final faixa">
@@ -468,6 +475,14 @@ export default function Site() {
               <Link className="botao verde" to="/entrar">
                 Começar agora →
               </Link>
+              <a
+                className="botao vazado"
+                href={linkZap("Olá! Vim pelo site da Neriah Data e quero conversar sobre os planos.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconeZap /> Falar no WhatsApp
+              </a>
             </div>
           </div>
         </section>
@@ -475,10 +490,20 @@ export default function Site() {
         <footer className="rodape faixa">
           <div className="limite">
             <Marca tamanho={15} />
+            <a
+              href={linkZap("Olá! Vim pelo site da Neriah Data.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--verde-vivo)", textDecoration: "none", display: "inline-flex", gap: 7, alignItems: "center" }}
+            >
+              <IconeZap tamanho={16} /> {WHATSAPP_EXIBICAO}
+            </a>
             <span>Neriah · luz — inteligência de dados para quem vive de vender.</span>
           </div>
         </footer>
       </div>
+
+      <BotaoZap />
     </div>
   );
 }

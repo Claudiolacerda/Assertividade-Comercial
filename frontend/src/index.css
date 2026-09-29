@@ -767,3 +767,149 @@ td.texto { white-space: normal; min-width: 260px; }
   .secao { padding: 58px 0; }
   .hero { padding: 52px 0 62px; }
 }
+
+/* =================== planos =================== */
+.planos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.plano {
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 24px 22px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.secao.clara .plano { background: var(--page); }
+
+/* O plano do meio é o que queremos que escolham: destaque discreto, sem gritar */
+.plano.destaque {
+  border-color: var(--verde);
+  border-width: 2px;
+  box-shadow: 0 10px 34px rgba(9, 153, 56, 0.1);
+  position: relative;
+}
+.plano .fita {
+  position: absolute;
+  top: -11px;
+  left: 22px;
+  background: var(--verde);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.plano .nome {
+  font-size: 15px;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+}
+.plano .publico {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+  min-height: 2.6em;
+}
+.plano .preco {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 16px 0 3px;
+}
+.plano .preco .moeda { font-size: 16px; font-weight: 600; color: var(--ink-2); }
+.plano .preco .valor {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.plano .preco .periodo { font-size: 13px; color: var(--ink-muted); }
+.plano .unitario {
+  font-size: 12px;
+  color: var(--verde);
+  font-weight: 620;
+  min-height: 1.3em;
+}
+
+.plano ul {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 22px;
+  display: grid;
+  gap: 9px;
+  flex: 1;
+}
+.plano li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.plano li .v {
+  flex: none;
+  color: var(--verde);
+  font-weight: 800;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.plano .botao {
+  justify-content: center;
+  width: 100%;
+  padding: 11px 18px;
+  font-size: 14px;
+}
+.plano .botao.claro {
+  border-color: var(--borda);
+  color: var(--ink);
+  background: var(--surface);
+}
+.secao.clara .plano .botao.claro { background: var(--surface); }
+.plano .botao.claro:hover { background: var(--surface-2); }
+
+.nota-planos {
+  margin-top: 26px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-align: center;
+}
+.nota-planos strong { color: var(--ink); }
+
+/* =================== WhatsApp =================== */
+.zap-flutuante {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #25d366;
+  color: #062e14;
+  font-weight: 650;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+  transition: transform 0.14s ease;
+}
+.zap-flutuante:hover { transform: translateY(-2px); }
+.zap-flutuante svg { flex: none; }
+
+@media (max-width: 620px) {
+  /* no celular só o ícone, para não cobrir o conteúdo */
+  .zap-flutuante .rotulo-zap { display: none; }
+  .zap-flutuante { padding: 14px; right: 14px; bottom: 14px; }
+}
