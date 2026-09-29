@@ -1,0 +1,40 @@
+# HTTPS automático via Let's Encrypt. O Caddy cuida de emissão e renovação —
+# não há nada a configurar além do domínio apontando para este servidor.
+
+{
+	email {$EMAIL_TLS}
+}
+
+{$DOMINIO}, www.{$DOMINIO} {
+	encode gzip zstd
+
+	# Cabeçalhos de segurança
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# A API e o site ficam no mesmo domínio, então não há CORS no caminho feliz.
+	handle /api/* {
+		reverse_proxy api:8000 {
+			# análise de planilha grande demora mais que o padrão
+			transport http {
+				response_header_timeout 180s
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy web:80
+	}
+
+	log {
+		output file /data/acesso.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

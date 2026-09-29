@@ -9,7 +9,9 @@ venv/
 .env
 backend/.env
 backend/dados_clientes/
+backups-local/
 dados_clientes/
+backups-local/
 
 # Node
 node_modules/
