@@ -3,26 +3,33 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-assert_app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}"
       POSTGRES_DB: ${POSTGRES_DB:-assertividade}
+      # Locale pt_BR para ordenação correta de nomes com acento
+      LANG: pt_BR.utf8
     volumes:
+      # Volume nomeado: os dados sobrevivem a `docker compose down` e a
+      # recriação do contêiner. Sem isto, um `docker rm` apaga tudo.
       - dados_postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-assert_app} -d ${POSTGRES_DB:-assertividade}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
     # Sem "ports": o banco não fica exposto na internet, só na rede interna.
 
   api:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-assert_app}:${POSTGRES_PASSWORD}@banco:5432/${POSTGRES_DB:-assertividade}
-      JWT_SECRET: ${JWT_SECRET:?gere com python3 -c "import secrets; print(secrets.token_urlsafe(48))"}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://${POSTGRES_USER:-assert_app}:${POSTGRES_PASSWORD}@banco:5432/${POSTGRES_DB:-assertividade}}
+      JWT_SECRET: '${JWT_SECRET:?gere com: python -c "import secrets; print(secrets.token_urlsafe(48))"}'
       AMBIENTE: producao
       DIR_UPLOADS: /dados_clientes
-      ORIGENS_PERMITIDAS: ${ORIGENS_PERMITIDAS:-http://localhost:8080}
+      # Mesma origem do site: o Caddy serve front e API no mesmo domínio
+      ORIGENS_PERMITIDAS: ${ORIGENS_PERMITIDAS:-https://${DOMINIO:-localhost}}
       PERMITIR_AUTOCADASTRO: ${PERMITIR_AUTOCADASTRO:-False}
+      TAMANHO_MAX_UPLOAD_MB: ${TAMANHO_MAX_UPLOAD_MB:-25}
     volumes:
       - planilhas:/dados_clientes
     depends_on:
@@ -33,16 +40,51 @@ services:
   web:
     build:
       context: ./frontend
-      args:
-        # A build do frontend embute só caminhos relativos (/api), então o nginx
-        # do próprio contêiner faz o proxy para a api.
-        VITE_BASE: /
-    ports:
-      - "${PORTA_WEB:-8080}:80"
+    # Sem "ports": quem fala com a internet é o Caddy.
     depends_on:
       - api
+    restart: unless-stopped
+
+  # HTTPS automático: o Caddy pede e renova o certificado Let's Encrypt sozinho,
+  # desde que o domínio já aponte para o IP deste servidor.
+  proxy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: "${DOMINIO:?defina DOMINIO no .env, por exemplo neriahdata.com.br}"
+      EMAIL_TLS: "${EMAIL_TLS:?defina EMAIL_TLS no .env — avisos de expiração do certificado}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_dados:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # Backup diário do banco e das planilhas, com retenção de 14 dias.
+  backup:
+    image: postgres:16-alpine
+    environment:
+      PGHOST: banco
+      PGUSER: ${POSTGRES_USER:-assert_app}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-assertividade}
+      RETENCAO_DIAS: ${RETENCAO_DIAS:-14}
+    volumes:
+      - backups:/backups
+      - planilhas:/dados_clientes:ro
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    depends_on:
+      banco:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   dados_postgres:
   planilhas:
+  backups:
+  caddy_dados:
+  caddy_config:
