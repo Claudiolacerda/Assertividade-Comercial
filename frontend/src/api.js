@@ -158,6 +158,30 @@ export const api = {
 
   baixarExcel: (id, nome) => baixar(`/analises/${id}/excel`, nome),
 
+  // ---- relatório de WhatsApp ----
+  previaZap: (id, completo = false) => requisitar(`/analises/${id}/whatsapp?completo=${completo}`),
+
+  enviarZap: (id, dados) =>
+    requisitar(`/analises/${id}/whatsapp/enviar`, { method: "POST", body: JSON.stringify(dados) }),
+
+  situacaoZap: () => requisitar("/whatsapp"),
+
+  salvarZap: (numero) => requisitar("/whatsapp", { method: "PUT", body: JSON.stringify({ numero }) }),
+
+  // ---- cadência ----
+  cadencias: () => requisitar("/cadencias"),
+
+  modelosCadencia: () => requisitar("/cadencias/modelos"),
+
+  cadencia: (id) => requisitar(`/cadencias/${id}`),
+
+  criarCadencia: (dados) => requisitar("/cadencias", { method: "POST", body: JSON.stringify(dados) }),
+
+  salvarCadencia: (id, dados) =>
+    requisitar(`/cadencias/${id}`, { method: "PUT", body: JSON.stringify(dados) }),
+
+  excluirCadencia: (id) => requisitar(`/cadencias/${id}`, { method: "DELETE" }),
+
   // ---- planilha-modelo (público) ----
   baixarModelo: () => baixar("/modelo/planilha-comercial.xlsx", "Modelo_Comercial_Neriah.xlsx"),
 

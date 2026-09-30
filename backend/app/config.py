@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     # CORS (origens do frontend)
     origens_permitidas: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # WhatsApp: vazio = só copiar/abrir no WhatsApp Web (funciona sem credencial)
+    zap_provedor: str = ""  # "evolution" | "cloud" | ""
+    zap_evolution_url: str = ""
+    zap_evolution_token: str = ""
+    zap_evolution_instancia: str = "default"
+    zap_cloud_token: str = ""
+    zap_cloud_phone_id: str = ""
+
     # Cadastro aberto: em produção normalmente False (você cria as contas dos clientes)
     permitir_autocadastro: bool = True
 

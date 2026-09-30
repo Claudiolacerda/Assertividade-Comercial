@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .db import criar_schemas_base
-from .routers import analises, auth, empresas, modelo
+from .routers import analises, auth, cadencias, empresas, modelo, relatorios
 
 log = logging.getLogger("assertividade")
 
@@ -48,6 +48,9 @@ app.include_router(analises.config_router)
 app.include_router(empresas.router)
 app.include_router(empresas.org_router)
 app.include_router(modelo.router)
+app.include_router(relatorios.router)
+app.include_router(relatorios.zap_router)
+app.include_router(cadencias.router)
 
 
 @app.exception_handler(ValueError)

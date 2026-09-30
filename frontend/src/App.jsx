@@ -4,6 +4,7 @@ import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "reac
 import Marca from "./components/Marca";
 import { useAuth } from "./auth";
 import Analise from "./pages/Analise";
+import Cadencia from "./pages/Cadencia";
 import Carteira from "./pages/Carteira";
 import Configuracao from "./pages/Configuracao";
 import Entrada from "./pages/Entrada";
@@ -114,6 +115,11 @@ function Produto() {
             Nova análise
           </NavLink>
         )}
+        {!ehCliente && (
+          <NavLink to="/cadencia" className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
+            Cadência
+          </NavLink>
+        )}
         <NavLink to="/configuracao" className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
           Configuração
         </NavLink>
@@ -138,6 +144,7 @@ function Produto() {
           <Route path="/carteira" element={<Carteira />} />
           <Route path="/nova" element={<Upload />} />
           <Route path="/analises/:id" element={<Analise />} />
+          <Route path="/cadencia" element={<Cadencia />} />
           <Route path="/configuracao" element={<Configuracao />} />
           <Route path="/equipe" element={<Equipe />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -70,6 +70,8 @@ class Empresa(BasePublic):
     slug: Mapped[str] = mapped_column(String(63), unique=True, nullable=False, index=True)
     schema_banco: Mapped[str] = mapped_column(String(63), unique=True, nullable=False)
     segmento: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    # Destino do relatório mensal no WhatsApp
+    whatsapp: Mapped[str | None] = mapped_column(String(30), nullable=True)
     ativa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Configuração da análise desta empresa (metas, vocabulário de status...)
     config_analise: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -175,3 +177,27 @@ class Analise(BaseTenant):
     concluida_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     arquivos: Mapped[list[Arquivo]] = relationship(back_populates="analise", cascade="all, delete-orphan")
+
+
+class Cadencia(BaseTenant):
+    """Um fluxo de cadência desenhado no canvas.
+
+    O grafo inteiro vive em JSONB: o formato é do front (nós e ligações), e
+    guardá-lo assim evita uma tabela de nós que só existiria para ser remontada
+    a cada carregamento.
+    """
+
+    __tablename__ = "cadencias"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nome: Mapped[str] = mapped_column(String(160), nullable=False)
+    descricao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fluxo: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    # de onde veio a sugestão, quando foi gerada a partir de uma análise
+    origem: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    criada_por: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    atualizada_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

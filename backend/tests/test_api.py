@@ -553,3 +553,83 @@ def test_so_admin_liga_modo_agencia(client, org):
 def test_tipo_invalido_e_recusado(client, org):
     dados = org()
     assert client.put("/api/organizacao/tipo", headers=cab(dados), json={"tipo": "qualquer"}).status_code == 422
+
+
+# --------------------------------------------------------------------- #
+# Relatório de WhatsApp
+# --------------------------------------------------------------------- #
+def test_previa_do_relatorio_de_whatsapp(client, org):
+    dados = org("Contabilidade Horizonte")
+    analise = subir(client, dados).json()
+    r = client.get(f"/api/analises/{analise['id']}/whatsapp", headers=cab(dados))
+    assert r.status_code == 200
+    corpo = r.json()
+    t = corpo["texto"]
+    assert "Contabilidade Horizonte — setembro/2026" in t
+    assert "*R$ 3.651,02*" in t  # negrito do WhatsApp, não markdown
+    assert "Assertividade" in t and "25,7%" in t
+    # sem credencial o link wa.me sempre funciona
+    assert corpo["link"].startswith("https://wa.me/")
+    assert corpo["envio_automatico"] is False
+
+
+def test_relatorio_nao_leva_recado_tecnico_ao_cliente(client, org):
+    """Avisos sobre a planilha são de quem opera; o cliente recebe o resultado."""
+    dados = org()
+    analise = subir(client, dados).json()
+    t = client.get(f"/api/analises/{analise['id']}/whatsapp", headers=cab(dados)).json()["texto"]
+    assert "sem gasto e sem impressões" not in t
+    assert "REGRAS_STATUS" not in t and "coluna" not in t.lower()
+
+
+def test_relatorio_completo_traz_a_nota_da_planilha(client, org):
+    dados = org()
+    analise = subir(client, dados).json()
+    t = client.get(
+        f"/api/analises/{analise['id']}/whatsapp?completo=true", headers=cab(dados)
+    ).json()["texto"]
+    assert "6/13 campos" in t
+
+
+def test_relatorio_compara_com_o_mes_anterior(client, org):
+    dados = org()
+    subir(client, dados, mes="2026-08")
+    atual = subir(client, dados).json()
+    t = client.get(f"/api/analises/{atual['id']}/whatsapp", headers=cab(dados)).json()["texto"]
+    # mesmos dados nos dois meses: variação abaixo de 3% não vira notícia
+    assert "mês passado" not in t
+
+
+def test_salvar_whatsapp_do_cliente(client, org):
+    dados = org()
+    r = client.put("/api/whatsapp", headers=cab(dados), json={"numero": "(83) 99853-9248"})
+    assert r.status_code == 200 and r.json()["numero"] == "(83) 99853-9248"
+    analise = subir(client, dados).json()
+    link = client.get(f"/api/analises/{analise['id']}/whatsapp", headers=cab(dados)).json()["link"]
+    assert link.startswith("https://wa.me/5583998539248?text=")
+
+
+def test_numero_invalido_e_recusado(client, org):
+    dados = org()
+    r = client.put("/api/whatsapp", headers=cab(dados), json={"numero": "123"})
+    assert r.status_code == 400
+    assert "não parece válido" in r.json()["detail"] or "dígitos" in r.json()["detail"]
+
+
+def test_envio_sem_provedor_explica_o_caminho(client, org):
+    """Sem credencial o sistema não finge que enviou — diz o que fazer."""
+    dados = org()
+    analise = subir(client, dados).json()
+    r = client.post(
+        f"/api/analises/{analise['id']}/whatsapp/enviar",
+        headers=cab(dados),
+        json={"numero": "83998539248"},
+    )
+    assert r.status_code == 400
+    assert "Abrir no WhatsApp" in r.json()["detail"]
+
+
+def test_relatorio_de_outra_organizacao_e_recusado(client, org):
+    a, b = org("Agência Rho"), org("Agência Sigma")
+    analise = subir(client, a).json()
+    assert client.get(f"/api/analises/{analise['id']}/whatsapp", headers=cab(b)).status_code == 404
