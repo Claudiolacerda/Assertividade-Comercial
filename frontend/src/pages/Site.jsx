@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 
 import Marca from "../components/Marca";
 import Planos, { BotaoZap, IconeZap, WHATSAPP_EXIBICAO, linkZap } from "../components/Planos";
+import Recursos from "../components/Recursos";
 
 const FUNIL = [
   { etapa: "Cliques no link", valor: 516, pct: 100 },
@@ -130,6 +131,9 @@ export default function Site() {
               <a href="#planilha" className="oculta-movel">
                 Sua planilha
               </a>
+              <a href="#cadencia" className="oculta-movel">
+                Cadência
+              </a>
               <a href="#planos" className="oculta-movel">
                 Planos
               </a>
@@ -144,7 +148,7 @@ export default function Site() {
           <div className="limite">
             <span className="etiqueta">
               <span className="ponto" />
-              Meta Ads × planilha comercial
+              Análise · Relatório no WhatsApp · Cadência
             </span>
 
             <h1>
@@ -153,8 +157,9 @@ export default function Site() {
 
             <p className="chamada">
               Você sabe quanto gastou em anúncio. Sabe quantas reuniões aconteceram. O que ninguém
-              te diz é quanto custou <em>cada cliente que assinou</em> — e qual anúncio trouxe ele.
-              A Neriah cruza as duas planilhas e responde isso em segundos.
+              te diz é quanto custou <em>cada cliente que assinou</em> — e o que fazer na segunda-feira.
+              A Neriah cruza as duas planilhas, manda o resultado no WhatsApp do cliente e desenha a
+              cadência para destravar quem ficou no meio do caminho.
             </p>
 
             <div className="acoes">
@@ -287,8 +292,9 @@ export default function Site() {
               <div className="num">3</div>
               <h3>Recebe conclusões, não só gráficos</h3>
               <p>
-                Painel com KPIs, funil e evolução mês a mês — mais a leitura crítica em texto, e a
-                planilha formatada em Excel com as fórmulas vivas para você mandar ao cliente.
+                Painel com KPIs, funil e evolução mês a mês, a leitura crítica em texto e o Excel com
+                fórmulas vivas. O resumo vai pronto para o WhatsApp do cliente — e o Neriah ainda
+                desenha a cadência para destravar quem não fechou.
               </p>
             </div>
           </div>
@@ -318,6 +324,9 @@ export default function Site() {
           </div>
         </div>
       </section>
+
+      {/* ---------------- WhatsApp e cadência ---------------- */}
+      <Recursos />
 
       {/* ---------------- sua planilha ---------------- */}
       <section className="secao clara faixa" id="planilha">

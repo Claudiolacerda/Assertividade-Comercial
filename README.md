@@ -80,6 +80,16 @@ e há teste para isso.
 organização lida do banco (nunca do token). Há testes para as duas fronteiras: entre organizações
 e, dentro da mesma organização, entre o que um usuário `cliente` pode ver.
 
+**Relatório no WhatsApp.** Toda análise vira uma mensagem curta para o cliente final:
+os quatro números que ele cobra, a variação sobre o mês anterior e quem fechar esta semana pelo
+nome. Editável antes de mandar. Três caminhos de envio — copiar, abrir o WhatsApp Web (funciona
+sem nenhuma credencial) ou envio automático via Evolution API ou WhatsApp Cloud API.
+
+**Cadência.** Um canvas onde cada etapa tem canal, dia e roteiro. O diferencial não é desenhar:
+é `POST /api/cadencias {analise_id}`, que monta o fluxo a partir das objeções que a análise
+encontrou — reancorar preço porque N clientes travaram nisso, material para o decisor porque M
+dependem de terceiro, reabrir as oportunidades paradas.
+
 **Planilha-modelo e nota da planilha.** O gargalo real não é o motor, é a coluna que falta na
 planilha do cliente. Toda análise devolve uma `cobertura` — quantos dos 13 campos foram
 reconhecidos e o que cada ausência está custando em indicador — e `/api/modelo/planilha-comercial.xlsx`
