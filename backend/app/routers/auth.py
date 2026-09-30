@@ -46,7 +46,13 @@ def _slug_livre(db: Session, base: str, modelo) -> str:
     return slug
 
 
-def criar_empresa(db: Session, organizacao: Organizacao, nome: str, segmento: str | None = None) -> Empresa:
+def criar_empresa(
+    db: Session,
+    organizacao: Organizacao,
+    nome: str,
+    segmento: str | None = None,
+    whatsapp: str | None = None,
+) -> Empresa:
     """Cria o cliente e o schema dele. Usado no cadastro e ao adicionar à carteira."""
     slug = _slug_livre(db, gerar_slug(nome), Empresa)
     empresa = Empresa(
@@ -55,6 +61,7 @@ def criar_empresa(db: Session, organizacao: Organizacao, nome: str, segmento: st
         slug=slug,
         schema_banco=nome_schema(slug),
         segmento=segmento,
+        whatsapp=whatsapp,
     )
     db.add(empresa)
     db.flush()

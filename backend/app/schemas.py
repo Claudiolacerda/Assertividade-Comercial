@@ -51,9 +51,31 @@ class TipoOrganizacao(BaseModel):
     tipo: str = Field(pattern="^(agencia|direta)$")
 
 
+class RelatorioZap(BaseModel):
+    """Prévia do relatório de WhatsApp."""
+
+    texto: str
+    link: str
+    numero: str | None = None
+    envio_automatico: bool = False
+    provedor: str | None = None
+
+
+class EnvioZap(BaseModel):
+    numero: str | None = None
+    # texto vazio = usa o gerado na hora; preenchido = o que a agência editou
+    texto: str | None = None
+    completo: bool = False
+
+
+class TextoZap(BaseModel):
+    numero: str | None = Field(default=None, max_length=30)
+
+
 class NovaEmpresa(BaseModel):
     nome: str = Field(min_length=2, max_length=160)
     segmento: str | None = Field(default=None, max_length=80)
+    whatsapp: str | None = Field(default=None, max_length=30)
 
 
 class OrganizacaoOut(BaseModel):
@@ -73,6 +95,7 @@ class EmpresaOut(BaseModel):
     nome: str
     slug: str
     segmento: str | None = None
+    whatsapp: str | None = None
 
 
 class UsuarioOut(BaseModel):
@@ -137,3 +160,36 @@ class ConfigAnaliseIn(BaseModel):
 
     def apenas_preenchidos(self) -> dict[str, Any]:
         return {k: v for k, v in self.model_dump().items() if v is not None}
+
+
+# ---- Cadência -------------------------------------------------------------- #
+class NovaCadencia(BaseModel):
+    nome: str | None = Field(default=None, max_length=160)
+    # exatamente uma origem: modelo pronto, sugestão de análise, ou nenhuma (branco)
+    modelo: str | None = None
+    analise_id: int | None = None
+
+
+class CadenciaIn(BaseModel):
+    nome: str | None = Field(default=None, max_length=160)
+    descricao: str | None = None
+    fluxo: dict[str, Any] | None = None
+
+
+class CadenciaResumo(BaseModel):
+    id: int
+    nome: str
+    descricao: str | None = None
+    etapas: int
+    atualizada_em: datetime
+
+
+class CadenciaDetalhe(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nome: str
+    descricao: str | None = None
+    fluxo: dict[str, Any]
+    origem: dict[str, Any] | None = None
+    atualizada_em: datetime

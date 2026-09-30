@@ -913,3 +913,166 @@ td.texto { white-space: normal; min-width: 260px; }
   .zap-flutuante .rotulo-zap { display: none; }
   .zap-flutuante { padding: 14px; right: 14px; bottom: 14px; }
 }
+
+/* =================== canvas de cadência =================== */
+.editor-cadencia {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+}
+.editor-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--borda);
+  background: var(--surface);
+}
+.editor-corpo { flex: 1; display: flex; min-height: 0; }
+
+.paleta {
+  width: 186px;
+  flex: none;
+  border-right: 1px solid var(--borda);
+  background: var(--surface);
+  padding: 14px 12px;
+  overflow-y: auto;
+}
+.paleta-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+.paleta-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  padding: 8px 10px;
+}
+.paleta-dica { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; margin-top: 14px; }
+
+.tela-fluxo { flex: 1; position: relative; min-width: 0; }
+.fluxo-vazio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+.inspetor {
+  width: 300px;
+  flex: none;
+  border-left: 1px solid var(--borda);
+  background: var(--surface);
+  padding: 16px 14px;
+  overflow-y: auto;
+}
+.inspetor textarea { font-family: var(--fonte); resize: vertical; line-height: 1.5; }
+.inspetor code {
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+
+/* ---- o nó ---- */
+.no-etapa {
+  width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--cor-canal);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: var(--sombra);
+  font-family: var(--fonte);
+}
+.no-etapa.selecionado {
+  border-color: var(--verde);
+  border-left-color: var(--cor-canal);
+  box-shadow: 0 0 0 2px var(--verde-fundo), var(--sombra);
+}
+.no-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.no-canal { font-size: 11px; font-weight: 650; color: var(--cor-canal); }
+.no-dia {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-variant-numeric: tabular-nums;
+}
+.no-titulo { font-size: 13px; font-weight: 640; color: var(--ink); margin-top: 6px; line-height: 1.3; }
+.no-texto {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-top: 5px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* handles do React Flow com a cor do canal */
+.no-etapa .react-flow__handle {
+  width: 9px;
+  height: 9px;
+  background: var(--surface);
+  border: 2px solid var(--cor-canal);
+}
+
+/* o React Flow tem tema próprio; aqui ele passa a obedecer os tokens da marca */
+.react-flow__edge-path { stroke: var(--axis); stroke-width: 2; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--verde); }
+.react-flow__controls-button {
+  background: var(--surface);
+  border-bottom: 1px solid var(--borda);
+  fill: var(--ink-2);
+}
+.react-flow__minimap {
+  background: var(--surface);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+.react-flow__attribution { background: transparent; font-size: 10px; }
+.react-flow__attribution a { color: var(--ink-muted); }
+
+/* ---- cartões de modelo ---- */
+.modelo-cadencia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  text-align: left;
+  padding: 15px;
+  border-radius: 11px;
+  height: 100%;
+}
+.modelo-cadencia:hover:not(:disabled) { border-color: var(--verde); }
+.modelo-cadencia .nome { font-weight: 650; font-size: 14px; }
+.modelo-cadencia .desc { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.modelo-cadencia .etapas { font-size: 11.5px; color: var(--verde); font-weight: 620; margin-top: auto; }
+
+.destaque-sugestao { border-left: 3px solid var(--verde); }
+
+@media (max-width: 900px) {
+  .paleta { width: 64px; }
+  .paleta-item { justify-content: center; font-size: 0; gap: 0; padding: 10px 6px; }
+  .paleta-item span { font-size: 17px; }
+  .paleta-titulo, .paleta-dica { display: none; }
+  .inspetor { position: absolute; right: 0; top: 0; bottom: 0; z-index: 5; box-shadow: var(--sombra-alta); }
+}

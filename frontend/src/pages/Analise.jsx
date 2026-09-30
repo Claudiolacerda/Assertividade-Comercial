@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import { useAuth } from "../auth";
+
 import { api } from "../api";
 import {
   GraficoCampanhas,
@@ -10,6 +12,7 @@ import {
   GraficoStatus,
 } from "../components/Charts";
 import NotaPlanilha from "../components/NotaPlanilha";
+import RelatorioZap from "../components/RelatorioZap";
 import { Diagnostico, TabelaDados, Tile } from "../components/Painel";
 
 const ABAS = [
@@ -17,11 +20,13 @@ const ABAS = [
   { id: "trafego", titulo: "Tráfego pago" },
   { id: "comercial", titulo: "Comercial" },
   { id: "pipeline", titulo: "Pipeline e objeções" },
+  { id: "relatorio", titulo: "Relatório WhatsApp" },
   { id: "qualidade", titulo: "Qualidade dos dados" },
 ];
 
 export default function Analise() {
   const { id } = useParams();
+  const { empresa } = useAuth();
   const [analise, setAnalise] = useState(null);
   const [erro, setErro] = useState("");
   const [aba, setAba] = useState("resumo");
@@ -218,6 +223,12 @@ export default function Analise() {
             subtitulo="Cliente a cliente, com os sinais identificados."
             linhas={tabela("observacoes")}
           />
+        </div>
+      )}
+
+      {aba === "relatorio" && (
+        <div className="grade">
+          <RelatorioZap analiseId={analise.id} nomeCliente={empresa?.nome} />
         </div>
       )}
 

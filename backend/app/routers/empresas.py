@@ -86,7 +86,7 @@ def adicionar(dados: NovaEmpresa, sessao: Sessao = Depends(admin_sessao), db: Se
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Já existe um cliente com esse nome na sua carteira."
         )
-    empresa = criar_empresa(db, sessao.organizacao, nome, dados.segmento)
+    empresa = criar_empresa(db, sessao.organizacao, nome, dados.segmento, dados.whatsapp)
     db.commit()
     return EmpresaOut.model_validate(empresa)
 
