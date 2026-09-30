@@ -1076,3 +1076,100 @@ td.texto { white-space: normal; min-width: 260px; }
   .paleta-titulo, .paleta-dica { display: none; }
   .inspetor { position: absolute; right: 0; top: 0; bottom: 0; z-index: 5; box-shadow: var(--sombra-alta); }
 }
+
+/* =================== vitrine do WhatsApp e da cadência =================== */
+.palco-zap {
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  border-radius: 16px;
+  background:
+    radial-gradient(70% 60% at 50% 30%, rgba(37, 211, 102, 0.1), transparent 70%),
+    var(--surface);
+  border: 1px solid var(--borda);
+}
+/* o palco fica sempre um degrau acima do fundo da seção, nos dois casos */
+.secao.clara .palco-zap { background:
+    radial-gradient(70% 60% at 50% 30%, rgba(37, 211, 102, 0.1), transparent 70%),
+    var(--page); }
+
+.bolha-zap {
+  position: relative;
+  max-width: 330px;
+  background: #dcf8c6;
+  color: #0b1f13;
+  border-radius: 12px 12px 12px 3px;
+  padding: 13px 15px 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 6px 22px rgba(10, 20, 18, 0.14);
+}
+:root[data-theme="dark"] .bolha-zap { background: #075e54; color: #eaf6ef; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .bolha-zap { background: #075e54; color: #eaf6ef; }
+}
+.bolha-zap .forte { font-weight: 700; }
+.bolha-zap .hora {
+  text-align: right;
+  font-size: 10.5px;
+  opacity: 0.6;
+  margin-top: 7px;
+}
+
+.palco-fluxo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 30px 34px;
+  margin-top: 8px;
+}
+.mini-etapa {
+  position: relative;
+  background: var(--page);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--cor-canal);
+  border-radius: 11px;
+  padding: 13px 15px;
+}
+.secao.alterna .mini-etapa { background: var(--surface); }
+.mini-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mini-canal { font-size: 11px; font-weight: 700; color: var(--cor-canal); }
+.mini-dia {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.mini-titulo { font-size: 14px; font-weight: 650; margin-top: 7px; }
+.mini-texto { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.45; }
+/* seta ligando os cartões — some na última coluna e no empilhamento */
+.mini-seta {
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  width: 16px;
+  height: 2px;
+  background: var(--axis);
+}
+.mini-seta::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  border-left: 6px solid var(--axis);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+@media (max-width: 760px) {
+  .mini-seta { display: none; }
+}
+
+.nota-fluxo {
+  margin-top: 26px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  max-width: 78ch;
+  line-height: 1.6;
+}
