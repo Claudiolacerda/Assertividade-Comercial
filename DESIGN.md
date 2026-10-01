@@ -576,6 +576,52 @@ A oportunidade principal, promovida acima dos KPIs: lavagem verde, borda verde,
 ícone de nível e a frase em 16px/560. É a linha que paga a assinatura, e antes
 ela tinha o mesmo peso de uma observação informativa no meio de dezoito.
 
+### Movimento
+
+Uma curva e três durações, e cada duração significa uma distância.
+
+| Token | Valor | Para quê |
+|---|---|---|
+| `--curva` | `cubic-bezier(0.16, 1, 0.3, 1)` | Toda chegada. Desaceleração natural, sem salto elástico |
+| `--t-feedback` | 130ms | Hover, cor, foco — o que responde ao dedo |
+| `--t-estado` | 210ms | Aba, alternador, prévia — o que muda de estado |
+| `--t-camada` | 300ms | Inspetor, sanfona — o que se move no espaço |
+
+**A Regra da Saída Mais Rápida.** Pressionar um botão dura 70ms, metade de
+qualquer outra coisa. Esperar para algo sumir lê como latência, nunca como
+cuidado.
+
+**A Regra do Movimento Que Explica.** Cada animação do sistema responde a uma
+pergunta: o indicador de aba diz *de onde para onde* você foi; o inspetor entra
+pela direita porque é de lá que ele vem; a seta do recolher gira para dizer em
+que estado o botão está. Movimento que não responde a nada é dívida.
+
+**A Regra da Entrada Onde Algo Chega.** O produto não tem coreografia de
+carregamento. A única entrada encadeada é a dos KPIs, porque ali o conteúdo
+realmente chega depois da análise — 240ms cada, 35ms de intervalo, **teto de
+175ms no atraso total**. Passar disso deixa de ser chegada e vira espera.
+
+**A Regra do Padrão Visível.** Nenhuma animação parte de invisível por JavaScript.
+Se o script falhar, o conteúdo está lá.
+
+Técnicas: o indicador de aba e o polegar do alternador são posicionados por
+**medição** (`useLayoutEffect` + `offsetLeft`/`offsetWidth`), nunca por cálculo —
+os rótulos têm larguras diferentes e a barra rola no celular. Ambos usam
+`translateX` + `scaleX` sobre um elemento de 1px, em vez de animar `width`, que
+é propriedade de layout. A sanfona usa `grid-template-rows: 0fr → 1fr`, a única
+forma de animar altura automática sem medir nada e sem travar num `max-height`
+chutado.
+
+Medido: 58 fps no desktop e 56 no celular durante troca de aba mais sanfona,
+com `transform`, `opacity` e cor apenas. Nenhuma biblioteca de animação.
+
+**Movimento reduzido.** Sai todo deslocamento no espaço: varredura, entrada
+encadeada, deslizes, viagem do indicador. **Fica o feedback que confirma uma
+ação** — o afundar do botão, a cor, a opacidade. A ordem das regras importa:
+pressionar é também estar com o mouse em cima, então a regra de `:hover` precisa
+vir **antes** da de `:active`, ou o botão fica mudo para quem mais precisa da
+confirmação.
+
 ### O Facho — o momento de assinatura
 
 O único efeito extraordinário do sistema, e ele vive em um lugar só: o painel
@@ -660,3 +706,9 @@ o lockup inteiro escala proporcionalmente com um único número.
   regra acima explica por quê.
 - **Don't** trocar o `linear` do facho por easing sem recalcular os atrasos de
   cada elemento.
+- **Don't** animar `width`, `height`, `top`, `left` ou margem. Use `transform`,
+  `scaleX` ou `grid-template-rows`.
+- **Don't** dar entrada a uma seção só porque ela existe. Entrada é para
+  conteúdo que chega.
+- **Don't** pôr a regra de `:hover` depois da de `:active` no bloco de
+  movimento reduzido.

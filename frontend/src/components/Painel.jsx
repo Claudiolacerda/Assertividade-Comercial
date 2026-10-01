@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { formatar } from "./Charts";
-import { IconeAtencao, IconeOk, ICONES_NIVEL } from "./Icones";
+import { IconeAtencao, IconeOk, IconeQueda, ICONES_NIVEL } from "./Icones";
 
 /** Número em destaque. Quando há meta, o selo traz ícone + texto (nunca só cor). */
 export function Tile({ kpi, destaque = false }) {
@@ -148,10 +148,21 @@ export function Diagnostico({ itens }) {
             onClick={() => setAbertos((v) => !v)}
             aria-expanded={abertos}
           >
+            <span className="seta">
+              <IconeQueda tamanho={13} />
+            </span>
             {abertos ? "Ocultar" : "Ver"} dentro da meta e informações
             <span className="conta">{resto.length}</span>
           </button>
-          {abertos && resto.map((d, i) => <Linha item={d} key={i} />)}
+          {/* grid-template-rows 0fr->1fr: a única forma de animar "altura
+              automática" sem medir nada em JS nem travar em max-height chutado. */}
+          <div className={`sanfona${abertos ? " aberta" : ""}`}>
+            <div>
+              {resto.map((d, i) => (
+                <Linha item={d} key={i} />
+              ))}
+            </div>
+          </div>
         </section>
       )}
     </div>

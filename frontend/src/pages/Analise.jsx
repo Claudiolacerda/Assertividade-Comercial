@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAuth } from "../auth";
@@ -30,6 +30,28 @@ export default function Analise() {
   const [analise, setAnalise] = useState(null);
   const [erro, setErro] = useState("");
   const [aba, setAba] = useState("resumo");
+  const barraAbas = useRef(null);
+
+  /* O indicador é posicionado por medição, não por cálculo: os rótulos têm
+     larguras diferentes e a barra rola no celular. useLayoutEffect para a
+     posição valer já na primeira pintura, sem salto. */
+  useLayoutEffect(() => {
+    const barra = barraAbas.current;
+    if (!barra) return;
+    const ativa = barra.querySelector(".aba.ativa");
+    if (!ativa) return;
+    const mover = () => {
+      barra.style.setProperty("--ind-x", `${ativa.offsetLeft}px`);
+      barra.style.setProperty("--ind-w", `${ativa.offsetWidth}px`);
+    };
+    mover();
+    const ro = new ResizeObserver(mover);
+    ro.observe(barra);
+    return () => ro.disconnect();
+    // `analise` entra nas dependências porque as abas só existem depois que o
+    // resultado chega: sem isso o efeito roda cedo demais, não acha a aba ativa
+    // e o indicador fica invisível até a primeira troca.
+  }, [aba, analise]);
   const [baixando, setBaixando] = useState(false);
 
   useEffect(() => {
@@ -93,7 +115,10 @@ export default function Analise() {
 
       {/* role/aria-selected são o que diz ao leitor de tela qual visão está
           aberta: o sublinhado verde sozinho não é exposto a ninguém. */}
-      <div className="abas" role="tablist" aria-label="Visões da análise">
+      <div className="abas" role="tablist" aria-label="Visões da análise" ref={barraAbas}>
+        {/* Um indicador só, que viaja entre as abas. Seis sublinhados que acendem
+            e apagam não dizem de onde para onde você foi; este diz. */}
+        <span className="indicador-aba" aria-hidden="true" />
         {ABAS.map((a) => (
           <button
             key={a.id}
