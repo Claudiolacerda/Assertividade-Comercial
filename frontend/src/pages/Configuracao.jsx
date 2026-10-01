@@ -182,7 +182,7 @@ export default function Configuracao() {
             <label style={{ display: "flex", gap: 9, alignItems: "flex-start", fontWeight: 500 }}>
               <input
                 type="checkbox"
-                style={{ width: "auto", marginTop: 3 }}
+                style={{ marginTop: 2 }}
                 checked={Boolean(config.classificar_perda_pela_observacao)}
                 onChange={(e) =>
                   setConfig((c) => ({ ...c, classificar_perda_pela_observacao: e.target.checked }))
@@ -202,7 +202,7 @@ export default function Configuracao() {
             <label style={{ display: "flex", gap: 9, alignItems: "flex-start", fontWeight: 500 }}>
               <input
                 type="checkbox"
-                style={{ width: "auto", marginTop: 3 }}
+                style={{ marginTop: 2 }}
                 checked={Boolean(config.sem_origem_considerar_pago)}
                 onChange={(e) =>
                   setConfig((c) => ({ ...c, sem_origem_considerar_pago: e.target.checked }))

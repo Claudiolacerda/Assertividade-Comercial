@@ -4,6 +4,8 @@
  * dela. O botão de cada plano abre o WhatsApp com a mensagem já escrita — em
  * venda consultiva o primeiro passo é a conversa, não o cartão de crédito. */
 
+import { IconeCheck } from "./Icones";
+
 export const WHATSAPP = "5583998539248";
 export const WHATSAPP_EXIBICAO = "(83) 99853-9248";
 
@@ -92,7 +94,6 @@ export default function Planos() {
     <section className="secao clara faixa" id="planos">
       <div className="limite">
         <div className="secao-topo">
-          <div className="super">Planos</div>
           <h2>Custa menos que um cliente perdido</h2>
           <p>
             Preço por cliente analisado, porque é assim que a sua conta fecha. Sem fidelidade e sem
@@ -117,7 +118,7 @@ export default function Planos() {
               <ul>
                 {p.itens.map((i) => (
                   <li key={i}>
-                    <span className="v">✓</span>
+                    <span className="v"><IconeCheck tamanho={11} /></span>
                     <span>{i}</span>
                   </li>
                 ))}

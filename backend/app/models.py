@@ -30,7 +30,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 # --------------------------------------------------------------------------- #
@@ -167,10 +167,15 @@ class Analise(BaseTenant):
     status: Mapped[str] = mapped_column(String(20), default="processando", nullable=False)
     erro: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Resultado completo (KPIs, diagnóstico, tabelas) — o painel lê daqui
-    resultado: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # JSON e não JSONB: o JSONB normaliza o objeto e REORDENA as chaves por
+    # tamanho, o que embaralha a ordem das colunas de toda tabela do resultado
+    # ("Clientes" vinha antes de "Sinal na observação" porque é mais curto).
+    # Aqui a ordem é informação: ela é a ordem de leitura da tabela na tela e
+    # no Excel. O JSON guarda o texto como veio.
+    resultado: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     # KPIs achatados para o gráfico de evolução e para a carteira da agência
-    kpis_resumo: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    config_usada: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    kpis_resumo: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    config_usada: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     caminho_excel: Mapped[str | None] = mapped_column(Text, nullable=True)
     criada_por: Mapped[int | None] = mapped_column(Integer, nullable=True)
     criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

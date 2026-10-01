@@ -2,6 +2,9 @@
  * que a equipe executa. Mostradas com conteúdo real — o mesmo texto e o mesmo
  * fluxo que a análise de setembro gerou. */
 
+import { CANAIS } from "./EtapaCadencia";
+import { IconeCheck } from "./Icones";
+
 const MENSAGEM = [
   { t: "*Contabilidade Horizonte — setembro/2026*", forte: true },
   { t: "" },
@@ -21,10 +24,10 @@ const MENSAGEM = [
 ];
 
 const ETAPAS = [
-  { canal: "Nota", cor: "#d0567f", dia: 0, titulo: "7 clientes quentes", texto: "Nilton, Arnaldo, Josefina, Jonas…" },
-  { canal: "Ligação", cor: "#2a78d6", dia: 0, titulo: "Ligar para os quentes", texto: "Objetivo: marcar a assinatura." },
-  { canal: "WhatsApp", cor: "#25d366", dia: 1, titulo: "Reancorar valor", texto: "9 clientes travaram em preço." },
-  { canal: "Reunião", cor: "#099938", dia: 4, titulo: "Call com os dois", texto: "6 dependem de um decisor oculto." },
+  { chave: "nota", dia: 0, titulo: "7 clientes quentes", texto: "Nilton, Arnaldo, Josefina, Jonas…" },
+  { chave: "ligacao", dia: 0, titulo: "Ligar para os quentes", texto: "Objetivo: marcar a assinatura." },
+  { chave: "whatsapp", dia: 1, titulo: "Reancorar valor", texto: "9 clientes travaram em preço." },
+  { chave: "reuniao", dia: 4, titulo: "Call com os dois", texto: "6 dependem de um decisor oculto." },
 ];
 
 function Bolha() {
@@ -52,7 +55,6 @@ export default function Recursos() {
         <div className="limite duas-colunas">
           <div>
             <div className="secao-topo" style={{ marginBottom: 22 }}>
-              <div className="super">Relatório no WhatsApp</div>
               <h2>O seu cliente não abre dashboard. Ele abre o WhatsApp.</h2>
               <p>
                 Todo mês a análise vira uma mensagem que cabe numa tela: os números que o dono do
@@ -61,27 +63,27 @@ export default function Recursos() {
             </div>
             <ul className="lista-check">
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Editável antes de mandar</b> — quem assina o relatório é você, não o gerador.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Funciona no primeiro dia</b> — abre o WhatsApp com a mensagem pronta, sem
                   precisar configurar nada.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Ou automático</b> — conecte a sua Evolution API ou a API oficial da Meta e o
                   envio sai sozinho.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Sem recado técnico</b> — o que é problema de planilha fica no painel, não vai
                   para o cliente.
@@ -100,7 +102,6 @@ export default function Recursos() {
       <section className="secao alterna faixa" id="cadencia">
         <div className="limite">
           <div className="secao-topo">
-            <div className="super">Cadência</div>
             <h2>Descobrir onde trava é metade. A outra é o que fazer na segunda.</h2>
             <p>
               Um canvas para desenhar o follow-up da equipe — arrastar, ligar, editar. A diferença
@@ -111,9 +112,19 @@ export default function Recursos() {
 
           <div className="palco-fluxo">
             {ETAPAS.map((e, i) => (
-              <div key={e.titulo} className="mini-etapa" style={{ "--cor-canal": e.cor }}>
+              <div
+                key={e.titulo}
+                className="mini-etapa"
+                style={{ "--cor-canal": CANAIS[e.chave].cor, "--cor-canal-texto": CANAIS[e.chave].corTexto }}
+              >
                 <div className="mini-topo">
-                  <span className="mini-canal">{e.canal}</span>
+                  <span className="mini-canal">
+                    {(() => {
+                      const I = CANAIS[e.chave].Icone;
+                      return <I tamanho={13} />;
+                    })()}
+                    {CANAIS[e.chave].rotulo}
+                  </span>
                   <span className="mini-dia">D+{e.dia}</span>
                 </div>
                 <div className="mini-titulo">{e.titulo}</div>

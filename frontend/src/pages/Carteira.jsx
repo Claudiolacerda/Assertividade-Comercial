@@ -25,7 +25,7 @@ function Variacao({ valor, formato, melhorQuando }) {
       style={{
         fontSize: 11,
         fontWeight: 650,
-        color: bom ? "var(--sucesso-texto)" : "var(--critico)",
+        color: bom ? "var(--sucesso-texto)" : "var(--critico-texto)",
         marginLeft: 6,
         whiteSpace: "nowrap",
       }}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../api";
-import { GraficoEvolucao, S1, S2, S3, formatar } from "../components/Charts";
+import { GraficoEvolucao, S1, S2, S3, dataHora, formatar, mesPorExtenso } from "../components/Charts";
 import { useAuth } from "../auth";
 
 const COLUNAS = [
@@ -118,9 +118,11 @@ export default function Historico() {
               {analises.map((a) => (
                 <tr key={a.id}>
                   <td>
-                    <Link to={`/analises/${a.id}`}>{a.mes_referencia}</Link>
+                    <Link to={`/analises/${a.id}`}>{mesPorExtenso(a.mes_referencia)}</Link>
                   </td>
-                  <td>v{a.versao}</td>
+                  <td>
+                    <span className="pastilha-versao">v{a.versao}</span>
+                  </td>
                   {COLUNAS.map((c) => (
                     <td key={c.chave} className="num">
                       {a.kpis_resumo?.[c.chave] == null
@@ -128,7 +130,7 @@ export default function Historico() {
                         : formatar(a.kpis_resumo[c.chave], c.formato)}
                     </td>
                   ))}
-                  <td>{new Date(a.criada_em).toLocaleDateString("pt-BR")}</td>
+                  <td>{dataHora(a.criada_em)}</td>
                   <td style={{ textAlign: "right" }}>
                     <button
                       className="discreto"

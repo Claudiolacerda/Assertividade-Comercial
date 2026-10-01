@@ -12,6 +12,7 @@ import Equipe from "./pages/Equipe";
 import Historico from "./pages/Historico";
 import Site from "./pages/Site";
 import Upload from "./pages/Upload";
+import { IconeLua, IconeSol } from "./components/Icones";
 
 const CHAVE_TEMA = "neriah_tema";
 
@@ -37,7 +38,7 @@ function BotaoTema() {
 
   return (
     <button className="discreto" onClick={() => setTema(tema === "dark" ? "light" : "dark")} title="Alternar tema">
-      {tema === "dark" ? "☀️ claro" : "🌙 escuro"}
+      {tema === "dark" ? <><IconeSol tamanho={14} /> claro</> : <><IconeLua tamanho={14} /> escuro</>}
     </button>
   );
 }
@@ -94,6 +95,11 @@ function Produto() {
   const { usuario, empresa, sair, temCarteira, ehCliente } = useAuth();
   return (
     <div className="app">
+      {/* Sem isto, chegar às abas significa tabular a barra lateral inteira
+          em toda página. */}
+      <a className="pular" href="#conteudo">
+        Pular para o conteúdo
+      </a>
       <nav className="barra-lateral">
         <div className="marca-barra">
           <Marca tamanho={17} />
@@ -137,7 +143,7 @@ function Produto() {
         </div>
       </nav>
 
-      <main className="conteudo">
+      <main className="conteudo" id="conteudo" tabIndex={-1}>
         {/* A key força as telas a recarregar quando o cliente em foco muda */}
         <Routes key={empresa?.id || "sem-empresa"}>
           <Route path="/" element={<Historico />} />

@@ -5,11 +5,20 @@
  * torna a demonstração convincente: quem chega vê exatamente o tipo de conclusão
  * que vai receber. */
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import Marca from "../components/Marca";
 import Planos, { BotaoZap, IconeZap, WHATSAPP_EXIBICAO, linkZap } from "../components/Planos";
 import Recursos from "../components/Recursos";
+import {
+  ICONES_NIVEL,
+  IconeAtencao,
+  IconeCheck,
+  IconeDiagonal,
+  IconeQueda,
+  IconeSubida,
+} from "../components/Icones";
 
 const FUNIL = [
   { etapa: "Cliques no link", valor: 516, pct: 100 },
@@ -21,7 +30,7 @@ const FUNIL = [
 
 const DIAGNOSTICOS = [
   {
-    ic: "⚠️",
+    nivel: "atencao",
     tx: (
       <>
         3 clientes marcados como <b>Fechado</b> têm observação de quem ainda vai decidir. Se não
@@ -30,7 +39,7 @@ const DIAGNOSTICOS = [
     ),
   },
   {
-    ic: "🔴",
+    nivel: "critico",
     tx: (
       <>
         4 dos 9 fechamentos têm marcação de parceiro no nome. Se vieram de indicação, o{" "}
@@ -39,7 +48,7 @@ const DIAGNOSTICOS = [
     ),
   },
   {
-    ic: "🔥",
+    nivel: "quente",
     tx: (
       <>
         <b>7 clientes quentes</b> para fechar agora: Nilton, Arnaldo, Josefina, Jonas, Lauro, Romildo,
@@ -48,7 +57,7 @@ const DIAGNOSTICOS = [
     ),
   },
   {
-    ic: "⚠️",
+    nivel: "atencao",
     tx: (
       <>
         11 oportunidades em aberto há mais de 15 dias. Vale follow-up ou dar como perdida.
@@ -114,6 +123,7 @@ const CONCLUSOES = [
 ];
 
 export default function Site() {
+  const [menuAberto, setMenuAberto] = useState(false);
   return (
     <div className="site">
       {/* ---------------- topo + hero ---------------- */}
@@ -121,20 +131,35 @@ export default function Site() {
         <header className="topo faixa">
           <div className="limite">
             <Marca tamanho={19} />
-            <nav>
-              <a href="#como" className="oculta-movel">
+            {/* Sem isto, no celular "Planos" e "Como funciona" eram inalcançáveis:
+                o único caminho até o preço era rolar a página inteira. */}
+            <button
+              className="menu-movel"
+              aria-expanded={menuAberto}
+              aria-controls="nav-site"
+              onClick={() => setMenuAberto((v) => !v)}
+            >
+              <span className="barrinhas" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              Menu
+            </button>
+            <nav id="nav-site" className={menuAberto ? "aberto" : ""} onClick={() => setMenuAberto(false)}>
+              <a href="#como">
                 Como funciona
               </a>
-              <a href="#conclusoes" className="oculta-movel">
+              <a href="#conclusoes">
                 O que ele conclui
               </a>
-              <a href="#planilha" className="oculta-movel">
+              <a href="#planilha">
                 Sua planilha
               </a>
-              <a href="#cadencia" className="oculta-movel">
+              <a href="#cadencia">
                 Cadência
               </a>
-              <a href="#planos" className="oculta-movel">
+              <a href="#planos">
                 Planos
               </a>
               <Link className="botao verde" to="/entrar" style={{ padding: "9px 18px", fontSize: 14 }}>
@@ -183,7 +208,7 @@ export default function Site() {
               <div className="demo">
                 <div className="demo-tiles">
                   <div className="demo-tile forte">
-                    <div className="r">⭐ ASSERTIVIDADE</div>
+                    <div className="r">ASSERTIVIDADE</div>
                     <div className="v">25,7%</div>
                     <div className="d">9 fechados ÷ 35 reuniões</div>
                   </div>
@@ -195,7 +220,7 @@ export default function Site() {
                   <div className="demo-tile">
                     <div className="r">CUSTO POR LEAD</div>
                     <div className="v">R$ 45,07</div>
-                    <div className="d">⚠ acima da meta</div>
+                    <div className="d">acima da meta</div>
                   </div>
                   <div className="demo-tile">
                     <div className="r">INVESTIMENTO</div>
@@ -222,8 +247,11 @@ export default function Site() {
                     <h4>O que os números estão dizendo</h4>
                     {DIAGNOSTICOS.map((d, i) => (
                       <div className="demo-diag" key={i}>
-                        <span className="ic" aria-hidden="true">
-                          {d.ic}
+                        <span className={`ic n-${d.nivel}`}>
+                          {(() => {
+                            const I = ICONES_NIVEL[d.nivel];
+                            return <I tamanho={13} />;
+                          })()}
                         </span>
                         <span className="tx">{d.tx}</span>
                       </div>
@@ -261,7 +289,6 @@ export default function Site() {
       <section className="secao clara faixa" id="como">
         <div className="limite">
           <div className="secao-topo">
-            <div className="super">Como funciona</div>
             <h2>Três passos. Nenhuma planilha reformatada.</h2>
             <p>
               A maior parte das ferramentas exige que você arrume a planilha antes. A Neriah faz o
@@ -305,7 +332,6 @@ export default function Site() {
       <section className="secao alterna faixa" id="conclusoes">
         <div className="limite">
           <div className="secao-topo">
-            <div className="super">Inteligência, não relatório</div>
             <h2>Ela chega às próprias conclusões — inclusive as incômodas</h2>
             <p>
               Um dashboard comum mostra o número. A Neriah avisa quando o número não merece
@@ -333,7 +359,6 @@ export default function Site() {
         <div className="limite duas-colunas">
           <div>
             <div className="secao-topo" style={{ marginBottom: 26 }}>
-              <div className="super">Sua planilha</div>
               <h2>O mínimo é duas colunas. O resto vai destravando.</h2>
               <p>
                 Nada de projeto de implantação. Se a sua planilha tem cliente e etapa, você já tem
@@ -342,32 +367,32 @@ export default function Site() {
             </div>
             <ul className="lista-check">
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Cliente + etapa do funil</b> — o mínimo. Já entrega assertividade, funil, CAC e
                   pipeline.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Valor do contrato</b> — libera receita, ticket médio, ROAS e ROI.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Campanha</b> — mostra qual anúncio realmente vende, com CAC por campanha.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Quem fez</b> — compara assertividade entre vendedores.
                 </span>
               </li>
               <li>
-                <span className="v">✓</span>
+                <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
                   <b>Motivo da perda</b> — win rate confiável e o que mais trava a venda.
                 </span>
@@ -411,7 +436,7 @@ export default function Site() {
                     fontSize: 13.5,
                   }}
                 >
-                  <span style={{ color: "var(--atencao)" }}>⚠</span>
+                  <span style={{ color: "var(--atencao-texto)", display: "inline-flex" }}><IconeAtencao tamanho={13} /></span>
                   <span style={{ color: "var(--ink)" }}>{t}</span>
                 </div>
               ))}
@@ -428,7 +453,6 @@ export default function Site() {
       <section className="secao alterna faixa">
         <div className="limite">
           <div className="secao-topo">
-            <div className="super">Para quem vende tráfego</div>
             <h2>Pare de entregar print do Gerenciador</h2>
             <p>
               O cliente não compra CPM. Ele compra cliente novo. A Neriah traduz o seu trabalho na
@@ -437,7 +461,7 @@ export default function Site() {
           </div>
           <div className="passos">
             <div className="passo">
-              <div className="num">↑</div>
+              <div className="num"><IconeSubida /></div>
               <h3>Cada cliente no seu espaço</h3>
               <p>
                 Login próprio e banco isolado por empresa. Um cliente nunca alcança o dado do outro
@@ -445,7 +469,7 @@ export default function Site() {
               </p>
             </div>
             <div className="passo">
-              <div className="num">↗</div>
+              <div className="num"><IconeDiagonal /></div>
               <h3>Histórico mês a mês</h3>
               <p>
                 Assertividade, CAC e custo por lead em série temporal. É o gráfico que renova
@@ -453,7 +477,7 @@ export default function Site() {
               </p>
             </div>
             <div className="passo">
-              <div className="num">↓</div>
+              <div className="num"><IconeQueda /></div>
               <h3>Excel com fórmula viva</h3>
               <p>
                 O relatório baixado não tem número congelado: o cliente muda a meta na célula e a

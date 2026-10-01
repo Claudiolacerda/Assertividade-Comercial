@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../api";
+import { IconeCheck } from "../components/Icones";
 
 function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
   const [sobre, setSobre] = useState(false);
@@ -15,7 +16,7 @@ function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
     <div>
       <label htmlFor={id}>{titulo}</label>
       <div
-        className={`arraste${sobre ? " sobre" : ""}`}
+        className={`arraste${sobre ? " sobre" : ""}${arquivos.length ? " preenchido" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setSobre(true);
@@ -36,15 +37,32 @@ function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
           onChange={(e) => receber(e.target.files)}
           style={{ display: "none" }}
         />
-        <button type="button" onClick={() => entrada.current?.click()}>
-          Escolher arquivo
-        </button>
-        <div style={{ fontSize: 13, marginTop: 8 }}>ou arraste aqui</div>
-        <div className="nomes">
-          {arquivos.length
-            ? arquivos.map((a) => a.name).join(" · ")
-            : ajuda}
-        </div>
+        {arquivos.length > 0 ? (
+          <>
+            <div className="anexo-ok">
+              <IconeCheck tamanho={14} />
+              {arquivos.length === 1 ? "Arquivo anexado" : `${arquivos.length} arquivos anexados`}
+            </div>
+            <div className="anexo-nomes">
+              {arquivos.map((a) => (
+                <div key={a.name}>
+                  {a.name} <span>{(a.size / 1024).toFixed(0)} KB</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="discreto" onClick={() => entrada.current?.click()}>
+              Trocar arquivo
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => entrada.current?.click()}>
+              Escolher arquivo
+            </button>
+            <div style={{ fontSize: 13, marginTop: 8 }}>ou arraste aqui</div>
+            <div className="nomes">{ajuda}</div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -100,7 +118,7 @@ export default function Upload() {
             ajuda="CSV ou XLSX exportado do Gerenciador de Anúncios"
             aceita=".csv,.xlsx"
             arquivos={meta}
-            onArquivos={setMeta}
+            onArquivos={(a) => { setMeta(a); setErro(""); }}
           />
           <Soltar
             id="arquivos-reunioes"
@@ -108,7 +126,7 @@ export default function Upload() {
             ajuda="XLSX ou CSV com cliente, etapa do funil e datas"
             aceita=".csv,.xlsx,.xlsm,.xls"
             arquivos={reunioes}
-            onArquivos={setReunioes}
+            onArquivos={(a) => { setReunioes(a); setErro(""); }}
           />
           <div className="aviso" style={{ borderLeftColor: "var(--verde)" }}>
             Não tem uma planilha organizada?{" "}
