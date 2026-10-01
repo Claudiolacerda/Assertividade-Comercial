@@ -39,6 +39,24 @@ if (-not $existe) {
 }
 Write-Host " ok" -ForegroundColor Green
 
+# -------------------------------------------------- 1b. Migrações pendentes
+# Idempotentes: se já estiver tudo certo, não fazem nada e não demoram nada.
+$venvPy = Join-Path $raiz "backend\.venv\Scripts\python.exe"
+if (Test-Path $venvPy) {
+    Write-Host "[1b/3] Migracoes..." -NoNewline
+    Push-Location (Join-Path $raiz "backend")
+    $saida = & $venvPy "scripts\migrar_ordem_colunas.py" 2>&1
+    Pop-Location
+    if ($saida -match "convertida") {
+        Write-Host " aplicada" -ForegroundColor Green
+        Write-Host "      As colunas do resultado passaram de JSONB para JSON." -ForegroundColor DarkGray
+        Write-Host "      Analises antigas seguem com a ordem de coluna embaralhada;" -ForegroundColor DarkGray
+        Write-Host "      refaca a analise do mes para ela sair na ordem certa." -ForegroundColor DarkGray
+    } else {
+        Write-Host " nada pendente" -ForegroundColor Green
+    }
+}
+
 # ---------------------------------------------------------------- 2. Backend
 $venv = Join-Path $raiz "backend\.venv\Scripts\python.exe"
 if (-not (Test-Path $venv)) {
@@ -68,11 +86,25 @@ Start-Process powershell -ArgumentList @(
 Write-Host " ok (janela separada)" -ForegroundColor Green
 
 # ---------------------------------------------------------------- 3. Frontend
-if (-not (Test-Path (Join-Path $raiz "frontend\node_modules"))) {
+# Instala quando node_modules nao existe OU quando o package-lock mudou depois
+# da ultima instalacao. Sem a segunda condicao, um `git pull` que traz dependencia
+# nova deixa o site quebrado e o script nao percebe — foi o que aconteceu.
+$frontend = Join-Path $raiz "frontend"
+$modulos  = Join-Path $frontend "node_modules"
+$lock     = Join-Path $frontend "package-lock.json"
+$carimbo  = Join-Path $modulos ".instalado-em"
+
+$precisa = $false
+if (-not (Test-Path $modulos)) { $precisa = $true }
+elseif (-not (Test-Path $carimbo)) { $precisa = $true }
+elseif ((Get-Item $lock).LastWriteTime -gt (Get-Item $carimbo).LastWriteTime) { $precisa = $true }
+
+if ($precisa) {
     Write-Host "[3/3] Instalando dependencias do site (1 a 2 minutos)..." -ForegroundColor Yellow
-    Push-Location (Join-Path $raiz "frontend")
+    Push-Location $frontend
     npm install
     Pop-Location
+    if (Test-Path $modulos) { Set-Content -Path $carimbo -Value (Get-Date -Format o) }
 }
 
 Write-Host "[3/3] Site em http://localhost:5173 ..." -NoNewline
