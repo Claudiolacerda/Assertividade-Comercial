@@ -198,6 +198,10 @@ export default function Site() {
 
             {/* painel demonstrativo — dados reais de uma análise */}
             <div className="moldura">
+              {/* O facho: a luz que revela o dado, literal. Varre o painel uma
+                  vez; cada elemento acende quando ele passa por cima. */}
+              <span className="facho" aria-hidden="true" />
+
               <div className="barra-janela">
                 <span className="bolinha" />
                 <span className="bolinha" />
@@ -207,22 +211,22 @@ export default function Site() {
 
               <div className="demo">
                 <div className="demo-tiles">
-                  <div className="demo-tile forte">
+                  <div className="demo-tile forte" style={{ "--atraso": "475ms" }}>
                     <div className="r">ASSERTIVIDADE</div>
                     <div className="v">25,7%</div>
                     <div className="d">9 fechados ÷ 35 reuniões</div>
                   </div>
-                  <div className="demo-tile">
+                  <div className="demo-tile" style={{ "--atraso": "731ms" }}>
                     <div className="r">CAC</div>
                     <div className="v">R$ 405,67</div>
                     <div className="d">meta máx. R$ 800,00</div>
                   </div>
-                  <div className="demo-tile">
+                  <div className="demo-tile" style={{ "--atraso": "987ms" }}>
                     <div className="r">CUSTO POR LEAD</div>
                     <div className="v">R$ 45,07</div>
                     <div className="d">acima da meta</div>
                   </div>
-                  <div className="demo-tile">
+                  <div className="demo-tile" style={{ "--atraso": "1244ms" }}>
                     <div className="r">INVESTIMENTO</div>
                     <div className="v">R$ 3.651</div>
                     <div className="d">81 leads no período</div>
@@ -232,8 +236,12 @@ export default function Site() {
                 <div className="demo-corpo">
                   <div className="demo-bloco">
                     <h4>Funil do anúncio ao cliente</h4>
-                    {FUNIL.map((f) => (
-                      <div className="barra-linha" key={f.etapa}>
+                    {FUNIL.map((f, i) => (
+                      <div
+                        className="barra-linha"
+                        key={f.etapa}
+                        style={{ "--atraso": `${590 + i * 26}ms` }}
+                      >
                         <span className="et">{f.etapa}</span>
                         <span className="tr">
                           <span className="pr" style={{ width: `${Math.max(f.pct, 2.5)}%` }} />
@@ -246,7 +254,7 @@ export default function Site() {
                   <div className="demo-bloco">
                     <h4>O que os números estão dizendo</h4>
                     {DIAGNOSTICOS.map((d, i) => (
-                      <div className="demo-diag" key={i}>
+                      <div className="demo-diag" key={i} style={{ "--atraso": `${1105 + i * 30}ms` }}>
                         <span className={`ic n-${d.nivel}`}>
                           {(() => {
                             const I = ICONES_NIVEL[d.nivel];
