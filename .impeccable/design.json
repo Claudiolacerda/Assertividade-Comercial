@@ -1,22 +1,22 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-01T13:47:00.138Z",
+  "generatedAt": "2026-10-01T15:00:16.454044+00:00",
   "title": "Design System: Neriah Data",
   "extensions": {
     "colorMeta": {
       "verde": {
         "role": "primary",
         "displayName": "Verde Neriah",
-        "canonical": "oklch(59.6% 0.175 147.0)",
+        "canonical": "oklch(52.7% 0.153 147.1)",
         "tonalRamp": [
-          "oklch(15.0% 0.096 147.0)",
-          "oklch(26.0% 0.175 147.0)",
-          "oklch(37.0% 0.175 147.0)",
-          "oklch(48.0% 0.175 147.0)",
-          "oklch(60.0% 0.175 147.0)",
-          "oklch(72.0% 0.175 147.0)",
-          "oklch(84.0% 0.105 147.0)",
-          "oklch(95.0% 0.061 147.0)"
+          "oklch(15.0% 0.084 147.1)",
+          "oklch(26.0% 0.153 147.1)",
+          "oklch(37.0% 0.153 147.1)",
+          "oklch(48.0% 0.153 147.1)",
+          "oklch(60.0% 0.153 147.1)",
+          "oklch(72.0% 0.153 147.1)",
+          "oklch(84.0% 0.092 147.1)",
+          "oklch(95.0% 0.054 147.1)"
         ]
       },
       "verde-vivo": {
@@ -127,16 +127,16 @@
       "ink-muted": {
         "role": "neutral",
         "displayName": "Tinta Apagada",
-        "canonical": "oklch(62.2% 0.016 180.4)",
+        "canonical": "oklch(54.1% 0.015 179.0)",
         "tonalRamp": [
-          "oklch(15.0% 0.009 180.4)",
-          "oklch(26.0% 0.016 180.4)",
-          "oklch(37.0% 0.016 180.4)",
-          "oklch(48.0% 0.016 180.4)",
-          "oklch(60.0% 0.016 180.4)",
-          "oklch(72.0% 0.016 180.4)",
-          "oklch(84.0% 0.009 180.4)",
-          "oklch(95.0% 0.006 180.4)"
+          "oklch(15.0% 0.008 179.0)",
+          "oklch(26.0% 0.015 179.0)",
+          "oklch(37.0% 0.015 179.0)",
+          "oklch(48.0% 0.015 179.0)",
+          "oklch(60.0% 0.015 179.0)",
+          "oklch(72.0% 0.015 179.0)",
+          "oklch(84.0% 0.009 179.0)",
+          "oklch(95.0% 0.005 179.0)"
         ]
       },
       "series-1": {
@@ -273,11 +273,6 @@
     },
     "shadows": [
       {
-        "name": "repouso",
-        "value": "0 1px 2px rgba(10,20,18,0.04), 0 2px 8px rgba(10,20,18,0.05)",
-        "purpose": "Cartão, tile e gráfico no tema claro. Vira none no escuro."
-      },
-      {
         "name": "flutuante",
         "value": "0 12px 40px rgba(10,20,18,0.12)",
         "purpose": "Só para o que flutua: tooltip e inspetor sobreposto no celular."
@@ -285,7 +280,7 @@
       {
         "name": "moldura-hero",
         "value": "0 30px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(83,239,134,0.07)",
-        "purpose": "A única sombra dramática do sistema. Painel demonstrativo do hero."
+        "purpose": "A única sombra dramática do sistema."
       },
       {
         "name": "cta-verde",
@@ -340,7 +335,7 @@
       "refersTo": "button-primary",
       "description": "A ação principal. Um por tela.",
       "html": "<button class=\"ds-btn-primary\">Analisar</button>",
-      "css": ".ds-btn-primary { font: inherit; cursor: pointer; background: var(--verde, #099938); color: #fff; font-weight: 620; border: 1px solid transparent; border-radius: 9px; padding: 9px 14px; transition: background .14s ease, border-color .14s ease, transform .14s ease; } .ds-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .55; cursor: not-allowed; }"
+      "css": ".ds-btn-primary { font: inherit; cursor: pointer; background: var(--verde, #099938); color: #fff; font-weight: 620; border: 1px solid transparent; border-radius: 9px; padding: 11px 16px; min-height: 44px; transition: background .14s ease, border-color .14s ease, transform .14s ease; } .ds-btn-primary:hover { background: var(--verde, #08812f); filter: brightness(1.08); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .55; cursor: not-allowed; }"
     },
     {
       "name": "Botão secundário",
@@ -372,7 +367,7 @@
       "refersTo": "card",
       "description": "A superfície que agrupa conteúdo. Cartão dentro de cartão é proibido.",
       "html": "<div class=\"ds-card\"><h2 class=\"ds-card-t\">O que os números estão dizendo</h2><p class=\"ds-card-p\">Conclusões geradas pelo cruzamento das duas planilhas.</p></div>",
-      "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-card-t { margin: 0; font-size: 17px; font-weight: 660; letter-spacing: -.015em; line-height: 1.2; color: var(--ink, #0a1412); } .ds-card-p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2, #4c5a57); }"
+      "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 18px; } .ds-card-t { margin: 0; font-size: 17px; font-weight: 660; letter-spacing: -.015em; line-height: 1.2; color: var(--ink, #0a1412); } .ds-card-p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2, #4c5a57); }"
     },
     {
       "name": "Stat tile",
@@ -380,7 +375,7 @@
       "refersTo": "tile",
       "description": "A unidade de leitura do painel. A variante em destaque marca o KPI pelo qual a página existe.",
       "html": "<div class=\"ds-tile\"><span class=\"ds-tile-r\">Reuniões realizadas</span><div class=\"ds-tile-n\">35</div><div class=\"ds-tile-nota\">de 81 leads gerados</div></div><div class=\"ds-tile ds-tile-destaque\"><span class=\"ds-tile-r\">Assertividade</span><div class=\"ds-tile-n\">25,7%</div><span class=\"ds-selo ds-selo-ok\">✓ acima da meta</span></div>",
-      "css": ".ds-tile { display: inline-block; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 15px 16px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-tile-r { font-size: 12.5px; color: var(--ink-2, #4c5a57); font-weight: 620; display: block; margin-bottom: 7px; } .ds-tile-n { font-size: 28px; font-weight: 680; letter-spacing: -.025em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink, #0a1412); } .ds-tile-nota { font-size: 12px; color: var(--ink-muted, #7d8a87); margin-top: 6px; } .ds-tile-destaque { border-color: var(--verde, #099938); box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 0 0 3px var(--verde-fundo, #e8fbef); } .ds-tile-destaque .ds-tile-n { color: var(--verde, #099938); } .ds-selo { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; padding: 2px 8px; border-radius: 999px; margin-top: 7px; border: 1px solid var(--borda, rgba(10,20,18,.1)); } .ds-selo-ok { color: var(--sucesso-texto, #006300); }"
+      "css": ".ds-tile { display: inline-block; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 15px 16px; } .ds-tile-r { font-size: 12.5px; color: var(--ink-2, #4c5a57); font-weight: 620; display: block; margin-bottom: 7px; } .ds-tile-n { font-size: 28px; font-weight: 680; letter-spacing: -.025em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink, #0a1412); } .ds-tile-nota { font-size: 12px; color: var(--ink-muted, #7d8a87); margin-top: 6px; } .ds-tile-destaque { border-color: var(--verde, #099938); box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 0 0 3px var(--verde-fundo, #e8fbef); } .ds-tile-destaque .ds-tile-n { color: var(--verde, #099938); } .ds-selo { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; padding: 2px 8px; border-radius: 999px; margin-top: 7px; border: 1px solid var(--borda, rgba(10,20,18,.1)); } .ds-selo-ok { color: var(--sucesso-texto, #006300); }"
     },
     {
       "name": "Item de navegação",
@@ -396,7 +391,7 @@
       "refersTo": "cadence-node",
       "description": "O componente de assinatura. Borda esquerda na cor do canal; cada canal tem cor E ícone, para o fluxo ser legível sem depender de cor.",
       "html": "<div class=\"ds-no\" style=\"--cor-canal:#25d366\"><div class=\"ds-no-topo\"><span class=\"ds-no-canal\"><span aria-hidden=\"true\">💬</span> WhatsApp</span><span class=\"ds-no-dia\">D+1</span></div><div class=\"ds-no-titulo\">Reancorar valor</div><div class=\"ds-no-texto\">9 clientes travaram em preço.</div></div>",
-      "css": ".ds-no { width: 210px; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-left: 3px solid var(--cor-canal); border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-no:hover { border-color: var(--verde, #099938); border-left-color: var(--cor-canal); } .ds-no-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .ds-no-canal { font-size: 11px; font-weight: 650; color: var(--cor-canal); } .ds-no-dia { font-size: 10.5px; font-weight: 700; color: var(--ink-muted, #7d8a87); background: var(--surface-2, #f1f4f3); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; } .ds-no-titulo { font-size: 13px; font-weight: 640; color: var(--ink, #0a1412); margin-top: 6px; line-height: 1.3; } .ds-no-texto { font-size: 11.5px; color: var(--ink-2, #4c5a57); margin-top: 5px; line-height: 1.45; }"
+      "css": ".ds-no { width: 210px; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-left: 3px solid var(--cor-canal); border-radius: 10px; padding: 10px 12px; } .ds-no:hover { border-color: var(--verde, #099938); border-left-color: var(--cor-canal); } .ds-no-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .ds-no-canal { font-size: 11px; font-weight: 650; color: var(--cor-canal); } .ds-no-dia { font-size: 10.5px; font-weight: 700; color: var(--ink-muted, #7d8a87); background: var(--surface-2, #f1f4f3); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; } .ds-no-titulo { font-size: 13px; font-weight: 640; color: var(--ink, #0a1412); margin-top: 6px; line-height: 1.3; } .ds-no-texto { font-size: 11.5px; color: var(--ink-2, #4c5a57); margin-top: 5px; line-height: 1.45; }"
     },
     {
       "name": "Aviso",
@@ -501,6 +496,16 @@
         "name": "A Regra da Barra de Canal",
         "section": "shapes",
         "body": "A borda esquerda de 3px é reservada para identidade — canal da cadência, destaque de recurso, severidade de aviso. Não é decoração, e usá-la como tal destrói o sinal."
+      },
+      {
+        "name": "A Regra da Elevação Única",
+        "section": "elevation",
+        "body": "Borda ou sombra, nunca os dois no mesmo elemento. Borda de 1px sob sombra larga não soma profundidade, só suja o contorno."
+      },
+      {
+        "name": "A Regra das Duas Cores de Canal",
+        "section": "colors",
+        "body": "Cada canal carrega cor e corTexto. A primeira preenche a barra e a alça, onde 3:1 basta; a segunda escreve o rótulo, onde são exigidos 4,5:1."
       }
     ],
     "dos": [
@@ -527,7 +532,11 @@
       "Don't escrever frase em caixa alta com letter-spacing largo.",
       "Don't usar a borda esquerda de 3px como decoração — ela carrega identidade.",
       "Don't remover o contorno de foco.",
-      "Don't criar CSS por página; o sistema é um arquivo só, por seção temática."
+      "Don't criar CSS por página; o sistema é um arquivo só, por seção temática.",
+      "Don't usar emoji no lugar de ícone de interface.",
+      "Don't declarar borda e sombra no mesmo elemento.",
+      "Don't pôr sobretítulo acima de um título.",
+      "Don't gravar o resultado da análise em JSONB: ele reordena as chaves e embaralha as colunas."
     ]
   }
 }

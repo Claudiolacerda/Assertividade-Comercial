@@ -33,6 +33,19 @@ const MARGEM = { top: 8, right: 16, bottom: 4, left: 4 };
 export const inteiro = (v) => (v == null ? "—" : Number(v).toLocaleString("pt-BR"));
 export const porcento = (v, casas = 1) =>
   v == null ? "—" : `${(Number(v) * 100).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas })}%`;
+/** "2026-09" -> "setembro/2026". Quatro formatos para o mesmo conceito viraram um. */
+export const mesPorExtenso = (iso) => {
+  if (!iso || !/^\d{4}-\d{2}$/.test(iso)) return iso || "—";
+  const [ano, mes] = iso.split("-");
+  const nome = new Date(Number(ano), Number(mes) - 1, 1).toLocaleDateString("pt-BR", { month: "long" });
+  return `${nome}/${ano}`;
+};
+
+export const dataHora = (iso) =>
+  new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+
 export const reais = (v) =>
   v == null
     ? "—"
@@ -111,7 +124,7 @@ export function Quadro({ titulo, subtitulo, legenda = [], tabela, altura = 260, 
   return (
     <section className="grafico">
       <div className="grafico-topo">
-        <h3>{titulo}</h3>
+        <h2>{titulo}</h2>
         {tabela && (
           <button className="discreto" onClick={() => setVerTabela((v) => !v)}>
             {verTabela ? "ver gráfico" : "ver tabela"}

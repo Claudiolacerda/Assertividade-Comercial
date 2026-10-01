@@ -158,7 +158,7 @@ export default function Equipe() {
                       >
                         <input
                           type="checkbox"
-                          style={{ width: "auto" }}
+                          
                           checked={novo.empresas.includes(e.id)}
                           onChange={() => alternarEmpresa(e.id)}
                         />

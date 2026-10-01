@@ -2,7 +2,7 @@
 name: Neriah Data
 description: Cruza relatório de tráfego com planilha comercial e diz onde o dinheiro trava.
 colors:
-  verde: "#099938"
+  verde: "#08812f"
   verde-dark: "#53ef86"
   verde-vivo: "#53ef86"
   verde-fundo: "#e8fbef"
@@ -18,7 +18,7 @@ colors:
   ink-dark: "#ffffff"
   ink-2: "#4c5a57"
   ink-2-dark: "#b9c7c3"
-  ink-muted: "#7d8a87"
+  ink-muted: "#66726f"
   ink-muted-dark: "#8b9995"
   grid: "#e4eae8"
   grid-dark: "#1d2b28"
@@ -36,13 +36,26 @@ colors:
   critico: "#d03b3b"
   sucesso-texto: "#006300"
   sucesso-texto-dark: "#0ca30c"
+  atencao-texto: "#946603"
+  atencao-texto-dark: "#fab219"
+  serio-texto: "#a4471d"
+  serio-texto-dark: "#ec835a"
+  critico-texto: "#c0302f"
+  critico-texto-dark: "#d96060"
   canal-whatsapp: "#25d366"
+  canal-whatsapp-texto: "#16803e"
   canal-ligacao: "#2a78d6"
+  canal-ligacao-texto: "#266fc7"
   canal-email: "#7c5cd6"
+  canal-email-texto: "#7959d5"
   canal-reuniao: "#099938"
+  canal-reuniao-texto: "#08812f"
   canal-espera: "#8b9995"
+  canal-espera-texto: "#64726e"
   canal-decisao: "#e08a1e"
+  canal-decisao-texto: "#9e6215"
   canal-nota: "#d0567f"
+  canal-nota-texto: "#c73768"
 typography:
   display:
     fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif"
@@ -92,8 +105,12 @@ components:
     backgroundColor: "{colors.verde}"
     textColor: "#ffffff"
     rounded: "{rounded.control}"
-    padding: "9px 14px"
+    padding: "11px 16px"
+    height: "44px"
     typography: "{typography.body}"
+  button-primary-hover:
+    backgroundColor: "{colors.verde}"
+    textColor: "#ffffff"
   button-primary-dark:
     backgroundColor: "{colors.verde-dark}"
     textColor: "{colors.preto-neriah}"
@@ -208,7 +225,9 @@ de série medidas para daltonismo e quatro de status.
 - **Verde Neriah** (`verde` / `verde-dark`): o acento da marca e a única cor que
   significa "isto importa". Botão primário, aba ativa, item de navegação ativo,
   borda do KPI em destaque, link. **Troca de valor por tema** — veja a regra
-  abaixo.
+  abaixo. O tom claro é `#08812f` e não o verde da logo: medido, dá 5,01:1 como
+  texto sobre branco e 5,01:1 para o branco escrito sobre ele, atendendo os dois
+  sentidos de uso.
 - **Verde da Logo** (`verde-vivo`): o verde literal do arquivo da logo. Vive
   exclusivamente sobre superfície escura: CTA do hero, números da tira de prova,
   palavra iluminada do título, sub-marca "DATA" no lockup escuro.
@@ -252,9 +271,10 @@ E-mail, Reunião, Espera, Decisão, Nota.
 
 - **Bom** (`bom`), **Atenção** (`atencao`), **Sério** (`serio`),
   **Crítico** (`critico`): escala de severidade do diagnóstico e das metas.
-- **Sucesso em Texto** (`sucesso-texto` / `sucesso-texto-dark`): existe separado
-  de `bom` porque o verde que serve de preenchimento não tem contraste
-  suficiente como letra no tema claro.
+- **Tons de texto dos status** (`sucesso-texto`, `atencao-texto`, `serio-texto`,
+  `critico-texto`): existem separados dos tons de preenchimento porque a cor que
+  funciona como área não funciona como letra. O amarelo de atenção fica em
+  1,83:1 escrito sobre branco; o tom de texto correspondente, em 5,05:1.
 
 ### Named Rules
 
@@ -263,6 +283,13 @@ ilegível sobre branco — reprova contraste para texto. Por isso o acento troca
 valor por tema (`verde` ≠ `verde-dark`) enquanto `verde-vivo` fica fixo e só
 aparece sobre escuro. Teste: se um elemento usa `verde-vivo` e o fundo dele não
 é `preto-neriah` ou `.escuro`, é erro.
+
+**A Regra do Par Medido.** Nenhuma cor entra no sistema por aparência. Cada
+token de texto foi ajustado em HSL — matiz e saturação preservados, luminância
+descida até passar — e conferido contra todos os fundos onde aparece. A
+verificação no navegador percorre cada nó de texto das telas nos dois temas e
+hoje devolve **zero reprovações**, contra 16 pares reprovados no claro e 1 no
+escuro antes desta passagem.
 
 **A Regra da Paleta Medida.** As seis cores de série foram escolhidas e
 *medidas*, não aprovadas no olho. O pior par de qualquer combinação, simulado
@@ -289,6 +316,8 @@ para transparência sobre o preto.
 **Display Font:** system-ui (com `-apple-system`, `Segoe UI`, `sans-serif`)
 **Body Font:** a mesma — há uma única família em todo o sistema
 **Label/Mono Font:** nenhuma; alinhamento numérico vem de `tabular-nums`
+**Ícones:** desenhados, em `components/Icones.jsx` — caixa de 16px, traço 1,6,
+pontas arredondadas, sempre em `currentColor`
 
 **Character:** neutra e invisível, de propósito. A personalidade do produto está
 na cor e na densidade, não na letra. Não carregar webfont elimina um salto de
@@ -373,9 +402,9 @@ ferramenta de hierarquia.
 
 ### Shadow Vocabulary
 
-- **Repouso** (`0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05)`):
-  cartão, tile e gráfico no tema claro. Quase imperceptível de propósito — separa
-  sem levantar.
+- **Repouso**: aposentada. Cartão, tile e gráfico declaravam borda de 1px *e*
+  sombra larga ao mesmo tempo — o cartão fantasma. Hoje a elevação é declarada
+  uma vez só, pela borda.
 - **Flutuante** (`0 12px 40px rgba(10,20,18,.12)` / `rgba(0,0,0,.5)` no escuro):
   só para o que flutua de verdade — tooltip, inspetor sobreposto no celular.
 - **Moldura do hero** (`0 30px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(83,239,134,.07)`):
@@ -392,6 +421,9 @@ Quem separa no escuro é a borda e o degrau de superfície.
 
 **A Regra da Borda Antes da Sombra.** Precisa separar dois blocos? 1px de borda.
 Sombra entra só quando o elemento realmente flutua sobre o conteúdo.
+
+**A Regra da Elevação Única.** Borda ou sombra, nunca os dois no mesmo elemento.
+Borda de 1px sob sombra larga não soma profundidade, só suja o contorno.
 
 **A Regra do Cartão Sem Filho.** Cartão dentro de cartão é proibido. Para agrupar
 dentro de um cartão, use borda, espaçamento ou um `h3`. O terceiro degrau de
@@ -511,9 +543,36 @@ com ícone à esquerda e a pílula do dia (`D+2`) à direita; abaixo, título em
 
 Cada um dos sete canais tem cor **e** ícone próprios, porque o fluxo precisa ser
 legível de relance e sem depender de cor. As alças de conexão herdam a cor do
-canal. O React Flow traz tema próprio, e o sistema o reescreve para obedecer aos
+canal, e as arestas levam ponta de seta — sem ela não dá para ler a direção do
+fluxo.
+
+**A Regra das Duas Cores de Canal.** Cada canal carrega `cor` e `corTexto`. A
+primeira preenche a barra e a alça, onde 3:1 basta por serem elementos não
+textuais; a segunda escreve o rótulo, onde são exigidos 4,5:1. O verde do
+WhatsApp fica em 1,98:1 como letra: bom na barra, ilegível escrito. O React Flow traz tema próprio, e o sistema o reescreve para obedecer aos
 tokens: aresta em eixo, aresta selecionada em verde, controles e minimapa em
 superfície.
+
+### Segmented control
+
+Alternador de duas opções mutuamente exclusivas (`Resumo | Completo` no relatório
+de WhatsApp). Trilho em superfície elevada com 9px de raio e 3px de respiro
+interno; a opção ativa ganha a superfície branca, peso 650 e uma sombra de 1px.
+Substitui a caixa de seleção solta que ficava longe do que ela reescrevia.
+
+### Prévia do WhatsApp
+
+A mensagem renderizada como o cliente vai receber — balão verde, negrito de
+verdade no lugar dos asteriscos, hora — dentro de um palco em superfície
+elevada. **Sem rolagem interna:** ver a mensagem inteira de uma vez é o que
+impede mandar a coisa errada. "Editar texto" troca o balão pelo campo de edição;
+o padrão é ver, não editar.
+
+### Cartão de destaque do diagnóstico
+
+A oportunidade principal, promovida acima dos KPIs: lavagem verde, borda verde,
+ícone de nível e a frase em 16px/560. É a linha que paga a assinatura, e antes
+ela tinha o mesmo peso de uma observação informativa no meio de dezoito.
 
 ### Brand Lockup
 
@@ -553,3 +612,12 @@ o lockup inteiro escala proporcionalmente com um único número.
 - **Don't** usar a borda esquerda de 3px como decoração — ela carrega identidade.
 - **Don't** remover o contorno de foco.
 - **Don't** criar CSS por página; o sistema é um arquivo só, por seção temática.
+- **Don't** usar emoji no lugar de ícone de interface — eles mudam de forma por
+  sistema operacional, não acompanham a tinta do tema e não têm peso de traço.
+  Emoji dentro de texto de mensagem de WhatsApp é conteúdo, e esse fica.
+- **Don't** declarar borda e sombra no mesmo elemento.
+- **Don't** pôr sobretítulo acima de um título: o título carrega o próprio peso.
+- **Don't** deixar `auto-fit` sem teto numa fileira de poucos KPIs — dois tiles
+  de 830px segurando os numerais "4" e "0" foi exatamente o que aconteceu.
+- **Don't** gravar o resultado da análise em `JSONB`: o Postgres reordena as
+  chaves por tamanho e a ordem das chaves É a ordem das colunas da tabela.

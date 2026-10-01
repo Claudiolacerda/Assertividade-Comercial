@@ -13,7 +13,7 @@ import {
 } from "../components/Charts";
 import NotaPlanilha from "../components/NotaPlanilha";
 import RelatorioZap from "../components/RelatorioZap";
-import { Diagnostico, TabelaDados, Tile } from "../components/Painel";
+import { Destaque, Diagnostico, TabelaDados, Tile } from "../components/Painel";
 
 const ABAS = [
   { id: "resumo", titulo: "Resumo" },
@@ -91,10 +91,16 @@ export default function Analise() {
         </div>
       )}
 
-      <div className="abas">
+      {/* role/aria-selected são o que diz ao leitor de tela qual visão está
+          aberta: o sublinhado verde sozinho não é exposto a ninguém. */}
+      <div className="abas" role="tablist" aria-label="Visões da análise">
         {ABAS.map((a) => (
           <button
             key={a.id}
+            id={`aba-${a.id}`}
+            role="tab"
+            aria-selected={aba === a.id}
+            aria-controls={`painel-${a.id}`}
             className={`aba${aba === a.id ? " ativa" : ""}`}
             onClick={() => setAba(a.id)}
           >
@@ -104,7 +110,14 @@ export default function Analise() {
       </div>
 
       {aba === "resumo" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-resumo"
+          aria-labelledby="aba-resumo"
+          tabIndex={-1}
+        >
+          <Destaque itens={r.diagnostico} />
           <div className="grade tiles">
             <Tile kpi={kpis.assert} destaque />
             <Tile kpi={kpis.cac} />
@@ -123,7 +136,13 @@ export default function Analise() {
       )}
 
       {aba === "trafego" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-trafego"
+          aria-labelledby="aba-trafego"
+          tabIndex={-1}
+        >
           <div className="grade tiles">
             <Tile kpi={kpis.inv} />
             <Tile kpi={kpis.imp} />
@@ -160,7 +179,13 @@ export default function Analise() {
       )}
 
       {aba === "comercial" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-comercial"
+          aria-labelledby="aba-comercial"
+          tabIndex={-1}
+        >
           <div className="grade tiles">
             <Tile kpi={kpis.ag} />
             <Tile kpi={kpis.real} />
@@ -197,7 +222,13 @@ export default function Analise() {
       )}
 
       {aba === "pipeline" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-pipeline"
+          aria-labelledby="aba-pipeline"
+          tabIndex={-1}
+        >
           <div className="grade tiles">
             {kpis.vneg && <Tile kpi={kpis.vneg} />}
             {kpis.fcst && <Tile kpi={kpis.fcst} />}
@@ -227,13 +258,25 @@ export default function Analise() {
       )}
 
       {aba === "relatorio" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-relatorio"
+          aria-labelledby="aba-relatorio"
+          tabIndex={-1}
+        >
           <RelatorioZap analiseId={analise.id} nomeCliente={empresa?.nome} />
         </div>
       )}
 
       {aba === "qualidade" && (
-        <div className="grade">
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-qualidade"
+          aria-labelledby="aba-qualidade"
+          tabIndex={-1}
+        >
           <NotaPlanilha cobertura={r.cobertura} />
           <TabelaDados
             titulo="Resumo dos problemas"

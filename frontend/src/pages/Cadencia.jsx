@@ -9,6 +9,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  MarkerType,
   ReactFlow,
   ReactFlowProvider,
   addEdge,
@@ -20,6 +21,7 @@ import "@xyflow/react/dist/style.css";
 
 import { api } from "../api";
 import EtapaCadencia, { CANAIS } from "../components/EtapaCadencia";
+import { dataHora, mesPorExtenso } from "../components/Charts";
 
 const tiposDeNo = { etapa: EtapaCadencia };
 
@@ -170,8 +172,8 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
           <div className="paleta-titulo">Arraste para o fluxo</div>
           {Object.entries(CANAIS).map(([chave, c]) => (
             <button key={chave} className="paleta-item" onClick={() => adicionar(chave)}>
-              <span style={{ color: c.cor }} aria-hidden="true">
-                {c.icone}
+              <span style={{ color: c.corTexto, display: "flex" }}>
+                <c.Icone />
               </span>
               {c.rotulo}
             </button>
@@ -193,8 +195,12 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
             onNodeClick={(_, n) => setSelecionado(n.id)}
             onPaneClick={() => setSelecionado(null)}
             fitView
-            proOptions={{ hideAttribution: false }}
             deleteKeyCode={["Backspace", "Delete"]}
+            /* Sem ponta de seta não dá para ler a direção do fluxo, e a
+               cronologia sobe e desce entre as colunas. */
+            defaultEdgeOptions={{
+              markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18 },
+            }}
           >
             <Background gap={22} size={1} color="var(--grid)" />
             <Controls showInteractive={false} />
@@ -211,6 +217,13 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
 
         {no && (
           <aside className="inspetor">
+              <button
+                className="discreto fechar-inspetor"
+                onClick={() => setSelecionado(null)}
+                aria-label="Fechar o painel da etapa"
+              >
+                Fechar
+              </button>
             <div className="paleta-titulo">Etapa</div>
 
             <label htmlFor="i-canal">Canal</label>
@@ -253,7 +266,7 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
               Use <code>{"{nome}"}</code> para o nome do cliente na hora de enviar.
             </p>
 
-            <button className="discreto" onClick={removerNo} style={{ marginTop: 18, color: "var(--critico)" }}>
+            <button className="discreto" onClick={removerNo} style={{ marginTop: 18, color: "var(--critico-texto)" }}>
               Remover etapa
             </button>
           </aside>
@@ -371,7 +384,7 @@ export default function Cadencia() {
                 disabled={criando}
                 onClick={() => criar({ analise_id: a.id })}
               >
-                Gerar de {a.mes_referencia}
+                Gerar de {mesPorExtenso(a.mes_referencia)} · v{a.versao}
               </button>
             ))}
           </div>
@@ -436,7 +449,7 @@ export default function Cadencia() {
                       )}
                     </td>
                     <td className="num">{c.etapas}</td>
-                    <td>{new Date(c.atualizada_em).toLocaleDateString("pt-BR")}</td>
+                    <td>{dataHora(c.atualizada_em)}</td>
                     <td style={{ textAlign: "right" }}>
                       <button className="discreto" onClick={() => abrir(c.id)}>
                         abrir

@@ -5,6 +5,7 @@
  * planilha está incompleta" para "adicione Valor e ganhe ROAS". */
 
 import { api } from "../api";
+import { IconeAtencao } from "./Icones";
 
 const ROTULO_IMPACTO = {
   obrigatorio: "obrigatória",
@@ -96,8 +97,8 @@ export default function NotaPlanilha({ cobertura }) {
                 borderBottom: "1px solid var(--grid)",
               }}
             >
-              <span style={{ color: "var(--atencao)", flex: "none", marginTop: 1 }} aria-hidden="true">
-                ⚠
+              <span style={{ color: "var(--atencao-texto)", flex: "none", marginTop: 1 }}>
+                <IconeAtencao tamanho={14} />
               </span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 620 }}>
