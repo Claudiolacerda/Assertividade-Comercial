@@ -5,7 +5,7 @@
  * aparece quando o servidor está configurado, em vez de oferecer um botão que
  * falha. */
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { api } from "../api";
 import { useAuth } from "../auth";
@@ -37,6 +37,18 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
   const [enviando, setEnviando] = useState(false);
   const [editado, setEditado] = useState(false);
   const [editando, setEditando] = useState(false);
+  const trilho = useRef(null);
+
+  /* O polegar é medido, não calculado: "Resumo" e "Completo" têm larguras
+     diferentes e o tamanho muda com a fonte do sistema. */
+  useLayoutEffect(() => {
+    const t = trilho.current;
+    if (!t) return;
+    const ativo = t.querySelector("button.ativo");
+    if (!ativo) return;
+    t.style.setProperty("--pol-x", `${ativo.offsetLeft - 3}px`);
+    t.style.setProperty("--pol-w", `${ativo.offsetWidth}px`);
+  }, [completo, carregando, editando]);
 
   useEffect(() => {
     let ativo = true;
@@ -136,7 +148,8 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
       ) : (
         <>
           <div className="zap-controles">
-            <div className="segmentado" role="group" aria-label="Tamanho do relatório">
+            <div className="segmentado" role="group" aria-label="Tamanho do relatório" ref={trilho}>
+              <span className="polegar" aria-hidden="true" />
               {[
                 ["Resumo", false],
                 ["Completo", true],

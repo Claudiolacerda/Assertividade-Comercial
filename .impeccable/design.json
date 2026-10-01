@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-01T15:00:16.454044+00:00",
+  "generatedAt": "2026-10-01T18:20:59.966818+00:00",
   "title": "Design System: Neriah Data",
   "extensions": {
     "colorMeta": {
@@ -290,19 +290,29 @@
     ],
     "motion": [
       {
-        "name": "transicao-controle",
-        "value": "140ms ease",
-        "purpose": "Fundo, borda e posição em botão, campo e área de arraste."
+        "name": "curva",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Toda chegada. Desaceleração natural, sem salto elástico."
       },
       {
-        "name": "elevacao-hover",
-        "value": "translateY(-1px)",
-        "purpose": "Botão primário no hover; -2px nos CTAs do site."
+        "name": "t-feedback",
+        "value": "130ms",
+        "purpose": "Hover, cor, foco — o que responde ao dedo."
       },
       {
-        "name": "brilho-hover",
-        "value": "brightness(1.08)",
-        "purpose": "Hover do botão primário, em vez de uma segunda cor de verde."
+        "name": "t-estado",
+        "value": "210ms",
+        "purpose": "Aba, alternador, prévia — o que muda de estado."
+      },
+      {
+        "name": "t-camada",
+        "value": "300ms",
+        "purpose": "Inspetor, sanfona — o que se move no espaço."
+      },
+      {
+        "name": "t-pressao",
+        "value": "70ms",
+        "purpose": "O afundar do botão. Metade de tudo: saída mais rápida que entrada."
       }
     ],
     "breakpoints": [
@@ -506,6 +516,26 @@
         "name": "A Regra das Duas Cores de Canal",
         "section": "colors",
         "body": "Cada canal carrega cor e corTexto. A primeira preenche a barra e a alça, onde 3:1 basta; a segunda escreve o rótulo, onde são exigidos 4,5:1."
+      },
+      {
+        "name": "A Regra da Saída Mais Rápida",
+        "section": "motion",
+        "body": "Pressionar um botão dura 70ms, metade de qualquer outra coisa. Esperar para algo sumir lê como latência."
+      },
+      {
+        "name": "A Regra do Movimento Que Explica",
+        "section": "motion",
+        "body": "Cada animação responde a uma pergunta: de onde para onde, de onde vem, em que estado está. Movimento que não responde a nada é dívida."
+      },
+      {
+        "name": "A Regra da Entrada Onde Algo Chega",
+        "section": "motion",
+        "body": "Não há coreografia de carregamento. A única entrada encadeada é a dos KPIs, com teto de 175ms no atraso total."
+      },
+      {
+        "name": "A Regra do Padrão Visível",
+        "section": "motion",
+        "body": "Nenhuma animação parte de invisível por JavaScript. Se o script falhar, o conteúdo está lá."
       }
     ],
     "dos": [
@@ -536,7 +566,10 @@
       "Don't usar emoji no lugar de ícone de interface.",
       "Don't declarar borda e sombra no mesmo elemento.",
       "Don't pôr sobretítulo acima de um título.",
-      "Don't gravar o resultado da análise em JSONB: ele reordena as chaves e embaralha as colunas."
+      "Don't gravar o resultado da análise em JSONB: ele reordena as chaves e embaralha as colunas.",
+      "Don't animar width, height, top, left ou margem.",
+      "Don't dar entrada a uma seção só porque ela existe.",
+      "Don't pôr :hover depois de :active no bloco de movimento reduzido."
     ]
   }
 }

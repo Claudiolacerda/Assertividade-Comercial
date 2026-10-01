@@ -50,6 +50,15 @@
   --serio-texto: #a4471d;
   --critico-texto: #c0302f;
 
+  /* --- movimento ---
+     Uma curva só para chegadas, e três durações que significam distância:
+     feedback é imediato, estado é curto, camada é o que se move no espaço.
+     Saída sempre mais rápida que entrada — esperar para algo sumir é latência. */
+  --curva: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-feedback: 130ms;
+  --t-estado: 210ms;
+  --t-camada: 300ms;
+
   --raio: 12px;
   --sombra: 0 1px 2px rgba(10, 20, 18, 0.04), 0 2px 8px rgba(10, 20, 18, 0.05);
   --sombra-alta: 0 12px 40px rgba(10, 20, 18, 0.12);
@@ -197,6 +206,12 @@ button {
   transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
 }
 button:hover:not(:disabled) { background: var(--surface-2); }
+/* O afundar é o reconhecimento de que o clique chegou, antes de qualquer
+   resposta da rede. 70ms: mais que isso já parece lentidão. */
+button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.988);
+  transition-duration: 70ms;
+}
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 
 button.primario {
@@ -218,6 +233,7 @@ button.primario:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
 }
+button.primario:active:not(:disabled) { transform: translateY(0) scale(0.988); }
 
 button.discreto {
   background: transparent;
@@ -238,7 +254,10 @@ input, select, textarea {
   border: 1px solid var(--borda);
   background: var(--surface);
   color: var(--ink);
+  transition: border-color var(--t-feedback) ease, box-shadow var(--t-feedback) ease;
 }
+input:hover:not(:disabled), textarea:hover, select:hover { border-color: var(--axis); }
+input:focus, textarea:focus, select:focus { border-color: var(--verde); }
 input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
   outline: 2px solid var(--verde);
   outline-offset: 2px;
@@ -325,6 +344,7 @@ label {
   font-size: 14px;
   font-weight: 520;
 }
+.nav-item { transition: background var(--t-feedback) ease, color var(--t-feedback) ease; }
 .nav-item:hover { background: var(--surface-2); }
 .nav-item.ativo {
   background: var(--verde-fundo);
@@ -370,6 +390,23 @@ label {
 /* auto-fit sozinho estica 2 tiles para 830px cada quando a aba tem poucos KPIs.
    O teto de 300px mantém o número proporcional à informação que ele carrega. */
 .grade.tiles { grid-template-columns: repeat(auto-fit, minmax(210px, 300px)); }
+
+/* Os números chegam depois da análise, e é o único lugar do produto com entrada
+   encadeada. Teto de 175ms no atraso total: passar disso vira espera. */
+@keyframes chegar {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.grade.tiles > .tile {
+  animation: chegar 240ms var(--curva) both;
+  animation-delay: calc(var(--n, 0) * 35ms);
+}
+.grade.tiles > .tile:nth-child(1) { --n: 0; }
+.grade.tiles > .tile:nth-child(2) { --n: 1; }
+.grade.tiles > .tile:nth-child(3) { --n: 2; }
+.grade.tiles > .tile:nth-child(4) { --n: 3; }
+.grade.tiles > .tile:nth-child(5) { --n: 4; }
+.grade.tiles > .tile:nth-child(n + 6) { --n: 5; }
 
 /* =================== stat tiles =================== */
 .tile {
@@ -464,6 +501,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: 999px; padding: 2px 8px;
   font-variant-numeric: tabular-nums;
 }
+tbody tr { transition: background var(--t-feedback) ease; }
 tbody tr:hover { background: var(--surface-2); }
 td.texto { white-space: normal; min-width: 260px; }
 
@@ -486,6 +524,23 @@ td.texto { white-space: normal; min-width: 260px; }
   font-variant-numeric: tabular-nums;
 }
 .revelar { display: inline-flex; align-items: center; gap: 8px; margin-left: -10px; }
+
+/* Sanfona sem JS e sem max-height chutado. O conteúdo fica no DOM e só é
+   recortado, então leitor de tela e Ctrl+F continuam achando. */
+.sanfona {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--t-camada) var(--curva);
+}
+.sanfona.aberta { grid-template-rows: 1fr; }
+.sanfona > div { overflow: hidden; min-height: 0; }
+
+/* o chevron gira para dizer em que estado o botão está */
+.revelar .seta {
+  transition: transform var(--t-estado) var(--curva);
+  display: inline-flex;
+}
+.revelar[aria-expanded="true"] .seta { transform: rotate(180deg); }
 
 .diag {
   display: flex; gap: 11px; padding: 11px 0;
@@ -535,6 +590,7 @@ td.texto { white-space: normal; min-width: 260px; }
 .aviso.ok { border-left-color: var(--bom); color: var(--sucesso-texto); }
 
 .abas {
+  position: relative;
   display: flex; gap: 4px;
   border-bottom: 1px solid var(--borda);
   margin-bottom: 18px;
@@ -550,7 +606,35 @@ td.texto { white-space: normal; min-width: 260px; }
   border-radius: 0; background: transparent; color: var(--ink-2);
   font-size: 13.5px; white-space: nowrap;
 }
-.aba.ativa { color: var(--ink); border-bottom-color: var(--verde); font-weight: 650; }
+/* scaleX em um elemento de 1px em vez de animar width: largura é propriedade
+   de layout e dispara reflow a cada quadro. */
+.indicador-aba {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 1px;
+  height: 2px;
+  background: var(--verde);
+  transform-origin: left center;
+  transform: translateX(var(--ind-x, 0)) scaleX(var(--ind-w, 0));
+  transition: transform var(--t-estado) var(--curva);
+  pointer-events: none;
+}
+
+.aba { transition: color var(--t-feedback) ease; }
+.aba:hover { color: var(--ink); }
+/* a cor marca a aba ativa; quem desenha a posição é o indicador deslizante */
+.aba.ativa { color: var(--ink); border-bottom-color: transparent; font-weight: 650; }
+
+/* A troca de aba é mudança de estado, não carregamento: 170ms e 3px, o
+   suficiente para o olho saber que o conteúdo é outro. */
+@keyframes trocar-painel {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+[role="tabpanel"] {
+  animation: trocar-painel 170ms var(--curva) both;
+}
 
 .arraste {
   border: 1.5px dashed var(--axis);
@@ -794,12 +878,47 @@ td.texto { white-space: normal; min-width: 260px; }
   }
 }
 
-/* Quem pediu menos movimento recebe o painel aceso, sem varredura. */
+/* ---------------------------------------------------------------------------
+   MOVIMENTO REDUZIDO
+   Reduzir não é desligar. O que sai é deslocamento no espaço — varredura,
+   entrada encadeada, deslizes. O que FICA é o feedback que confirma uma ação:
+   cor, opacidade, o afundar do botão. Tirar isso deixaria a interface muda
+   para quem mais precisa de confirmação.
+   --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
+  /* o momento focal da hero: painel nasce aceso */
   .moldura .facho { animation: none; opacity: 0; }
   .moldura .demo-tile,
   .moldura .barra-linha,
   .moldura .demo-diag { animation: none; }
+
+  /* entradas e deslocamentos: nenhum */
+  [role="tabpanel"],
+  .grade.tiles > .tile,
+  .palco-previa,
+  .inspetor,
+  .topo nav.aberto { animation: none; }
+
+  /* o indicador e o polegar continuam existindo, mas aparecem no lugar
+     em vez de viajar até ele */
+  .indicador-aba,
+  .segmentado .polegar { transition: none; }
+
+  /* a sanfona abre e fecha sem o deslizar da altura */
+  .sanfona { transition: none; }
+  .revelar .seta { transition: none; }
+
+  /* Primeiro o que sai: a elevação no hover. */
+  button.primario:hover:not(:disabled) { transform: none; filter: brightness(1.08); }
+  .botao.verde:hover, .zap-flutuante:hover { transform: none; }
+
+  /* Depois o que FICA: a confirmação do clique.
+     A ordem importa — pressionar é também estar com o mouse em cima, então a
+     regra de :hover acima venceria a de :active se viesse depois dela, e o
+     botão ficaria mudo justamente para quem mais precisa da confirmação. */
+  button:active:not(:disabled) { transform: translateY(1px); transition-duration: 70ms; }
+  button.primario:active:not(:disabled),
+  .botao.verde:active, .zap-flutuante:active { transform: scale(0.985); }
 }
 
 /* painel demonstrativo dentro do hero */
@@ -1030,7 +1149,11 @@ td.texto { white-space: normal; min-width: 260px; }
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: 11px; padding-top: 6px;
   }
-  .topo nav.aberto { display: flex; }
+  .topo nav.aberto { display: flex; animation: trocar-painel var(--t-estado) var(--curva) both; }
+  .barrinhas span { transition: transform var(--t-estado) var(--curva), opacity var(--t-feedback) ease; }
+  .menu-movel[aria-expanded="true"] .barrinhas span:nth-child(1) { transform: translateY(5.3px) rotate(45deg); }
+  .menu-movel[aria-expanded="true"] .barrinhas span:nth-child(2) { opacity: 0; }
+  .menu-movel[aria-expanded="true"] .barrinhas span:nth-child(3) { transform: translateY(-5.3px) rotate(-45deg); }
   .topo nav a:not(.botao) { padding: 13px 2px; }
   .topo nav .botao { margin: 8px 0 4px; justify-content: center; }
   .secao-topo h2 { max-width: none; }
@@ -1235,6 +1358,26 @@ td.texto { white-space: normal; min-width: 260px; }
   justify-content: center;
 }
 .palco-previa .bolha-zap { max-width: 400px; width: 100%; }
+@keyframes surgir {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.palco-previa { animation: surgir var(--t-estado) var(--curva) both; }
+
+/* o polegar do alternador desliza; os rótulos só trocam de cor */
+.segmentado { position: relative; }
+.segmentado button { position: relative; z-index: 1; transition: color var(--t-feedback) ease; }
+.segmentado button.ativo { background: transparent; box-shadow: none; }
+.segmentado .polegar {
+  position: absolute;
+  top: 3px; left: 3px; bottom: 3px;
+  width: var(--pol-w, 0);
+  transform: translateX(var(--pol-x, 0));
+  background: var(--surface);
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(10, 20, 18, 0.08);
+  transition: transform var(--t-estado) var(--curva), width var(--t-estado) var(--curva);
+}
 
 /* =================== canvas de cadência =================== */
 .editor-cadencia {
@@ -1294,9 +1437,16 @@ td.texto { white-space: normal; min-width: 260px; }
   pointer-events: none;
 }
 
+@keyframes entrar-direita {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: none; }
+}
+
 .inspetor {
   width: 300px;
   flex: none;
+  /* vem da borda direita, que é de onde ele aparece — a direção é a explicação */
+  animation: entrar-direita var(--t-camada) var(--curva) both;
   border-left: 1px solid var(--borda);
   background: var(--surface);
   padding: 16px 14px;
