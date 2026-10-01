@@ -20,3 +20,11 @@ frontend/dist/
 # Sistema
 .DS_Store
 ~$*
+
+# Skills de agente instaladas localmente (impeccable e afins).
+# Ficam de fora do repositório: são ferramenta de quem desenvolve, não do produto,
+# e versionar código de terceiro que roda com permissão total de agente é risco
+# sem retorno. Reinstale com: npx skills add <url> --skill <nome>
+.agents/
+.claude/skills/
+skills-lock.json

@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T13:47:00.138Z",
+  "title": "Design System: Neriah Data",
+  "extensions": {
+    "colorMeta": {
+      "verde": {
+        "role": "primary",
+        "displayName": "Verde Neriah",
+        "canonical": "oklch(59.6% 0.175 147.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.096 147.0)",
+          "oklch(26.0% 0.175 147.0)",
+          "oklch(37.0% 0.175 147.0)",
+          "oklch(48.0% 0.175 147.0)",
+          "oklch(60.0% 0.175 147.0)",
+          "oklch(72.0% 0.175 147.0)",
+          "oklch(84.0% 0.105 147.0)",
+          "oklch(95.0% 0.061 147.0)"
+        ]
+      },
+      "verde-vivo": {
+        "role": "primary",
+        "displayName": "Verde da Logo",
+        "canonical": "oklch(84.6% 0.195 150.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.107 150.6)",
+          "oklch(26.0% 0.195 150.6)",
+          "oklch(37.0% 0.195 150.6)",
+          "oklch(48.0% 0.195 150.6)",
+          "oklch(60.0% 0.195 150.6)",
+          "oklch(72.0% 0.195 150.6)",
+          "oklch(84.0% 0.117 150.6)",
+          "oklch(95.0% 0.068 150.6)"
+        ]
+      },
+      "verde-fundo": {
+        "role": "primary",
+        "displayName": "Lavagem Verde",
+        "canonical": "oklch(97.1% 0.025 158.2)",
+        "tonalRamp": [
+          "oklch(15.0% 0.014 158.2)",
+          "oklch(26.0% 0.025 158.2)",
+          "oklch(37.0% 0.025 158.2)",
+          "oklch(48.0% 0.025 158.2)",
+          "oklch(60.0% 0.025 158.2)",
+          "oklch(72.0% 0.025 158.2)",
+          "oklch(84.0% 0.015 158.2)",
+          "oklch(95.0% 0.009 158.2)"
+        ]
+      },
+      "preto-neriah": {
+        "role": "neutral",
+        "displayName": "Preto Neriah",
+        "canonical": "oklch(14.8% 0.016 187.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.009 187.8)",
+          "oklch(26.0% 0.016 187.8)",
+          "oklch(37.0% 0.016 187.8)",
+          "oklch(48.0% 0.016 187.8)",
+          "oklch(60.0% 0.016 187.8)",
+          "oklch(72.0% 0.016 187.8)",
+          "oklch(84.0% 0.010 187.8)",
+          "oklch(95.0% 0.006 187.8)"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Página",
+        "canonical": "oklch(98.0% 0.002 165.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.001 165.1)",
+          "oklch(26.0% 0.002 165.1)",
+          "oklch(37.0% 0.002 165.1)",
+          "oklch(48.0% 0.002 165.1)",
+          "oklch(60.0% 0.002 165.1)",
+          "oklch(72.0% 0.002 165.1)",
+          "oklch(84.0% 0.001 165.1)",
+          "oklch(95.0% 0.001 165.1)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superfície",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.0% 0.000 89.9)",
+          "oklch(37.0% 0.000 89.9)",
+          "oklch(48.0% 0.000 89.9)",
+          "oklch(60.0% 0.000 89.9)",
+          "oklch(72.0% 0.000 89.9)",
+          "oklch(84.0% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "oklch(18.1% 0.015 180.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.008 180.6)",
+          "oklch(26.0% 0.015 180.6)",
+          "oklch(37.0% 0.015 180.6)",
+          "oklch(48.0% 0.015 180.6)",
+          "oklch(60.0% 0.015 180.6)",
+          "oklch(72.0% 0.015 180.6)",
+          "oklch(84.0% 0.009 180.6)",
+          "oklch(95.0% 0.005 180.6)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Tinta de Apoio",
+        "canonical": "oklch(45.5% 0.018 181.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.010 181.1)",
+          "oklch(26.0% 0.018 181.1)",
+          "oklch(37.0% 0.018 181.1)",
+          "oklch(48.0% 0.018 181.1)",
+          "oklch(60.0% 0.018 181.1)",
+          "oklch(72.0% 0.018 181.1)",
+          "oklch(84.0% 0.011 181.1)",
+          "oklch(95.0% 0.006 181.1)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Tinta Apagada",
+        "canonical": "oklch(62.2% 0.016 180.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.009 180.4)",
+          "oklch(26.0% 0.016 180.4)",
+          "oklch(37.0% 0.016 180.4)",
+          "oklch(48.0% 0.016 180.4)",
+          "oklch(60.0% 0.016 180.4)",
+          "oklch(72.0% 0.016 180.4)",
+          "oklch(84.0% 0.009 180.4)",
+          "oklch(95.0% 0.006 180.4)"
+        ]
+      },
+      "series-1": {
+        "role": "secondary",
+        "displayName": "Série 1 — Verde",
+        "canonical": "oklch(59.6% 0.175 147.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.096 147.0)",
+          "oklch(26.0% 0.175 147.0)",
+          "oklch(37.0% 0.175 147.0)",
+          "oklch(48.0% 0.175 147.0)",
+          "oklch(60.0% 0.175 147.0)",
+          "oklch(72.0% 0.175 147.0)",
+          "oklch(84.0% 0.105 147.0)",
+          "oklch(95.0% 0.061 147.0)"
+        ]
+      },
+      "series-2": {
+        "role": "secondary",
+        "displayName": "Série 2 — Azul",
+        "canonical": "oklch(57.5% 0.163 255.5)",
+        "tonalRamp": [
+          "oklch(15.0% 0.089 255.5)",
+          "oklch(26.0% 0.163 255.5)",
+          "oklch(37.0% 0.163 255.5)",
+          "oklch(48.0% 0.163 255.5)",
+          "oklch(60.0% 0.163 255.5)",
+          "oklch(72.0% 0.163 255.5)",
+          "oklch(84.0% 0.098 255.5)",
+          "oklch(95.0% 0.057 255.5)"
+        ]
+      },
+      "series-3": {
+        "role": "secondary",
+        "displayName": "Série 3 — Magenta",
+        "canonical": "oklch(71.6% 0.141 357.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.078 357.4)",
+          "oklch(26.0% 0.141 357.4)",
+          "oklch(37.0% 0.141 357.4)",
+          "oklch(48.0% 0.141 357.4)",
+          "oklch(60.0% 0.141 357.4)",
+          "oklch(72.0% 0.141 357.4)",
+          "oklch(84.0% 0.085 357.4)",
+          "oklch(95.0% 0.049 357.4)"
+        ]
+      },
+      "bom": {
+        "role": "tertiary",
+        "displayName": "Bom",
+        "canonical": "oklch(62.1% 0.207 142.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.114 142.6)",
+          "oklch(26.0% 0.207 142.6)",
+          "oklch(37.0% 0.207 142.6)",
+          "oklch(48.0% 0.207 142.6)",
+          "oklch(60.0% 0.207 142.6)",
+          "oklch(72.0% 0.207 142.6)",
+          "oklch(84.0% 0.124 142.6)",
+          "oklch(95.0% 0.073 142.6)"
+        ]
+      },
+      "atencao": {
+        "role": "tertiary",
+        "displayName": "Atenção",
+        "canonical": "oklch(81.1% 0.164 78.5)",
+        "tonalRamp": [
+          "oklch(15.0% 0.090 78.5)",
+          "oklch(26.0% 0.164 78.5)",
+          "oklch(37.0% 0.164 78.5)",
+          "oklch(48.0% 0.164 78.5)",
+          "oklch(60.0% 0.164 78.5)",
+          "oklch(72.0% 0.164 78.5)",
+          "oklch(84.0% 0.099 78.5)",
+          "oklch(95.0% 0.058 78.5)"
+        ]
+      },
+      "serio": {
+        "role": "tertiary",
+        "displayName": "Sério",
+        "canonical": "oklch(71.7% 0.141 41.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.077 41.6)",
+          "oklch(26.0% 0.141 41.6)",
+          "oklch(37.0% 0.141 41.6)",
+          "oklch(48.0% 0.141 41.6)",
+          "oklch(60.0% 0.141 41.6)",
+          "oklch(72.0% 0.141 41.6)",
+          "oklch(84.0% 0.084 41.6)",
+          "oklch(95.0% 0.049 41.6)"
+        ]
+      },
+      "critico": {
+        "role": "tertiary",
+        "displayName": "Crítico",
+        "canonical": "oklch(57.5% 0.186 25.2)",
+        "tonalRamp": [
+          "oklch(15.0% 0.102 25.2)",
+          "oklch(26.0% 0.186 25.2)",
+          "oklch(37.0% 0.186 25.2)",
+          "oklch(48.0% 0.186 25.2)",
+          "oklch(60.0% 0.186 25.2)",
+          "oklch(72.0% 0.186 25.2)",
+          "oklch(84.0% 0.112 25.2)",
+          "oklch(95.0% 0.065 25.2)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título do hero. Limitado a 16ch."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de seção do site público."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "h1, h2 e h3 dentro do produto."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "O número do stat tile. Sempre tabular."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Corpo geral; 13px em tabela."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Marcador curto em caixa alta. Nunca frase."
+      }
+    },
+    "shadows": [
+      {
+        "name": "repouso",
+        "value": "0 1px 2px rgba(10,20,18,0.04), 0 2px 8px rgba(10,20,18,0.05)",
+        "purpose": "Cartão, tile e gráfico no tema claro. Vira none no escuro."
+      },
+      {
+        "name": "flutuante",
+        "value": "0 12px 40px rgba(10,20,18,0.12)",
+        "purpose": "Só para o que flutua: tooltip e inspetor sobreposto no celular."
+      },
+      {
+        "name": "moldura-hero",
+        "value": "0 30px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(83,239,134,0.07)",
+        "purpose": "A única sombra dramática do sistema. Painel demonstrativo do hero."
+      },
+      {
+        "name": "cta-verde",
+        "value": "0 8px 28px rgba(83,239,134,0.26)",
+        "purpose": "Halo sob o CTA do hero. Exclusivo de superfície escura."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transicao-controle",
+        "value": "140ms ease",
+        "purpose": "Fundo, borda e posição em botão, campo e área de arraste."
+      },
+      {
+        "name": "elevacao-hover",
+        "value": "translateY(-1px)",
+        "purpose": "Botão primário no hover; -2px nos CTAs do site."
+      },
+      {
+        "name": "brilho-hover",
+        "value": "brightness(1.08)",
+        "purpose": "Hover do botão primário, em vez de uma segunda cor de verde."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "editor",
+        "value": "900px"
+      },
+      {
+        "name": "md",
+        "value": "980px"
+      },
+      {
+        "name": "sm",
+        "value": "880px"
+      },
+      {
+        "name": "setas",
+        "value": "760px"
+      },
+      {
+        "name": "xs",
+        "value": "620px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação principal. Um por tela.",
+      "html": "<button class=\"ds-btn-primary\">Analisar</button>",
+      "css": ".ds-btn-primary { font: inherit; cursor: pointer; background: var(--verde, #099938); color: #fff; font-weight: 620; border: 1px solid transparent; border-radius: 9px; padding: 9px 14px; transition: background .14s ease, border-color .14s ease, transform .14s ease; } .ds-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .55; cursor: not-allowed; }"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "O botão padrão do sistema: superfície com borda.",
+      "html": "<button class=\"ds-btn-secondary\">Baixar Excel</button>",
+      "css": ".ds-btn-secondary { font: inherit; cursor: pointer; background: var(--surface, #fff); color: var(--ink, #0a1412); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 9px; padding: 9px 14px; transition: background .14s ease, border-color .14s ease; } .ds-btn-secondary:hover { background: var(--surface-2, #f1f4f3); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão discreto",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação secundária em texto puro. Ação destrutiva usa esta variante com a cor crítica — nunca um botão vermelho cheio.",
+      "html": "<button class=\"ds-btn-ghost\">Trocar arquivos</button> <button class=\"ds-btn-ghost ds-btn-ghost-destrutivo\">Excluir etapa</button>",
+      "css": ".ds-btn-ghost { font: inherit; cursor: pointer; background: transparent; color: var(--ink-2, #4c5a57); border: 1px solid transparent; border-radius: 9px; padding: 5px 9px; font-size: 13px; transition: background .14s ease; } .ds-btn-ghost:hover { background: var(--surface-2, #f1f4f3); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; } .ds-btn-ghost-destrutivo { color: var(--critico, #d03b3b); }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rótulo acima, campo abaixo. O contorno de foco nunca é removido.",
+      "html": "<label class=\"ds-label\" for=\"ds-i\">Mês de referência</label><input class=\"ds-input\" id=\"ds-i\" value=\"2026-09\">",
+      "css": ".ds-label { display: block; font-size: 13px; font-weight: 620; color: var(--ink-2, #4c5a57); margin-bottom: 5px; } .ds-input { font: inherit; width: 100%; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--borda, rgba(10,20,18,.1)); background: var(--surface, #fff); color: var(--ink, #0a1412); } .ds-input:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; }"
+    },
+    {
+      "name": "Cartão",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A superfície que agrupa conteúdo. Cartão dentro de cartão é proibido.",
+      "html": "<div class=\"ds-card\"><h2 class=\"ds-card-t\">O que os números estão dizendo</h2><p class=\"ds-card-p\">Conclusões geradas pelo cruzamento das duas planilhas.</p></div>",
+      "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-card-t { margin: 0; font-size: 17px; font-weight: 660; letter-spacing: -.015em; line-height: 1.2; color: var(--ink, #0a1412); } .ds-card-p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2, #4c5a57); }"
+    },
+    {
+      "name": "Stat tile",
+      "kind": "card",
+      "refersTo": "tile",
+      "description": "A unidade de leitura do painel. A variante em destaque marca o KPI pelo qual a página existe.",
+      "html": "<div class=\"ds-tile\"><span class=\"ds-tile-r\">Reuniões realizadas</span><div class=\"ds-tile-n\">35</div><div class=\"ds-tile-nota\">de 81 leads gerados</div></div><div class=\"ds-tile ds-tile-destaque\"><span class=\"ds-tile-r\">Assertividade</span><div class=\"ds-tile-n\">25,7%</div><span class=\"ds-selo ds-selo-ok\">✓ acima da meta</span></div>",
+      "css": ".ds-tile { display: inline-block; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-radius: 12px; padding: 15px 16px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-tile-r { font-size: 12.5px; color: var(--ink-2, #4c5a57); font-weight: 620; display: block; margin-bottom: 7px; } .ds-tile-n { font-size: 28px; font-weight: 680; letter-spacing: -.025em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink, #0a1412); } .ds-tile-nota { font-size: 12px; color: var(--ink-muted, #7d8a87); margin-top: 6px; } .ds-tile-destaque { border-color: var(--verde, #099938); box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 0 0 3px var(--verde-fundo, #e8fbef); } .ds-tile-destaque .ds-tile-n { color: var(--verde, #099938); } .ds-selo { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; padding: 2px 8px; border-radius: 999px; margin-top: 7px; border: 1px solid var(--borda, rgba(10,20,18,.1)); } .ds-selo-ok { color: var(--sucesso-texto, #006300); }"
+    },
+    {
+      "name": "Item de navegação",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Barra lateral do produto. O ativo ganha lavagem verde, tinta verde e peso maior.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\">Nova análise</a><a class=\"ds-nav-item ds-nav-item-ativo\" href=\"#\">Histórico</a><a class=\"ds-nav-item\" href=\"#\">Cadência</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 4px; width: 208px; } .ds-nav-item { display: block; padding: 9px 11px; border-radius: 9px; color: var(--ink-2, #4c5a57); text-decoration: none; font-size: 14px; font-weight: 520; } .ds-nav-item:hover { background: var(--surface-2, #f1f4f3); } .ds-nav-item:focus-visible { outline: 2px solid var(--verde, #099938); outline-offset: 2px; } .ds-nav-item-ativo { background: var(--verde-fundo, #e8fbef); color: var(--verde, #099938); font-weight: 650; }"
+    },
+    {
+      "name": "Nó de cadência",
+      "kind": "custom",
+      "refersTo": "cadence-node",
+      "description": "O componente de assinatura. Borda esquerda na cor do canal; cada canal tem cor E ícone, para o fluxo ser legível sem depender de cor.",
+      "html": "<div class=\"ds-no\" style=\"--cor-canal:#25d366\"><div class=\"ds-no-topo\"><span class=\"ds-no-canal\"><span aria-hidden=\"true\">💬</span> WhatsApp</span><span class=\"ds-no-dia\">D+1</span></div><div class=\"ds-no-titulo\">Reancorar valor</div><div class=\"ds-no-texto\">9 clientes travaram em preço.</div></div>",
+      "css": ".ds-no { width: 210px; background: var(--surface, #fff); border: 1px solid var(--borda, rgba(10,20,18,.1)); border-left: 3px solid var(--cor-canal); border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(10,20,18,.04), 0 2px 8px rgba(10,20,18,.05); } .ds-no:hover { border-color: var(--verde, #099938); border-left-color: var(--cor-canal); } .ds-no-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .ds-no-canal { font-size: 11px; font-weight: 650; color: var(--cor-canal); } .ds-no-dia { font-size: 10.5px; font-weight: 700; color: var(--ink-muted, #7d8a87); background: var(--surface-2, #f1f4f3); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; } .ds-no-titulo { font-size: 13px; font-weight: 640; color: var(--ink, #0a1412); margin-top: 6px; line-height: 1.3; } .ds-no-texto { font-size: 11.5px; color: var(--ink-2, #4c5a57); margin-top: 5px; line-height: 1.45; }"
+    },
+    {
+      "name": "Aviso",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Mensagem de estado. A borda esquerda de 3px carrega a severidade, e a cor nunca vem sozinha.",
+      "html": "<div class=\"ds-aviso\">7 dos 13 campos não foram encontrados na planilha.</div><div class=\"ds-aviso ds-aviso-ok\">Análise salva no histórico.</div><div class=\"ds-aviso ds-aviso-erro\">Nenhuma coluna de data foi reconhecida.</div>",
+      "css": ".ds-aviso { border: 1px solid var(--borda, rgba(10,20,18,.1)); border-left: 3px solid var(--atencao, #fab219); border-radius: 9px; padding: 11px 13px; font-size: 13.5px; background: var(--surface, #fff); color: var(--ink-2, #4c5a57); margin-bottom: 8px; } .ds-aviso-ok { border-left-color: var(--bom, #0ca30c); color: var(--sucesso-texto, #006300); } .ds-aviso-erro { border-left-color: var(--critico, #d03b3b); color: var(--critico, #d03b3b); }"
+    },
+    {
+      "name": "CTA do hero",
+      "kind": "button",
+      "refersTo": "cta-hero",
+      "description": "Variante exclusiva de superfície escura. O verde da logo só existe aqui.",
+      "html": "<div class=\"ds-palco\"><a class=\"ds-cta\" href=\"#\">Começar agora</a><a class=\"ds-cta ds-cta-vazado\" href=\"#\">Ver como funciona</a></div>",
+      "css": ".ds-palco { background: #040d0c; padding: 28px; border-radius: 16px; display: flex; gap: 12px; flex-wrap: wrap; } .ds-cta { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; padding: 13px 24px; font-size: 15px; font-weight: 620; text-decoration: none; border: 1px solid transparent; background: #53ef86; color: #040d0c; box-shadow: 0 8px 28px rgba(83,239,134,.26); transition: transform .14s ease, filter .14s ease, background .14s ease; } .ds-cta:hover { transform: translateY(-2px); filter: brightness(1.06); } .ds-cta:focus-visible { outline: 2px solid #53ef86; outline-offset: 2px; } .ds-cta-vazado { background: transparent; color: #fff; border-color: rgba(255,255,255,.22); box-shadow: none; } .ds-cta-vazado:hover { background: rgba(255,255,255,.07); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Luz Sobre o Dado",
+    "overview": "Neriah significa luz. A marca nasce do escuro — #040D0C, o fundo da própria logo — e o verde é a luz que revela o dado. Essa não é uma metáfora de apresentação: é a regra que governa qual superfície cada tela usa.\n\nMomentos de marca são escuros. Site público e tela de entrada, onde a pessoa ainda está decidindo se confia no produto, usam o preto da logo com um brilho verde nascendo atrás do conteúdo e uma malha técnica dissolvida nas bordas. O produto é claro. Painel, análises, tabelas e carteira — onde se lê número o dia inteiro — usam tinta escura sobre fundo claro, porque é assim que número se lê.\n\nA troca de superfície marca a passagem de \"isto é uma marca\" para \"isto é uma ferramenta\". A densidade acompanha: 15px de corpo, 13px em tabela, botão de 9px de raio. É densidade de ferramenta de trabalho, não de página de vendas. O sistema é deliberadamente plano — a profundidade vem de borda de 1px e de troca de superfície, quase nunca de sombra.",
+    "keyCharacteristics": [
+      "Verde como único acento de marca; não existe segunda cor de marca.",
+      "Tipografia de sistema, sem webfont — a primeira pintura importa mais.",
+      "Superfícies planas, bordas de 1px, sombra zerada no tema escuro.",
+      "Números sempre em tabular-nums, para alinharem na vertical.",
+      "Claro e escuro completos, por prefers-color-scheme e por data-theme.",
+      "Nenhum estado se comunica só por cor: sempre ícone ou texto junto."
+    ],
+    "rules": [
+      {
+        "name": "A Regra do Verde por Superfície",
+        "section": "colors",
+        "body": "O verde da logo é lindo sobre preto e ilegível sobre branco — reprova contraste para texto. Por isso o acento troca de valor por tema (verde ≠ verde-dark) enquanto verde-vivo fica fixo e só aparece sobre escuro. Teste: se um elemento usa verde-vivo e o fundo dele não é preto-neriah ou .escuro, é erro."
+      },
+      {
+        "name": "A Regra da Paleta Medida",
+        "section": "colors",
+        "body": "As seis cores de série foram escolhidas e medidas, não aprovadas no olho. O pior par, simulado para protanopia, deuteranopia e tritanopia, fica em ΔE 13,0 no claro e 8,7 no escuro; o mínimo exigido é 8. Uma tentativa anterior usava verde + laranja e reprovou com ΔE 4,3 em protanopia — por isso o terceiro slot é magenta. Trocar qualquer um dos seis valores exige refazer a medição."
+      },
+      {
+        "name": "A Regra dos Três Níveis de Tinta",
+        "section": "colors",
+        "body": "Existem ink, ink-2 e ink-muted, e só. Um quarto nível não acrescenta hierarquia, só reduz contraste."
+      },
+      {
+        "name": "A Regra do Ícone Obrigatório",
+        "section": "colors",
+        "body": "Nenhum estado se comunica apenas por cor. O diagnóstico usa emoji e é ordenado pelo peso do ícone, não pelo da cor. O selo de meta traz texto. Cor é reforço, nunca o portador da informação."
+      },
+      {
+        "name": "A Regra do Token",
+        "section": "colors",
+        "body": "Nenhuma cor literal em componente, com três exceções justificadas: cor de canal da cadência, o verde do WhatsApp (marca de terceiro) e as superfícies escuras do site, que precisam de rgba branco para transparência sobre o preto."
+      },
+      {
+        "name": "A Regra dos Pesos Quebrados",
+        "section": "typography",
+        "body": "Os pesos são 520, 620, 640, 650, 660, 680 — não 400/500/600/700. Com fonte variável de sistema esses meios-termos renderizam, e a diferença entre 620 e 650 é o que separa rótulo de título sem mudar tamanho. Arredondar para a centena achata a hierarquia."
+      },
+      {
+        "name": "A Regra do Aperto Proporcional",
+        "section": "typography",
+        "body": "O letter-spacing negativo cresce com o tamanho: -0.015em nos títulos do produto, -0.025em nos números, -0.035em no hero. Texto de corpo não recebe nenhum."
+      },
+      {
+        "name": "A Regra da Caixa Alta Curta",
+        "section": "typography",
+        "body": "Caixa alta com letter-spacing largo é para marcador de uma ou duas palavras. Nunca frase."
+      },
+      {
+        "name": "A Regra do Número Tabular",
+        "section": "typography",
+        "body": "Todo número que possa aparecer empilhado — coluna de tabela, valor de tooltip, dia da cadência — leva font-variant-numeric: tabular-nums."
+      },
+      {
+        "name": "A Regra da Grade Que Se Vira",
+        "section": "layout",
+        "body": "Antes de escrever media query, pergunte se auto-fit + minmax resolve. Nas sete grades de repetição do sistema resolveu, e cada media query não escrita é uma quebra a menos para manter."
+      },
+      {
+        "name": "A Regra da Sombra Zerada no Escuro",
+        "section": "elevation",
+        "body": "No tema escuro a sombra de repouso vira none. Sombra preta sobre fundo quase preto não eleva nada — só suja a borda. Quem separa no escuro é a borda e o degrau de superfície."
+      },
+      {
+        "name": "A Regra da Borda Antes da Sombra",
+        "section": "elevation",
+        "body": "Precisa separar dois blocos? 1px de borda. Sombra entra só quando o elemento realmente flutua sobre o conteúdo."
+      },
+      {
+        "name": "A Regra do Cartão Sem Filho",
+        "section": "elevation",
+        "body": "Cartão dentro de cartão é proibido. Para agrupar dentro de um cartão, use borda, espaçamento ou um h3. O terceiro degrau de superfície é o limite do sistema."
+      },
+      {
+        "name": "A Regra do Raio Proporcional",
+        "section": "shapes",
+        "body": "Elemento pequeno, raio pequeno. Um botão com raio de cartão parece inflado; um cartão com raio de botão parece rígido."
+      },
+      {
+        "name": "A Regra da Barra de Canal",
+        "section": "shapes",
+        "body": "A borda esquerda de 3px é reservada para identidade — canal da cadência, destaque de recurso, severidade de aviso. Não é decoração, e usá-la como tal destrói o sinal."
+      }
+    ],
+    "dos": [
+      "Do usar o token do acento e deixar o tema resolver o valor.",
+      "Do reservar o verde da logo para superfície escura, sempre.",
+      "Do aplicar tabular-nums em qualquer número que possa aparecer empilhado.",
+      "Do acompanhar todo estado de ícone ou texto, nunca só de cor.",
+      "Do manter o produto claro e os momentos de marca escuros.",
+      "Do preferir auto-fit + minmax a uma media query nova.",
+      "Do separar com borda de 1px antes de pensar em sombra.",
+      "Do oferecer \"ver tabela\" em todo gráfico.",
+      "Do formatar em pt-BR e mostrar — para valor nulo.",
+      "Do comentar no CSS a decisão que parece errada mas não é."
+    ],
+    "donts": [
+      "Don't escrever hex em componente; as três exceções estão em Colors.",
+      "Don't trocar uma cor de série sem refazer a medição de daltonismo.",
+      "Don't pôr o verde da logo sobre branco, nem texto branco sobre ele.",
+      "Don't aninhar cartão dentro de cartão.",
+      "Don't usar segundo eixo y num gráfico.",
+      "Don't adicionar webfont.",
+      "Don't arredondar os pesos quebrados para 400/500/600/700.",
+      "Don't usar sombra para separar no tema escuro.",
+      "Don't escrever frase em caixa alta com letter-spacing largo.",
+      "Don't usar a borda esquerda de 3px como decoração — ela carrega identidade.",
+      "Don't remover o contorno de foco.",
+      "Don't criar CSS por página; o sistema é um arquivo só, por seção temática."
+    ]
+  }
+}
