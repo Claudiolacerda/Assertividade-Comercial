@@ -434,8 +434,10 @@ superfície é o limite do sistema.
 A classe `.escuro` é o único lugar com decoração, e ela tem duas camadas em
 `z-index` negativo sob `isolation: isolate`:
 
-- **A luz** — dois gradientes radiais verdes (16% e 10% de opacidade) nascendo
-  atrás do conteúdo, no topo. É a metáfora da marca, literal.
+- **A luz** — uma fonte com direção, no eixo de 100° do facho (ver Components).
+  Substituiu dois gradientes radiais centrados: aqueles eram brilho de SaaS, que
+  não dizia de onde vinha nem o que iluminava. Este tem origem, e a origem é a
+  mesma do feixe.
 - **A malha técnica** — grade de 64px a 3,2% de branco, com máscara radial que a
   dissolve nas bordas. Diz "ferramenta de dados" sem virar papel de parede.
 
@@ -574,6 +576,39 @@ A oportunidade principal, promovida acima dos KPIs: lavagem verde, borda verde,
 ícone de nível e a frase em 16px/560. É a linha que paga a assinatura, e antes
 ela tinha o mesmo peso de uma observação informativa no meio de dezoito.
 
+### O Facho — o momento de assinatura
+
+O único efeito extraordinário do sistema, e ele vive em um lugar só: o painel
+demonstrativo da hero. Um feixe de luz entra pela esquerda, varre o painel uma
+vez em 1,75s e sai. Onde ele passa, o dado **resolve**: cada número sai de
+`blur(7px)` dessaturado para nítido e colorido, com um deslocamento de 5px.
+
+**Por que existe.** Neriah significa luz, e o produto não cria o dado — ele
+revela o que já estava na planilha. O facho executa essa frase na frente de quem
+chega, sem precisar escrevê-la. Os números que ele acende são reais, de setembro
+de 2026.
+
+**Como funciona.** `@property --facho` registra uma porcentagem como tipo
+animável; sem esse registro o navegador não interpola uma posição dentro de um
+gradiente e o feixe salta em vez de deslizar. O gradiente é assimétrico de
+propósito: rastro curto atrás (−6%), para não lavar o dado recém-revelado, e
+halo longo à frente (+22%), caindo sobre o que ainda está borrado.
+
+**A Regra do Feixe Calculado.** O feixe anda em velocidade **linear**, e é isso
+que torna a posição dele previsível: o instante em que cada elemento acende é
+calculado a partir da posição horizontal dele, resolvendo a geometria do
+`linear-gradient(100deg)` num box de 960×470 (comprimento da linha 1027px). Com
+easing, os tempos deixam de ser calculáveis e o feixe descola do que ele acende
+— foi exatamente o que aconteceu na primeira versão. Mexer no ângulo, na
+duração ou no tamanho do painel exige recalcular os atrasos.
+
+**Degradação.** Sem `@property`, o painel nasce aceso e nada se perde.
+Com `prefers-reduced-motion: reduce`, idem — nenhuma varredura.
+
+**A Regra do Momento Único.** Existe **um** momento extraordinário no produto
+inteiro, e é este. Um segundo efeito dessa classe em qualquer outra tela não
+soma: divide a atenção e transforma assinatura em maneirismo.
+
 ### Brand Lockup
 
 Símbolo PNG transparente — o mesmo arquivo serve em superfície clara e escura —
@@ -621,3 +656,7 @@ o lockup inteiro escala proporcionalmente com um único número.
   de 830px segurando os numerais "4" e "0" foi exatamente o que aconteceu.
 - **Don't** gravar o resultado da análise em `JSONB`: o Postgres reordena as
   chaves por tamanho e a ordem das chaves É a ordem das colunas da tabela.
+- **Don't** criar um segundo momento extraordinário. O facho é o único, e a
+  regra acima explica por quê.
+- **Don't** trocar o `linear` do facho por easing sem recalcular os atrasos de
+  cada elemento.
