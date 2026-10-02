@@ -161,3 +161,77 @@ def padronizar(df: pd.DataFrame, mapa: dict[str, list[str]], nome_base: str) -> 
         if c in df:
             novo[c] = df[c]
     return novo, pd.DataFrame(log)
+
+
+def ler_metas_da_planilha(caminhos) -> dict[str, float]:
+    """Lê a aba 'Metas' da planilha de reuniões, se ela existir.
+
+    A aba é opcional, e tem de ser: planilha antiga, CSV e export de outro
+    sistema nenhum tem essa aba, e todos continuam analisando igual. Linha
+    vazia ou valor não numérico é ignorado em silêncio — meta em branco é um
+    estado previsto, que o JET trata tirando o indicador do Score.
+
+    O casamento é pelo rótulo normalizado da coluna A, contra a mesma lista
+    que a planilha-modelo escreve. Por isso os dois lados importam de
+    `modelo.METAS_DA_PLANILHA`: mudar um rótulo lá muda os dois juntos.
+    """
+    from .modelo import ABA_METAS, METAS_DA_PLANILHA
+
+    por_rotulo = {normalizar(rot): (chave, fmt) for chave, rot, fmt, _, _ in METAS_DA_PLANILHA}
+    achadas: dict[str, float] = {}
+
+    for caminho in caminhos if isinstance(caminhos, (list, tuple)) else [caminhos]:
+        caminho = Path(caminho)
+        if caminho.suffix.lower() not in (".xlsx", ".xlsm", ".xls"):
+            continue
+        try:
+            abas = pd.read_excel(caminho, sheet_name=None, header=None, dtype=object)
+        except Exception:
+            continue
+        nome_aba = next((n for n in abas if normalizar(n) == normalizar(ABA_METAS)), None)
+        if nome_aba is None:
+            continue
+        for _, linha in abas[nome_aba].iterrows():
+            valores = list(linha)
+            if len(valores) < 2:
+                continue
+            alvo = por_rotulo.get(normalizar(valores[0]))
+            if not alvo:
+                continue
+            chave, formato = alvo
+            numero = _para_numero_meta(valores[1])
+            if numero is None:
+                continue
+            if numero <= 0:
+                continue
+            # O Excel guarda porcentagem como fração (25% = 0,25), mas quem
+            # digita "25" numa célula sem formato quer 25%. Acima de 1 numa
+            # meta percentual só pode ser a segunda leitura.
+            if formato == "pct" and numero > 1:
+                numero = numero / 100
+            achadas[chave] = numero
+    return achadas
+
+
+def _para_numero_meta(valor) -> float | None:
+    """Converte a célula de meta em número, aceitando o que o Excel e o humano dão.
+
+    O Excel entrega float ou int, e esses passam direto: tratá-los como texto
+    e aplicar a limpeza de separadores quebraria 0,25 em 25. Só quando a célula
+    é texto é que vale remover "R$", "%" e o ponto de milhar.
+    """
+    if isinstance(valor, bool) or valor is None:
+        return None
+    if isinstance(valor, (int, float)):
+        return None if pd.isna(valor) else float(valor)
+    texto = str(valor).strip()
+    if not texto:
+        return None
+    texto = texto.replace("R$", "").replace("%", "").replace("x", "").strip()
+    # "1.234,56" é milhar + decimal; "1234.56" é só decimal. A vírgula decide.
+    if "," in texto:
+        texto = texto.replace(".", "").replace(",", ".")
+    try:
+        return float(texto)
+    except ValueError:
+        return None

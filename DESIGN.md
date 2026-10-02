@@ -754,6 +754,36 @@ Com `prefers-reduced-motion: reduce`, idem — nenhuma varredura.
 inteiro, e é este. Um segundo efeito dessa classe em qualquer outra tela não
 soma: divide a atenção e transforma assinatura em maneirismo.
 
+### O Score do JET
+
+A nota do mês, de 0 a 100, com os três pilares que a formam e a lista do que
+custou ponto. É a única tela do sistema com um número grande: trinta e sete
+KPIs não respondem "o mês foi bom?", e o Score responde.
+
+- **Anel:** SVG de 128px, traço de 10px com ponta arredondada, girado -90° para
+  começar no topo. Trilho em `--surface-2`, arco em `--verde` (excelente e bom),
+  `--atencao` ou `--critico`. O traço anima por `stroke-dasharray` em
+  `--t-camada`, não por repintura do fundo.
+- **Número:** 36px, peso 680, `letter-spacing: -0.03em`, com "de 100" em 11px e
+  `--ink-muted` embaixo. O `<svg>` tem `role="img"` e um `aria-label` que diz o
+  valor e a faixa por extenso.
+- **Pilares:** três cartões iguais, nota em 27px sobre barra de 6px. O pilar sem
+  nenhum indicador pontuável troca a nota por "não pontuado" em
+  `--ink-muted` e ganha fundo `--surface-2`.
+- **Melhorias:** selo de custo à esquerda (`−12,0 pts` em vermelho, ou
+  `registro` em cinza), título, a comparação valor contra meta e a ação.
+
+**A Regra do Número Que Não Mente.** Nenhum estado aqui é dito só por cor. A
+faixa tem rótulo por extenso ao lado do ícone, o atingimento aparece como
+"36% da meta", e o pilar fora do cálculo diz "não pontuado". A decisão que sai
+desta tela é corte de verba; quem não distingue o verde do vermelho precisa
+chegar à mesma decisão.
+
+**A Regra do Fora do Cálculo Visível.** Indicador que o Score não considerou
+não é escondido: vai para uma seção própria, com o motivo escrito. Esconder
+faria o cliente ler 94 como se a nota cobrisse o mês inteiro, quando ela pode
+estar cobrindo dois pilares de três. A frase de leitura no topo diz quantos.
+
 ### Brand Lockup
 
 Símbolo PNG transparente — o mesmo arquivo serve em superfície clara e escura —

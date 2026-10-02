@@ -11,6 +11,7 @@ import {
   GraficoSemanas,
   GraficoStatus,
 } from "../components/Charts";
+import Jet from "../components/Jet";
 import NotaPlanilha from "../components/NotaPlanilha";
 import RelatorioZap from "../components/RelatorioZap";
 import { Destaque, Diagnostico, TabelaDados, Tile } from "../components/Painel";
@@ -18,6 +19,7 @@ import { mensagemDoErro } from "../erros";
 
 const ABAS = [
   { id: "resumo", titulo: "Resumo" },
+  { id: "jet", titulo: "JET" },
   { id: "trafego", titulo: "Tráfego pago" },
   { id: "comercial", titulo: "Comercial" },
   { id: "pipeline", titulo: "Pipeline e objeções" },
@@ -117,7 +119,7 @@ export default function Analise() {
       {/* role/aria-selected são o que diz ao leitor de tela qual visão está
           aberta: o sublinhado verde sozinho não é exposto a ninguém. */}
       <div className="abas" role="tablist" aria-label="Visões da análise" ref={barraAbas}>
-        {/* Um indicador só, que viaja entre as abas. Seis sublinhados que acendem
+        {/* Um indicador só, que viaja entre as abas. Sublinhados que acendem
             e apagam não dizem de onde para onde você foi; este diz. */}
         <span className="indicador-aba" aria-hidden="true" />
         {ABAS.map((a) => (
@@ -158,6 +160,12 @@ export default function Analise() {
             <GraficoFunil funil={tabela("funil")} />
             <GraficoStatus porStatus={tabela("por_status")} />
           </div>
+        </div>
+      )}
+
+      {aba === "jet" && (
+        <div role="tabpanel" id="painel-jet" aria-labelledby="aba-jet">
+          <Jet jet={r.jet} />
         </div>
       )}
 

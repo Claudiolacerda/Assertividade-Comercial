@@ -14,6 +14,13 @@ from typing import Any
 # Metas (referências do cliente — só marcam ✅/⚠️ e alimentam o diagnóstico)
 # --------------------------------------------------------------------------- #
 METAS_PADRAO: dict[str, float] = {
+    # As três primeiras não têm padrão possível: faturamento, número de clientes
+    # e volume de leads dependem do porte de cada cliente. Ficam em 0, o que o
+    # JET lê como "não preenchida" e tira do Score em vez de reprovar o mês por
+    # uma meta que ninguém escreveu. Vêm da aba Metas da planilha.
+    "receita_mes": 0.0,  # faturamento esperado no mês (R$)
+    "fechamentos_mes": 0.0,  # clientes fechados esperados no mês
+    "leads_mes": 0.0,  # leads esperados no mês
     "ctr": 0.010,  # CTR no link mínimo (1,0%)
     "cpl_max": 40.0,  # custo por lead máximo (R$)
     "lead_para_reuniao": 0.20,  # % dos leads que viram reunião agendada
