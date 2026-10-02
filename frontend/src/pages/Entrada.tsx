@@ -54,16 +54,16 @@ export default function Entrada() {
           </p>
           <p className="apoio">
             Duas planilhas entram. Sai o CAC real por campanha, a assertividade de cada vendedor e o
-            que travou cada venda — com as conclusões escritas, não só os gráficos.
+            que travou cada venda, com as conclusões escritas, não só os gráficos.
           </p>
 
           <div className="prova">
             <div className="item">
-              <b>25,7%</b> de assertividade — e o aviso de que, descontando quem ainda não decidiu,
+              <b>25,7%</b> de assertividade, e o aviso de que, descontando quem ainda não decidiu,
               a real é <b>17,1%</b>.
             </div>
             <div className="item">
-              <b>R$ 405,67</b> de CAC — ou <b>R$ 730,20</b>, se os fechamentos marcados como
+              <b>R$ 405,67</b> de CAC, ou <b>R$ 730,20</b> se os fechamentos marcados como
               parceiro vierem de indicação.
             </div>
             <div className="item">
@@ -72,7 +72,7 @@ export default function Entrada() {
           </div>
         </div>
 
-        <div className="rodape-marca">Neriah · luz — inteligência de dados comerciais.</div>
+        <div className="rodape-marca">Neriah · luz · inteligência de dados comerciais.</div>
       </aside>
 
       {/* -------- formulário -------- */}

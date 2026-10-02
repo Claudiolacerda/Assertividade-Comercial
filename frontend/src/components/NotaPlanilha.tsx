@@ -29,7 +29,7 @@ export default function NotaPlanilha({ cobertura }) {
           <h2>Nota da planilha</h2>
           <p style={{ color: "var(--ink-2)", fontSize: 13.5, margin: "5px 0 0" }}>
             {completa
-              ? "Planilha completa — todos os indicadores estão liberados."
+              ? "Planilha completa: todos os indicadores estão liberados."
               : `Com ${encontrados} de ${total} campos, ${faltando.length} indicador(es) ainda estão desligados.`}
           </p>
         </div>

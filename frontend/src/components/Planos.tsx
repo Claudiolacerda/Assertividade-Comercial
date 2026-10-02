@@ -97,7 +97,7 @@ export default function Planos() {
           <h2>Custa menos que um cliente perdido</h2>
           <p>
             Preço por cliente analisado, porque é assim que a sua conta fecha. Sem fidelidade e sem
-            taxa de setup — no anual, dois meses por nossa conta.
+            taxa de setup. No plano anual, dois meses por nossa conta.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ export default function Planos() {
 
         <p className="nota-planos">
           Ainda em dúvida?{" "}
-          <strong>A primeira análise é gratuita</strong> — mande as suas duas planilhas e receba o
+          <strong>A primeira análise é gratuita.</strong> Mande as suas duas planilhas e receba o
           diagnóstico da sua operação antes de decidir.{" "}
           <a href={linkZap("Olá! Quero fazer a primeira análise gratuita da Neriah Data.")} target="_blank" rel="noopener noreferrer">
             Começar pelo WhatsApp
