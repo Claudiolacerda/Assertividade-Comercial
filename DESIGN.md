@@ -399,6 +399,18 @@ forma:
 - **760px / 620px** — setas da vitrine somem; o botão flutuante do WhatsApp perde
   o rótulo e fica só ícone.
 
+**A Regra da Calha Inviolável.** A calha lateral usa `padding-inline`, e toda
+regra de ritmo vertical usa `padding-block`. O atalho `padding` zera os lados, e
+foi assim que a calha deste site ficou morta por muito tempo sem ninguém
+perceber: no desktop o contêiner de 1140px já deixa folga, então o defeito só
+aparecia no celular, onde o texto encostava na borda e era cortado. Quem define
+ritmo vertical nunca usa o atalho.
+
+**A Regra do Detector Que Mente.** `overflow-x: clip` corta o conteúdo sem criar
+contêiner de rolagem, então `scrollWidth` deixa de acusar estouro mesmo com
+texto sendo cortado. Medir estouro por `scrollWidth` sozinho é insuficiente:
+vale percorrer os blocos de texto e conferir a distância deles até a borda.
+
 **A Regra da Grade Que Se Vira.** Antes de escrever media query, pergunte se
 `auto-fit` + `minmax` resolve. Nas sete grades acima resolveu, e cada media query
 não escrita é uma quebra a menos para manter.
