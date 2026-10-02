@@ -125,6 +125,99 @@ def _aba_reunioes(wb: Workbook) -> None:
     ws.cell(ultima + 2, 1, "As três primeiras linhas são exemplos — apague antes de usar.").font = F_SUB
 
 
+# Nome da aba e dos rótulos: o parser procura por estes textos exatos, então
+# mudar um aqui obriga a mudar o espelho em `leitura.py`. A lista é a única
+# fonte dos dois lados — o modelo escreve a partir dela e o leitor lê por ela.
+ABA_METAS = "Metas"
+METAS_DA_PLANILHA = [
+    ("receita_mes", "Faturamento esperado no mês (R$)", "brl",
+     "Soma do valor dos contratos que você espera fechar no mês.", 60000),
+    ("fechamentos_mes", "Clientes fechados esperados no mês", "int",
+     "Quantos contratos novos o mês precisa entregar.", 12),
+    ("leads_mes", "Leads esperados no mês", "int",
+     "Quantas conversas o tráfego precisa gerar para sustentar essa meta.", 90),
+    ("cac_max", "Teto de custo por cliente (CAC) (R$)", "brl",
+     "O máximo que você aceita pagar em anúncio por cliente fechado.", 800),
+    ("cpl_max", "Teto de custo por lead (R$)", "brl",
+     "O máximo que você aceita pagar por conversa gerada.", 40),
+    ("assertividade", "Assertividade esperada (%)", "pct",
+     "De cada 100 reuniões realizadas, quantas devem fechar.", 0.25),
+    ("comparecimento", "Comparecimento esperado (%)", "pct",
+     "De cada 100 reuniões marcadas, quantas devem acontecer.", 0.70),
+    ("win_rate", "Win rate esperado (%)", "pct",
+     "Entre quem já decidiu (fechou ou perdeu), quantos devem fechar.", 0.40),
+    ("lead_para_reuniao", "Lead que vira reunião (%)", "pct",
+     "De cada 100 leads, quantos devem virar reunião agendada.", 0.20),
+    ("ctr", "CTR mínimo no link (%)", "pct",
+     "Proporção de quem vê o anúncio e clica.", 0.010),
+    ("roas", "ROAS esperado (x)", "x",
+     "Quantos reais de receita para cada real investido.", 3.0),
+]
+
+
+def _aba_metas(wb: Workbook) -> None:
+    """A aba que o JET lê para dar a nota do mês.
+
+    Em branco não é erro: cada meta vazia simplesmente sai do Score, e o JET
+    renormaliza os pesos. Preencher só o que você de fato combinou dá uma nota
+    mais honesta do que inventar número para todas as linhas.
+    """
+    ws = wb.create_sheet(ABA_METAS, 1)
+    ws["A1"] = "Metas do mês"
+    ws["A1"].font = F_TIT
+    ws["A2"] = (
+        "Preencha a coluna B com o que foi combinado para o mês. O JET usa estes números para dar "
+        "a nota da operação e apontar onde ela ficou devendo. Linha em branco sai do cálculo — "
+        "preencha só o que você realmente acompanha."
+    )
+    ws["A2"].font = F_SUB
+    ws.sheet_view.showGridLines = False
+
+    lin = 4
+    for i, h in enumerate(["Meta", "Valor", "O que é"], 1):
+        c = ws.cell(lin, i, h)
+        c.font, c.fill, c.border = F_CAB, FILL_CAB, BORDA
+        c.alignment = Alignment(horizontal="center", vertical="center")
+    lin += 1
+
+    for j, (_chave, rotulo, formato, explicacao, exemplo) in enumerate(METAS_DA_PLANILHA):
+        rot = ws.cell(lin, 1, rotulo)
+        val = ws.cell(lin, 2, exemplo)
+        exp = ws.cell(lin, 3, explicacao)
+        for cel in (rot, val, exp):
+            cel.font, cel.border = F_TXT, BORDA
+            cel.alignment = Alignment(wrap_text=True, vertical="center")
+        val.fill = FILL_OBR
+        val.alignment = Alignment(horizontal="right", vertical="center")
+        val.number_format = {
+            "brl": 'R$ #,##0.00', "int": "0", "pct": "0.0%", "x": '0.0"x"',
+        }[formato]
+        if j % 2:
+            rot.fill = exp.fill = FILL_ZEBRA
+        ws.row_dimensions[lin].height = 26
+        lin += 1
+
+    for letra, w in zip("ABC", [38, 18, 64]):
+        ws.column_dimensions[letra].width = w
+
+    lin += 1
+    ws.cell(lin, 1, "Os números acima são exemplos — troque pelos seus.").font = F_SUB
+    lin += 2
+    ws.cell(lin, 1, "Como o JET usa isto").font = F_SEC
+    lin += 1
+    for regra in [
+        "Resultado (peso 40): faturamento e clientes fechados contra o que foi combinado.",
+        "Eficiência (peso 30): CAC, custo por lead e volume de leads.",
+        "Assertividade (peso 30): as taxas de conversão do funil.",
+        "Meta em branco não derruba a nota: o peso dela é redistribuído entre as outras.",
+    ]:
+        cel = ws.cell(lin, 1, regra)
+        cel.font = F_TXT
+        cel.alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells(start_row=lin, start_column=1, end_row=lin, end_column=3)
+        lin += 1
+
+
 def _aba_instrucoes(wb: Workbook) -> None:
     ws = wb.create_sheet("Como preencher")
     ws["A1"] = "O que cada coluna destrava"
@@ -232,6 +325,7 @@ def gerar_planilha_modelo(destino: str | Path | None = None) -> bytes:
     wb = Workbook()
     wb.remove(wb.active)
     _aba_reunioes(wb)
+    _aba_metas(wb)
     _aba_instrucoes(wb)
     _aba_etapas(wb)
 

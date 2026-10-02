@@ -8,7 +8,7 @@ e a auditoria de qualidade — pronto para virar JSON (frontend) ou Excel.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 
 from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
-from .leitura import ler_arquivos, padronizar
+from .jet import avaliar as avaliar_jet
+from .leitura import ler_arquivos, ler_metas_da_planilha, padronizar
 from .metricas import (
     TAXAS_COMERCIAIS,
     TAXAS_CRUZADAS,
@@ -55,6 +56,7 @@ class Resultado:
     avisos: list[str] = field(default_factory=list)
     tipos_resultado: list[str] = field(default_factory=list)
     cobertura: dict[str, Any] = field(default_factory=dict)
+    jet: dict[str, Any] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -70,6 +72,7 @@ class Resultado:
             "avisos": self.avisos,
             "tipos_resultado": self.tipos_resultado,
             "cobertura": self.cobertura,
+            "jet": self.jet,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),
@@ -114,6 +117,13 @@ def analisar(
     cfg = cfg or ConfigAnalise()
     avisos: list[str] = []
 
+    # As metas da aba "Metas" da planilha vencem as guardadas na configuração:
+    # quem escreveu o número na planilha deste mês está dizendo a meta deste
+    # mês. A aba é opcional, e sem ela nada muda.
+    metas_planilha = ler_metas_da_planilha(arquivos_reunioes)
+    if metas_planilha:
+        cfg = replace(cfg, metas={**cfg.metas, **metas_planilha})
+
     m_bruto, r_bruto, em_blocos, log_meta, log_reun = _ler(arquivos_meta, arquivos_reunioes, cfg, avisos)
     meta = _tratar_meta(m_bruto, cfg, avisos)
     reun, tem_valor, tem_origem, ano_padrao = _tratar_reunioes(r_bruto, cfg, avisos)
@@ -141,6 +151,7 @@ def analisar(
     _diagnostico(ctx)
     _qualidade(ctx, log_meta, log_reun)
     _cobertura(res, log_reun)
+    res.jet = avaliar_jet(res).to_payload()
     return res
 
 

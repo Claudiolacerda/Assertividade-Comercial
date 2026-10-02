@@ -1786,3 +1786,134 @@ td.texto { white-space: normal; min-width: 260px; }
   max-width: 78ch;
   line-height: 1.6;
 }
+
+/* ===========================================================================
+   JET — a nota do mês
+
+   Hierarquia: o Score é a única coisa grande da tela, os pilares são a conta
+   dele e a lista de perdas é o que se faz a respeito. Nada é dito só por cor;
+   a faixa, o atingimento e o pilar fora do cálculo todos têm texto, porque a
+   decisão que sai daqui é corte de verba.
+   =========================================================================== */
+.jet { display: grid; gap: 26px; }
+/* Item de grid tem `min-width: auto`, e por isso a largura intrínseca da
+   tabela de campanhas empurrava a coluna inteira: no celular o JET ficava
+   125px mais largo que a tela. Mesmo defeito que já apareceu em `.grade`. */
+.jet > *, .jet-lista > ol, .jet-campanhas > .rolagem { min-width: 0; }
+
+.jet-topo {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 26px;
+  align-items: center;
+  padding: 22px 24px;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.jet-anel { width: 128px; height: 128px; flex: none; }
+.jet-anel circle {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 64px 64px;
+}
+.jet-anel .trilho { stroke: var(--surface-2); }
+.jet-anel .arco { transition: stroke-dasharray var(--t-camada) var(--curva); }
+.jet-anel .arco.excelente, .jet-anel .arco.bom { stroke: var(--verde); }
+.jet-anel .arco.atencao { stroke: var(--atencao); }
+.jet-anel .arco.critico { stroke: var(--critico); }
+.jet-anel .valor {
+  text-anchor: middle; font-size: 36px; font-weight: 680;
+  fill: var(--ink); letter-spacing: -0.03em;
+}
+.jet-anel .base { text-anchor: middle; font-size: 11px; fill: var(--ink-muted); }
+
+.jet-leitura p { margin: 10px 0 0; color: var(--ink-2); max-width: 62ch; line-height: 1.55; }
+.jet-leitura .aviso-metas { color: var(--atencao-texto); font-size: 13.5px; }
+
+.selo-faixa, .selo-nota, .selo-custo {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; font-weight: 620; white-space: nowrap;
+}
+.selo-faixa { padding: 5px 12px; font-size: 13px; }
+.selo-faixa.excelente, .selo-faixa.bom { background: var(--verde-fundo); color: var(--verde); }
+.selo-faixa.atencao { background: rgba(250, 178, 25, 0.16); color: var(--atencao-texto); }
+.selo-faixa.critico { background: rgba(208, 59, 59, 0.14); color: var(--critico-texto); }
+
+/* ---- pilares ---- */
+.jet-pilares { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.jet-pilar {
+  padding: 16px 18px; border: 1px solid var(--borda);
+  border-radius: 12px; background: var(--surface);
+  display: grid; gap: 8px; align-content: start;
+}
+.jet-pilar .nome { font-size: 13px; color: var(--ink-muted); font-weight: 560; }
+.jet-pilar .nota { font-size: 27px; font-weight: 660; letter-spacing: -0.025em; line-height: 1; }
+.jet-pilar .nota small { font-size: 13px; color: var(--ink-muted); font-weight: 520; }
+.jet-pilar .barra { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.jet-pilar .barra span {
+  display: block; height: 100%; background: var(--verde); border-radius: 99px;
+  transition: width var(--t-camada) var(--curva);
+}
+.jet-pilar .porque { margin: 0; font-size: 12.5px; color: var(--ink-muted); line-height: 1.45; }
+.jet-pilar.fora { background: var(--surface-2); }
+.jet-pilar.fora .nota { font-size: 15px; color: var(--ink-muted); font-weight: 560; }
+
+/* ---- listas de melhoria ---- */
+.jet-lista h3, .jet-campanhas h3, .jet-fora h3 {
+  font-size: 16px; margin: 0 0 4px;
+}
+.jet-lista .sub, .jet-campanhas .sub, .jet-fora .sub {
+  margin: 0 0 14px; color: var(--ink-muted); font-size: 13.5px; max-width: 76ch; line-height: 1.5;
+}
+.jet-lista ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.jet-melhoria {
+  display: grid; grid-template-columns: auto 1fr; gap: 14px;
+  padding: 14px 16px; border: 1px solid var(--borda);
+  border-radius: 11px; background: var(--surface);
+}
+.selo-custo {
+  padding: 4px 10px; font-size: 12px; align-self: start;
+  background: rgba(208, 59, 59, 0.12); color: var(--critico-texto);
+}
+.jet-melhoria.registro .selo-custo { background: var(--surface-2); color: var(--ink-muted); }
+.jet-melhoria .corpo strong { font-size: 14.5px; display: block; }
+.jet-melhoria .numeros { margin: 5px 0 0; font-size: 13px; color: var(--ink); font-weight: 560; }
+.jet-melhoria .numeros .contra { color: var(--ink-muted); font-weight: 460; }
+.jet-melhoria .acao { margin: 7px 0 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
+.jet-lista .tudo-certo {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--verde); font-weight: 560; margin: 0;
+}
+
+/* ---- campanhas ---- */
+.jet-campanhas .nome-campanha { font-weight: 560; text-align: left; }
+/* O cabeçalho tem de seguir o alinhamento da coluna: número à direita, e o
+   rótulo dele à esquerda em cima deles fazia a tabela parecer desencontrada. */
+.jet-campanhas th.num { text-align: right; }
+.jet-campanhas .porque-campanha { color: var(--ink-2); font-size: 13px; }
+.selo-nota { padding: 3px 9px; font-size: 12px; }
+.selo-nota.excelente, .selo-nota.bom { background: var(--verde-fundo); color: var(--verde); }
+.selo-nota.atencao { background: rgba(250, 178, 25, 0.16); color: var(--atencao-texto); }
+.selo-nota.critico { background: rgba(208, 59, 59, 0.14); color: var(--critico-texto); }
+.jet-campanhas button.discreto { margin-top: 10px; }
+
+/* ---- fora do cálculo ---- */
+.jet-fora ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.jet-fora li {
+  display: grid; grid-template-columns: minmax(140px, 240px) 1fr; gap: 14px;
+  padding: 10px 14px; border-radius: 9px; background: var(--surface-2);
+  font-size: 13px; color: var(--ink-muted);
+}
+.jet-fora li strong { color: var(--ink-2); font-weight: 560; }
+
+@media (max-width: 860px) {
+  .jet-topo { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .jet-leitura p { margin-inline: auto; }
+  .jet-pilares { grid-template-columns: 1fr; }
+  .jet-melhoria { grid-template-columns: 1fr; gap: 9px; }
+  .selo-custo { justify-self: start; }
+  .jet-fora li { grid-template-columns: 1fr; gap: 3px; }
+}

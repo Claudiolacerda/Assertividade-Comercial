@@ -72,11 +72,87 @@ export interface Cobertura {
  *  a ORDEM das chaves é a ordem das colunas e precisa ser preservada. */
 export type LinhaTabela = Record<string, string | number | null>;
 
+/* ---------------------------------------------------------------------- JET
+ * A nota do mês. Espelha `backend/app/core/jet.py`: três pilares com peso, um
+ * indicador por linha da régua e os pontos de melhoria já ordenados por
+ * quanto cada um custou de Score. */
+
+export type FaixaJet = "excelente" | "bom" | "atencao" | "critico";
+
+export interface PilarJet {
+  chave: "resultado" | "eficiencia" | "assertividade";
+  rotulo: string;
+  peso: number;
+  /** Null quando nenhum indicador do pilar pôde ser pontuado. */
+  nota: number | null;
+  pontuado: boolean;
+  indicadores_dentro: number;
+  /** Peso depois da renormalização entre os pilares vivos. */
+  peso_efetivo?: number;
+}
+
+export interface IndicadorJet {
+  chave: string;
+  rotulo: string;
+  pilar: PilarJet["chave"];
+  peso: number;
+  sentido: "min" | "max";
+  valor: number;
+  meta: number;
+  formato: string;
+  /** 0 a 100. */
+  atingimento: number;
+  pontuado: boolean;
+  /** Por que ficou fora, quando ficou. */
+  motivo_fora: string;
+  /** Pontos de Score que este indicador deixou na mesa. */
+  custo: number;
+}
+
+export interface CampanhaJet {
+  campanha: string;
+  investido: number;
+  nota: number;
+  faixa: FaixaJet;
+  fechados: number | null;
+  leads: number;
+  porque: string;
+  /** "venda" quando a planilha liga campanha a cliente; "midia" quando não. */
+  base: "venda" | "midia";
+}
+
+export interface MelhoriaJet {
+  /** "indicador" custa Score; "registro" é lacuna de preenchimento. */
+  tipo: "indicador" | "registro";
+  chave: string | null;
+  titulo: string;
+  custo: number;
+  valor: number | null;
+  meta: number | null;
+  formato: string | null;
+  sentido: "min" | "max" | null;
+  atingimento: number | null;
+  texto: string;
+  acao: string;
+}
+
+export interface Jet {
+  score: number;
+  faixa: FaixaJet;
+  leitura: string;
+  pilares: PilarJet[];
+  indicadores: IndicadorJet[];
+  campanhas: CampanhaJet[];
+  melhorias: MelhoriaJet[];
+  metas_ausentes: string[];
+}
+
 export interface ResultadoAnalise {
   kpis: Record<string, Kpi>;
   diagnostico: Apontamento[];
   tabelas: Record<string, LinhaTabela[]>;
   cobertura?: Cobertura;
+  jet?: Jet;
 }
 
 /** O que a listagem devolve (AnaliseResumo no backend): sem o resultado. */
