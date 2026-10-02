@@ -705,8 +705,42 @@ td.texto { white-space: normal; min-width: 260px; }
   pointer-events: none;
 }
 
+/* O fundo do Hero. Fica abaixo da luz (-2) e da malha (-1) de `.escuro`, para
+   os três não brigarem: o campo é a textura mais funda, a luz vem por cima dele
+   e a malha por cima da luz. */
+.fundo-hero {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* O véu. Sem ele um risco de luz passando atrás de uma linha de texto derruba
+   o parágrafo do hero para 1,94:1, contra os 4,5:1 exigidos — a média fica em
+   8,85, mas é o pior pixel que decide se a frase é legível.
+   O véu escurece a coluna central, onde vivem título, parágrafo e botões, e
+   deixa o campo aparecer nas laterais e embaixo. A vinheta que vem no próprio
+   componente faz o contrário: protege as bordas e expõe o centro. */
+.fundo-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 58% 42% at 50% 34%,
+    rgba(4, 13, 12, 0.93) 0%,
+    rgba(4, 13, 12, 0.78) 45%,
+    rgba(4, 13, 12, 0.3) 72%,
+    transparent 88%
+  );
+}
+
 /* =================== site público =================== */
-.site { overflow-x: hidden; }
+/* `clip` e não `hidden`: overflow-x:hidden força overflow-y:auto, o que cria um
+   contêiner de rolagem e mata o `position: sticky` de TODOS os descendentes —
+   era por isso que o cabeçalho do site rolava junto em vez de grudar. `clip`
+   recorta sem criar contêiner de rolagem, e o sticky volta a funcionar. */
+.site { overflow-x: clip; }
 
 .faixa { padding: 0 24px; }
 .limite { max-width: 1140px; margin: 0 auto; }
