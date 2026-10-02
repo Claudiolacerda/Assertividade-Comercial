@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import Marca from "../components/Marca";
 import { useAuth } from "../auth";
+import { mensagemDoErro } from "../erros";
 
 export default function Entrada() {
   const { entrar, cadastrar } = useAuth();
@@ -33,7 +34,7 @@ export default function Entrada() {
       if (modo === "login") await entrar(dados.email, dados.senha);
       else await cadastrar(dados);
     } catch (err) {
-      setErro(err.message);
+      setErro(mensagemDoErro(err));
     } finally {
       setEnviando(false);
     }

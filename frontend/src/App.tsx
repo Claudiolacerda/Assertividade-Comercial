@@ -93,6 +93,11 @@ function SeletorCliente() {
 
 function Produto() {
   const { usuario, empresa, sair, temCarteira, ehCliente } = useAuth();
+
+  // A rota protegida já garante que há usuário aqui; o retorno antecipado faz o
+  // TypeScript enxergar a mesma garantia em vez de espalhar `?.` pelo JSX.
+  if (!usuario) return null;
+
   return (
     <div className="app">
       {/* Sem isto, chegar às abas significa tabular a barra lateral inteira

@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 import { api } from "../api";
 import { IconeCheck } from "../components/Icones";
+import { mensagemDoErro } from "../erros";
 
 function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
   const [sobre, setSobre] = useState(false);
-  const entrada = useRef(null);
+  const entrada = useRef<any>(null);
 
   function receber(lista) {
     onArquivos(Array.from(lista || []));
@@ -70,8 +71,8 @@ function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
 
 export default function Upload() {
   const navegar = useNavigate();
-  const [meta, setMeta] = useState([]);
-  const [reunioes, setReunioes] = useState([]);
+  const [meta, setMeta] = useState<any[]>([]);
+  const [reunioes, setReunioes] = useState<any[]>([]);
   const [mes, setMes] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -88,11 +89,11 @@ export default function Upload() {
       const analise = await api.enviarAnalise({
         arquivosMeta: meta,
         arquivosReunioes: reunioes,
-        mesReferencia: mes || null,
+        mesReferencia: mes || undefined,
       });
       navegar(`/analises/${analise.id}`);
     } catch (err) {
-      setErro(err.message);
+      setErro(mensagemDoErro(err));
     } finally {
       setEnviando(false);
     }

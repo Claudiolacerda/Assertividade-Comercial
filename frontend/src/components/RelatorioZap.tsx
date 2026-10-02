@@ -9,6 +9,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { mensagemDoErro } from "../erros";
 
 /** `*texto*` é o negrito do WhatsApp. A prévia precisa mostrar o efeito, não a marcação. */
 function negrito(linha) {
@@ -37,7 +38,7 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
   const [enviando, setEnviando] = useState(false);
   const [editado, setEditado] = useState(false);
   const [editando, setEditando] = useState(false);
-  const trilho = useRef(null);
+  const trilho = useRef<any>(null);
 
   /* O polegar é medido, não calculado: "Resumo" e "Completo" têm larguras
      diferentes e o tamanho muda com a fonte do sistema. */
@@ -64,7 +65,7 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
         setNumero((n) => n || d.numero || "");
         setAutomatico(d.envio_automatico);
       })
-      .catch((e) => ativo && setErro(e.message))
+      .catch((e) => ativo && setErro(mensagemDoErro(e)))
       .finally(() => ativo && setCarregando(false));
     return () => {
       ativo = false;
@@ -98,7 +99,7 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
       setAviso("Número salvo para este cliente.");
       setTimeout(() => setAviso(""), 2500);
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -106,10 +107,10 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
     setErro("");
     setEnviando(true);
     try {
-      const r = await api.enviarZap(analiseId, { numero, texto });
+      const r = (await api.enviarZap(analiseId, { numero, texto })) as { detalhe?: string };
       setAviso(r.detalhe || "Enviado.");
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     } finally {
       setEnviando(false);
     }
@@ -150,10 +151,10 @@ export default function RelatorioZap({ analiseId, nomeCliente }) {
           <div className="zap-controles">
             <div className="segmentado" role="group" aria-label="Tamanho do relatório" ref={trilho}>
               <span className="polegar" aria-hidden="true" />
-              {[
+              {([
                 ["Resumo", false],
                 ["Completo", true],
-              ].map(([rotulo, valor]) => (
+              ] as const).map(([rotulo, valor]) => (
                 <button
                   key={rotulo}
                   className={completo === valor ? "ativo" : ""}

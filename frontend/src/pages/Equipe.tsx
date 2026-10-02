@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { mensagemDoErro } from "../erros";
 
 const PAPEIS = {
   admin: "Administrador — gerencia clientes, metas e usuários",
@@ -11,8 +12,14 @@ const PAPEIS = {
 
 export default function Equipe() {
   const { ehAdmin, empresas } = useAuth();
-  const [usuarios, setUsuarios] = useState(null);
-  const [novo, setNovo] = useState({ nome: "", email: "", senha: "", papel: "membro", empresas: [] });
+  const [usuarios, setUsuarios] = useState<any>(null);
+  const [novo, setNovo] = useState<{
+    nome: string;
+    email: string;
+    senha: string;
+    papel: string;
+    empresas: number[];
+  }>({ nome: "", email: "", senha: "", papel: "membro", empresas: [] });
   const [erro, setErro] = useState("");
   const [salvo, setSalvo] = useState("");
 
@@ -20,7 +27,7 @@ export default function Equipe() {
     try {
       setUsuarios(await api.usuarios());
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -42,13 +49,14 @@ export default function Equipe() {
       setNovo({ nome: "", email: "", senha: "", papel: "membro", empresas: [] });
       await carregar();
     } catch (err) {
-      setErro(err.message);
+      setErro(mensagemDoErro(err));
     }
   }
 
-  const campo = (k) => (e) => setNovo((n) => ({ ...n, [k]: e.target.value }));
+  const campo = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setNovo((n) => ({ ...n, [k]: e.target.value }));
 
-  function alternarEmpresa(id) {
+  function alternarEmpresa(id: number) {
     setNovo((n) => ({
       ...n,
       empresas: n.empresas.includes(id) ? n.empresas.filter((x) => x !== id) : [...n.empresas, id],

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { GraficoEvolucao, S1, S2, S3, dataHora, formatar, mesPorExtenso } from "../components/Charts";
 import { useAuth } from "../auth";
+import { mensagemDoErro } from "../erros";
 
 const COLUNAS = [
   { chave: "assert", titulo: "Assertividade", formato: "pct" },
@@ -16,8 +17,8 @@ const COLUNAS = [
 export default function Historico() {
   const { ehAdmin } = useAuth();
   const navegar = useNavigate();
-  const [analises, setAnalises] = useState(null);
-  const [evolucao, setEvolucao] = useState(null);
+  const [analises, setAnalises] = useState<any>(null);
+  const [evolucao, setEvolucao] = useState<any>(null);
   const [erro, setErro] = useState("");
 
   async function carregar() {
@@ -26,7 +27,7 @@ export default function Historico() {
       setAnalises(lista);
       setEvolucao(evo);
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -40,7 +41,7 @@ export default function Historico() {
       await api.excluirAnalise(id);
       await carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -137,7 +138,7 @@ export default function Historico() {
                       onClick={() =>
                         api
                           .baixarExcel(a.id, `Assertividade_${a.mes_referencia}_v${a.versao}.xlsx`)
-                          .catch((e) => setErro(e.message))
+                          .catch((e) => setErro(mensagemDoErro(e)))
                       }
                     >
                       .xlsx

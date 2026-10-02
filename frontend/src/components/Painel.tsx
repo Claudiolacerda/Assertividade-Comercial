@@ -180,7 +180,17 @@ function formatoDaColuna(nome) {
 }
 
 /** Tabela a partir de qualquer tabela do resultado (as colunas vêm do backend). */
-export function TabelaDados({ titulo, subtitulo, linhas, limite = 200 }) {
+export function TabelaDados({
+  titulo,
+  subtitulo,
+  linhas,
+  limite = 200,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  linhas: Record<string, unknown>[] | null | undefined;
+  limite?: number;
+}) {
   if (!linhas?.length) return null;
   const colunas = Object.keys(linhas[0]).filter((c) => !c.startsWith("_"));
   const mostradas = linhas.slice(0, limite);
@@ -209,7 +219,7 @@ export function TabelaDados({ titulo, subtitulo, linhas, limite = 200 }) {
                   const longo = typeof v === "string" && v.length > 60;
                   return (
                     <td key={c} className={ehNumero(v) ? "num" : longo ? "texto" : undefined}>
-                      {ehNumero(v) ? formatar(v, formatoDaColuna(c)) : (v ?? "—")}
+                      {ehNumero(v) ? formatar(v, formatoDaColuna(c)) : ((v as string | null) ?? "—")}
                     </td>
                   );
                 })}
