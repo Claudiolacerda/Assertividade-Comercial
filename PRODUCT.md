@@ -96,7 +96,19 @@ autorizou usar os números **sem nomear a empresa**.
 
 Também reais, e vindos dessa mesma análise: "9 clientes travaram em preço", "6
 dependem de um decisor oculto", "11 oportunidades paradas há mais de 15 dias".
-Os dados de origem estão em `dados/meta/` e `dados/reunioes/`.
+
+Os arquivos de origem em `dados/meta/` e `dados/reunioes/` são cópias
+**anonimizadas** da planilha real, porque o repositório é público. Toda a
+estrutura e todos os números foram preservados (a suíte de 74 testes confere
+os KPIs contra eles); o que mudou foram os nomes das pessoas, a marcação de
+parceria e o nome da empresa, trocados por fictícios um a um. A empresa
+aparece como "Contabilidade Horizonte", que não existe. Nenhum nome real de
+cliente final está no repositório, nem no histórico do git.
+
+Consequência prática: se você precisar citar um cliente do exemplo em texto de
+produto, use os nomes fictícios. Trocar por nomes reais reintroduz dado
+pessoal de terceiro em repositório público, o que o usuário não tem permissão
+para fazer.
 
 **Ausências que trabalho futuro não pode fabricar:**
 

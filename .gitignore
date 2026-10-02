@@ -13,6 +13,16 @@ backups-local/
 dados_clientes/
 backups-local/
 
+# Planilhas em dados/: só os exemplos anonimizados ficam versionados.
+# Qualquer arquivo real que você largar aqui fica fora do repositório por padrão.
+dados/*
+!dados/meta/
+!dados/reunioes/
+dados/meta/*
+dados/reunioes/*
+!dados/meta/*Exemplo*
+!dados/reunioes/*Exemplo*
+
 # Node
 node_modules/
 frontend/dist/

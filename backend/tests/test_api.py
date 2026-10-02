@@ -24,8 +24,8 @@ from app.main import app
 from app.models import Empresa, Organizacao, Usuario
 
 DADOS = Path(__file__).resolve().parents[2] / "dados"
-META = DADOS / "meta" / "_CA_-Conta-ilidade-Horizonte-Campanhas-1-de-set-de-2026-24-de-set-de-2026.csv"
-REUNIOES = DADOS / "reunioes" / "Controle_Comercial_Horizonte_-_Setembro.csv"
+META = DADOS / "meta" / "Campanhas-Exemplo-1-de-set-de-2026-24-de-set-de-2026.csv"
+REUNIOES = DADOS / "reunioes" / "Controle_Comercial_Exemplo_-_Setembro.csv"
 
 
 def _banco_disponivel() -> bool:
