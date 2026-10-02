@@ -62,7 +62,11 @@
   --raio: 12px;
   --sombra: 0 1px 2px rgba(10, 20, 18, 0.04), 0 2px 8px rgba(10, 20, 18, 0.05);
   --sombra-alta: 0 12px 40px rgba(10, 20, 18, 0.12);
-  --fonte: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Archivo Variable: grotesca de verdade, com o eixo de peso contínuo que os
+     pesos quebrados deste sistema (520, 620, 650, 660, 680) exigem. Uma fonte
+     estática arredondaria todos eles e achataria a hierarquia. Auto-hospedada,
+     sem CDN de terceiro. A pilha de sistema continua como reserva. */
+  --fonte: "Archivo Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
