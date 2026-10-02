@@ -22,6 +22,8 @@ import "@xyflow/react/dist/style.css";
 import { api } from "../api";
 import EtapaCadencia, { CANAIS } from "../components/EtapaCadencia";
 import { dataHora, mesPorExtenso } from "../components/Charts";
+import { mensagemDoErro } from "../erros";
+import type { CanalCadencia } from "../tipos";
 
 const tiposDeNo = { etapa: EtapaCadencia };
 
@@ -40,10 +42,10 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
   const [nodes, setNodes] = useState(inicial.nodes);
   const [edges, setEdges] = useState(inicial.edges);
   const [nome, setNome] = useState(cadencia.nome);
-  const [selecionado, setSelecionado] = useState(null);
+  const [selecionado, setSelecionado] = useState<any>(null);
   const [sujo, setSujo] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [salvoEm, setSalvoEm] = useState(null);
+  const [salvoEm, setSalvoEm] = useState<any>(null);
   const { screenToFlowPosition } = useReactFlow();
   const proximoId = useRef(Date.now());
 
@@ -204,7 +206,7 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
           >
             <Background gap={22} size={1} color="var(--grid)" />
             <Controls showInteractive={false} />
-            <MiniMap pannable zoomable nodeColor={(n) => CANAIS[n.data?.canal]?.cor || "#8b9995"} />
+            <MiniMap pannable zoomable nodeColor={(n) => CANAIS[(n.data as { canal?: CanalCadencia })?.canal ?? "nota"]?.cor || "#8b9995"} />
           </ReactFlow>
 
           {nodes.length === 0 && (
@@ -277,10 +279,10 @@ function Editor({ cadencia, aoSalvar, aoVoltar }) {
 }
 
 export default function Cadencia() {
-  const [lista, setLista] = useState(null);
-  const [modelos, setModelos] = useState([]);
-  const [analises, setAnalises] = useState([]);
-  const [aberta, setAberta] = useState(null);
+  const [lista, setLista] = useState<any>(null);
+  const [modelos, setModelos] = useState<any[]>([]);
+  const [analises, setAnalises] = useState<any[]>([]);
+  const [aberta, setAberta] = useState<any>(null);
   const [erro, setErro] = useState("");
   const [criando, setCriando] = useState(false);
 
@@ -291,7 +293,7 @@ export default function Cadencia() {
       setModelos(ms);
       setAnalises(as.filter((a) => a.status === "concluida"));
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -308,7 +310,7 @@ export default function Cadencia() {
       setAberta(completa);
       await carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     } finally {
       setCriando(false);
     }
@@ -318,7 +320,7 @@ export default function Cadencia() {
     try {
       setAberta(await api.cadencia(id));
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -328,7 +330,7 @@ export default function Cadencia() {
       await api.excluirCadencia(id);
       await carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 

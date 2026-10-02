@@ -14,6 +14,7 @@ import {
 import NotaPlanilha from "../components/NotaPlanilha";
 import RelatorioZap from "../components/RelatorioZap";
 import { Destaque, Diagnostico, TabelaDados, Tile } from "../components/Painel";
+import { mensagemDoErro } from "../erros";
 
 const ABAS = [
   { id: "resumo", titulo: "Resumo" },
@@ -27,10 +28,10 @@ const ABAS = [
 export default function Analise() {
   const { id } = useParams();
   const { empresa } = useAuth();
-  const [analise, setAnalise] = useState(null);
+  const [analise, setAnalise] = useState<any>(null);
   const [erro, setErro] = useState("");
   const [aba, setAba] = useState("resumo");
-  const barraAbas = useRef(null);
+  const barraAbas = useRef<any>(null);
 
   /* O indicador é posicionado por medição, não por cálculo: os rótulos têm
      larguras diferentes e a barra rola no celular. useLayoutEffect para a
@@ -59,9 +60,9 @@ export default function Analise() {
     setAnalise(null);
     setErro("");
     api
-      .analise(id)
+      .analise(id!)
       .then((a) => ativo && setAnalise(a))
-      .catch((e) => ativo && setErro(e.message));
+      .catch((e) => ativo && setErro(mensagemDoErro(e)));
     return () => {
       ativo = false;
     };
@@ -81,7 +82,7 @@ export default function Analise() {
     try {
       await api.baixarExcel(analise.id, `Assertividade_${analise.mes_referencia}_v${analise.versao}.xlsx`);
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     } finally {
       setBaixando(false);
     }

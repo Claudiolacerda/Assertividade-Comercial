@@ -1,23 +1,44 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { api, guardarEmpresa, guardarToken, lerEmpresa, lerToken } from "./api";
+import type { ReactNode } from "react";
 
-const Contexto = createContext(null);
+import { api, guardarEmpresa, guardarToken, lerEmpresa, lerToken } from "./api";
+import type { Empresa, Usuario } from "./tipos";
+
+/** O que o resto do app pode pedir ao contexto de autenticação. */
+export interface Auth {
+  usuario: Usuario | null;
+  carregando: boolean;
+  entrar: (email: string, senha: string) => Promise<void>;
+  cadastrar: (payload: Record<string, unknown>) => Promise<void>;
+  sair: () => void;
+  empresas: Empresa[];
+  empresaId: number | null;
+  empresa: Empresa | null;
+  trocarEmpresa: (id: number) => void;
+  recarregarEmpresas: () => Promise<unknown>;
+  ehAdmin: boolean;
+  ehCliente: boolean;
+  ehAgencia: boolean;
+  temCarteira: boolean;
+}
+
+const Contexto = createContext<Auth | null>(null);
 
 /** Escolhe qual cliente da carteira abrir: o último usado, se ainda existir. */
-function empresaInicial(empresas) {
+function empresaInicial(empresas: Empresa[] | undefined): number | null {
   if (!empresas?.length) return null;
   const salva = lerEmpresa();
   const achou = empresas.find((e) => e.id === salva);
   return (achou || empresas[0]).id;
 }
 
-export function ProvedorAuth({ children }) {
-  const [usuario, setUsuario] = useState(null);
+export function ProvedorAuth({ children }: { children: ReactNode }) {
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [empresaId, setEmpresaId] = useState(lerEmpresa());
   const [carregando, setCarregando] = useState(Boolean(lerToken()));
 
-  const aplicar = useCallback((u) => {
+  const aplicar = useCallback((u: Usuario | null) => {
     setUsuario(u);
     const id = empresaInicial(u?.empresas);
     guardarEmpresa(id);
@@ -84,8 +105,8 @@ export function ProvedorAuth({ children }) {
     [],
   );
 
-  const valor = useMemo(() => {
-    const empresas = usuario?.empresas || [];
+  const valor = useMemo<Auth>(() => {
+    const empresas: Empresa[] = usuario?.empresas || [];
     return {
       usuario,
       carregando,

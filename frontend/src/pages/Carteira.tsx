@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { formatar } from "../components/Charts";
+import { mensagemDoErro } from "../erros";
 
 /* Indicadores da carteira. `melhorQuando` diz para que lado a variação é boa —
    CAC subindo é ruim, assertividade subindo é boa. Sem isso a seta mente. */
@@ -39,7 +40,7 @@ function Variacao({ valor, formato, melhorQuando }) {
 export default function Carteira() {
   const navegar = useNavigate();
   const { ehAdmin, trocarEmpresa, recarregarEmpresas } = useAuth();
-  const [itens, setItens] = useState(null);
+  const [itens, setItens] = useState<any>(null);
   const [erro, setErro] = useState("");
   const [novo, setNovo] = useState("");
   const [segmento, setSegmento] = useState("");
@@ -50,7 +51,7 @@ export default function Carteira() {
     try {
       setItens(await api.carteira());
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 
@@ -71,7 +72,7 @@ export default function Carteira() {
       await carregar();
       return empresa;
     } catch (err) {
-      setErro(err.message);
+      setErro(mensagemDoErro(err));
     } finally {
       setCriando(false);
     }
@@ -89,7 +90,7 @@ export default function Carteira() {
       await recarregarEmpresas();
       await carregar();
     } catch (e) {
-      setErro(e.message);
+      setErro(mensagemDoErro(e));
     }
   }
 

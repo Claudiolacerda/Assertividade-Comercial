@@ -59,7 +59,16 @@ export function formatar(valor, formato) {
 }
 
 /* ---------------------------------------------------------------- */
-function Dica({ active, payload, label, formatos = {} }) {
+/* O Recharts injeta active/payload/label em tempo de execução; quem escreve o
+   JSX só passa `formatos`. Por isso tudo é opcional no tipo. */
+interface PropsDica {
+  active?: boolean;
+  payload?: { dataKey?: string | number; name?: string; value?: number; color?: string }[];
+  label?: string | number;
+  formatos?: Record<string, string>;
+}
+
+function Dica({ active, payload, label, formatos = {} }: PropsDica) {
   if (!active || !payload?.length) return null;
   return (
     <div className="dica">
@@ -68,14 +77,14 @@ function Dica({ active, payload, label, formatos = {} }) {
         <div className="linha" key={p.dataKey}>
           <span className="marca-cor" style={{ background: p.color, width: 9, height: 9, borderRadius: 2 }} />
           <span>{p.name}</span>
-          <span className="valor">{formatar(p.value, formatos[p.dataKey] || "int")}</span>
+          <span className="valor">{formatar(p.value, formatos[String(p.dataKey)] || "int")}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function Legenda({ itens }) {
+function Legenda({ itens }: { itens: { nome: string; cor: string }[] }) {
   if (itens.length < 2) return null; // uma série só: o título já a nomeia
   return (
     <ul className="legenda">
@@ -118,8 +127,35 @@ function Tabela({ colunas, linhas }) {
   );
 }
 
-/** Moldura comum: título, subtítulo, legenda e alternância gráfico/tabela. */
-export function Quadro({ titulo, subtitulo, legenda = [], tabela, altura = 260, children }) {
+/** A tabela que todo gráfico oferece como alternativa acessível aos dados. */
+export interface ColunaQuadro {
+  chave: string;
+  titulo: string;
+  /** alinha à direita e aplica tabular-nums */
+  num?: boolean;
+  formato?: string;
+}
+
+export interface TabelaDoQuadro {
+  colunas: ColunaQuadro[];
+  linhas: Record<string, unknown>[];
+}
+
+function Quadro({
+  titulo,
+  subtitulo,
+  legenda = [],
+  tabela,
+  altura = 260,
+  children,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  legenda?: { nome: string; cor: string }[];
+  tabela?: TabelaDoQuadro;
+  altura?: number;
+  children?: React.ReactNode;
+}) {
   const [verTabela, setVerTabela] = useState(false);
   return (
     <section className="grafico">
@@ -133,12 +169,12 @@ export function Quadro({ titulo, subtitulo, legenda = [], tabela, altura = 260, 
       </div>
       {subtitulo && <p className="legenda-sub">{subtitulo}</p>}
       {verTabela ? (
-        <Tabela {...tabela} />
+        <Tabela colunas={tabela!.colunas} linhas={tabela!.linhas} />
       ) : (
         <>
           <Legenda itens={legenda} />
           <div style={{ width: "100%", height: altura }}>
-            <ResponsiveContainer>{children}</ResponsiveContainer>
+            <ResponsiveContainer>{children as React.ReactElement}</ResponsiveContainer>
           </div>
         </>
       )}
@@ -401,7 +437,22 @@ export function GraficoCampanhas({ metaCampanhas }) {
 /* ---------------------------------------------------------------- */
 /* Evolução mês a mês. UM indicador por gráfico: assertividade (%) e
    CAC (R$) não compartilham escala, então são dois gráficos, nunca dois eixos. */
-export function GraficoEvolucao({ meses, chave, titulo, formato, cor: corLinha = S1, meta }) {
+export function GraficoEvolucao({
+  meses,
+  chave,
+  titulo,
+  formato,
+  cor: corLinha = S1,
+  meta,
+}: {
+  meses: Record<string, unknown>[];
+  chave: string;
+  titulo: string;
+  formato: string;
+  cor?: string;
+  /** linha de referência da meta; nem todo indicador tem uma */
+  meta?: number | null;
+}) {
   const dados = meses
     .filter((m) => m[chave] != null)
     .map((m) => ({ mes: m.mes_referencia, valor: m[chave] }));

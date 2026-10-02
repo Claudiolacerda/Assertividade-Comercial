@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { mensagemDoErro } from "../erros";
 
 const METAS = [
   { chave: "ctr", titulo: "CTR mínimo no link", tipo: "pct", ajuda: "Cliques ÷ impressões" },
@@ -21,13 +22,13 @@ const paraApi = (v, tipo) => (tipo === "pct" ? Number(v) / 100 : Number(v));
 export default function Configuracao() {
   const { ehAdmin, ehAgencia } = useAuth();
   const [virando, setVirando] = useState(false);
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState<any>(null);
   const [erro, setErro] = useState("");
   const [salvo, setSalvo] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
-    api.configuracao().then(setConfig).catch((e) => setErro(e.message));
+    api.configuracao().then(setConfig).catch((e) => setErro(mensagemDoErro(e)));
   }, []);
 
   if (erro) return <div className="aviso erro">{erro}</div>;
@@ -54,7 +55,7 @@ export default function Configuracao() {
       setConfig(atualizado);
       setSalvo("Configuração salva. Vale a partir da próxima análise.");
     } catch (err) {
-      setErro(err.message);
+      setErro(mensagemDoErro(err));
     } finally {
       setSalvando(false);
     }
@@ -234,7 +235,7 @@ export default function Configuracao() {
                   await api.mudarTipoOrganizacao("agencia");
                   window.location.reload();
                 } catch (e) {
-                  setErro(e.message);
+                  setErro(mensagemDoErro(e));
                 } finally {
                   setVirando(false);
                 }
