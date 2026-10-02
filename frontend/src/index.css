@@ -356,6 +356,51 @@ label {
   font-weight: 650;
 }
 
+/* O pé da barra lateral. Tema e sair eram dois botões `.discreto` soltos num
+   flex com wrap: sem forma, o ícone quebrava para cima do rótulo e os dois
+   ficavam desalinhados entre si. Eles são itens do mesmo trilho que a
+   navegação acima, então têm a mesma forma dela, só que em voz mais baixa.
+   A régua no topo do grupo responde à que fecha a marca lá em cima. */
+.rodape-rail {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--borda);
+  display: grid;
+  gap: 2px;
+}
+.controle-rail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 520;
+  text-align: left;
+  justify-content: flex-start;
+  transition: background var(--t-feedback) ease, color var(--t-feedback) ease;
+}
+.controle-rail svg { flex: none; }
+/* O nome de quem está logado é contexto, não o rótulo do botão: fica na
+   outra ponta, mais baixo, e some quando não cabe. */
+.controle-rail .quem {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 10ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.controle-rail:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.controle-rail:active:not(:disabled) { transform: none; }
+
 .conteudo {
   padding: 26px 30px 60px;
   max-width: 1320px;
@@ -676,6 +721,13 @@ td.texto { white-space: normal; min-width: 260px; }
   color: #fff;
   position: relative;
   isolation: isolate;
+  /* O brilho de ::before nasce em -20% e tem 130% de altura, então sobra
+     para fora da caixa nos dois lados. Em cima isso é de propósito. Embaixo
+     não: no último bloco escuro da página a sobra esticava o documento em
+     64px que ninguém pintava, e o branco do body aparecia debaixo do rodapé.
+     `clip` recorta sem criar contêiner de rolagem, então o cabeçalho sticky
+     daqui de dentro continua grudando; `hidden` é que o quebraria. */
+  overflow: clip;
 }
 /* A "luz": brilho verde que nasce atrás do conteúdo */
 .escuro::before {
@@ -1381,9 +1433,15 @@ td.texto { white-space: normal; min-width: 260px; }
   border-radius: 999px;
   text-decoration: none;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
-  transition: transform 0.14s ease;
+  transition: transform var(--t-camada) var(--curva), opacity var(--t-camada) var(--curva);
 }
 .zap-flutuante:hover { transform: translateY(-2px); }
+/* Recolhido no rodapé: desce para fora da tela em vez de sumir seco. */
+.zap-flutuante.recolhido {
+  transform: translateY(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
+}
 .zap-flutuante svg { flex: none; }
 
 @media (max-width: 620px) {
