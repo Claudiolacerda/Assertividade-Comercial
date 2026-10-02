@@ -17,7 +17,14 @@
 
 import { useState } from "react";
 
-import type { CampanhaJet, FaixaJet, Jet as TipoJet, MelhoriaJet, PilarJet } from "../tipos";
+import type {
+  CampanhaJet,
+  FaixaJet,
+  Jet as TipoJet,
+  Jev as TipoJev,
+  MelhoriaJet,
+  PilarJet,
+} from "../tipos";
 
 import { formatar } from "./Charts";
 import { IconeAtencao, IconeCheck, IconeOk } from "./Icones";
@@ -147,7 +154,52 @@ function Campanhas({ campanhas }: { campanhas: CampanhaJet[] }) {
   );
 }
 
-export default function Jet({ jet }: { jet?: TipoJet }) {
+/* A leitura do JEV. Vem antes da conta porque é o que responde "e daí?", mas
+   fica visivelmente separada do Score: ali embaixo tudo é número calculado e
+   conferido por teste; aqui em cima é interpretação, e quem lê merece saber a
+   diferença. Nenhum número aparece nesta caixa. */
+function Leitura({ jev }: { jev?: TipoJev }) {
+  if (!jev?.ativo) return null;
+  if (!jev.leitura) {
+    return <p className="jev-ausente">{jev.motivo}</p>;
+  }
+  const { leitura, primeiro_passo, pontos, onde_mover_verba } = jev.leitura;
+  return (
+    <section className="jev">
+      <header>
+        <span className="marca-jev">JEV</span>
+        <span className="aviso-jev">leitura em texto, escrita sobre os números abaixo</span>
+      </header>
+      <p className="jev-texto">{leitura}</p>
+
+      <div className="jev-primeiro">
+        <span className="rotulo">Primeiro passo</span>
+        <p>{primeiro_passo}</p>
+      </div>
+
+      {pontos.length > 0 && (
+        <ol className="jev-pontos">
+          {pontos.map((p) => (
+            <li key={p.titulo}>
+              <strong>{p.titulo}</strong>
+              <p>{p.porque}</p>
+              {p.indicadores.length > 0 && (
+                <p className="apoio">Apoia-se em: {p.indicadores.join(", ")}</p>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="jev-verba">
+        <span className="rotulo">Verba</span>
+        <p>{onde_mover_verba}</p>
+      </div>
+    </section>
+  );
+}
+
+export default function Jet({ jet, jev }: { jet?: TipoJet; jev?: TipoJev }) {
   if (!jet) {
     return (
       <p className="vazio">
@@ -162,6 +214,8 @@ export default function Jet({ jet }: { jet?: TipoJet }) {
 
   return (
     <div className="jet">
+      <Leitura jev={jev} />
+
       <section className="jet-topo">
         <Anel score={jet.score} faixa={jet.faixa} />
         <div className="jet-leitura">

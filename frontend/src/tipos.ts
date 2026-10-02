@@ -147,12 +147,37 @@ export interface Jet {
   metas_ausentes: string[];
 }
 
+/* ---------------------------------------------------------------------- JEV
+ * A leitura escrita por modelo de linguagem, em cima do que o JET calculou.
+ * Nenhum campo aqui é número: os números são todos do JET. Quando `leitura` é
+ * nula, `motivo` diz por quê, e o resto da análise não muda. */
+
+export interface PontoJev {
+  titulo: string;
+  porque: string;
+  indicadores: string[];
+}
+
+export interface LeituraJev {
+  leitura: string;
+  primeiro_passo: string;
+  pontos: PontoJev[];
+  onde_mover_verba: string;
+}
+
+export interface Jev {
+  ativo: boolean;
+  leitura: LeituraJev | null;
+  motivo: string | null;
+}
+
 export interface ResultadoAnalise {
   kpis: Record<string, Kpi>;
   diagnostico: Apontamento[];
   tabelas: Record<string, LinhaTabela[]>;
   cobertura?: Cobertura;
   jet?: Jet;
+  jev?: Jev;
 }
 
 /** O que a listagem devolve (AnaliseResumo no backend): sem o resultado. */
