@@ -652,6 +652,42 @@ pressionar é também estar com o mouse em cima, então a regra de `:hover` prec
 vir **antes** da de `:active`, ou o botão fica mudo para quem mais precisa da
 confirmação.
 
+### O Campo de Fluxo (FlowField)
+
+O fundo do Hero. Um campo vetorial de ruído move 600 partículas que deixam
+rastros luminosos, em canvas. Vem do Kokonut UI (MIT), adaptado.
+
+**Só no Hero.** Nenhuma outra seção recebe o efeito, e isso é regra, não
+acidente: a página tem sete seções e exatamente um canvas.
+
+**A Regra do Véu.** O campo fica atrás de texto, e isso é perigoso. Medido: um
+risco de luz passando atrás do parágrafo do Hero derrubava o contraste para
+**1,94:1**, contra os 4,5:1 exigidos — e a média ficava em 8,85, o que esconde o
+problema de qualquer verificador que olhe só a média. O véu (`.fundo-hero::after`)
+escurece a coluna central, onde vivem título, parágrafo e botões, e deixa o
+campo aparecer nas laterais e embaixo. Depois dele: 7,28:1 no pior pixel.
+A vinheta que vem no componente faz o contrário, protege as bordas e expõe o
+centro, então ela não substitui o véu.
+
+**Camadas.** O campo é a textura mais funda, em `z-index: -3`; a luz de
+`.escuro` vem acima dele (-2) e a malha técnica acima dela (-1). O conteúdo do
+Hero fica sobre os três.
+
+**Irmão, nunca envoltório.** O wrapper do componente tem `overflow: hidden`, e o
+cabeçalho do site é `position: sticky` dentro do mesmo bloco. Envolver o Hero no
+componente mataria o menu grudado.
+
+**O que foi corrigido no componente.** O `ctx.scale(dpr, dpr)` era cumulativo:
+cada `resize` multiplicava a escala anterior. Ele media a janela em vez do
+elemento. E não parava nunca: agora respeita `prefers-reduced-motion` com um
+quadro estático, para quando sai da tela e para quando a aba fica oculta.
+
+**Convivência com o facho.** São dois efeitos no mesmo Hero, e a Regra do
+Momento Único diz que apenas um pode ser protagonista. O campo roda em
+`sparse`, com intensidade 0,5 e ponto de 1px, para ser cenário: o facho segue
+sendo o momento. Subir a densidade ou a intensidade inverte essa relação e
+quebra a regra.
+
 ### O Facho — o momento de assinatura
 
 O único efeito extraordinário do sistema, e ele vive em um lugar só: o painel
@@ -735,6 +771,11 @@ o lockup inteiro escala proporcionalmente com um único número.
   chaves por tamanho e a ordem das chaves É a ordem das colunas da tabela.
 - **Don't** criar um segundo momento extraordinário. O facho é o único, e a
   regra acima explica por quê.
+- **Don't** aplicar o campo de fluxo em qualquer seção que não seja o Hero.
+- **Don't** pôr efeito luminoso atrás de texto sem véu, e sem medir o pior
+  pixel: a média mente.
+- **Don't** usar `overflow-x: hidden` num ancestral de elemento `sticky`; ele
+  força `overflow-y: auto` e cria contêiner de rolagem. Use `clip`.
 - **Don't** trocar o `linear` do facho por easing sem recalcular os atrasos de
   cada elemento.
 - **Don't** animar `width`, `height`, `top`, `left` ou margem. Use `transform`,

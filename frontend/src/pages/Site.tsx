@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import Marca from "../components/Marca";
 import Planos, { BotaoZap, IconeZap, WHATSAPP_EXIBICAO, linkZap } from "../components/Planos";
 import Recursos from "../components/Recursos";
+import FlowField from "../componentes-ui/flow-field";
 import {
   ICONES_NIVEL,
   IconeAtencao,
@@ -128,6 +129,23 @@ export default function Site() {
     <div className="site">
       {/* ---------------- topo + hero ---------------- */}
       <div className="escuro sobre-escuro">
+        {/* O FlowField entra como CAMADA DE FUNDO, irmão do conteúdo, e não
+            envolvendo-o. O wrapper dele tem `overflow-hidden`, e o cabeçalho
+            deste bloco é `position: sticky` — sticky dentro de um ancestral com
+            overflow recortado para de grudar. Envolver o Hero quebraria o menu.
+
+            Só aqui. Nenhuma outra seção da página recebe o efeito. */}
+        <div className="fundo-hero" aria-hidden="true">
+          <FlowField
+            theme="neriah"
+            density="sparse"
+            dotSize={1}
+            intensity={0.5}
+            className="!min-h-0 absolute inset-0 block"
+          >
+            <></>
+          </FlowField>
+        </div>
         <header className="topo faixa">
           <div className="limite">
             <Marca tamanho={19} />
