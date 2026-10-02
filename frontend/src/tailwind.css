@@ -1,0 +1,98 @@
+/* ===========================================================================
+   Tailwind v4 + contrato de tokens do shadcn
+   ---------------------------------------------------------------------------
+   O preflight do Tailwind NÃO é importado, de propósito. Ele zera margens,
+   tamanhos de fonte, bordas e estilos de lista que o index.css deste projeto
+   assume existirem. Importá-lo recriaria o design — exatamente o que não se
+   pode fazer aqui. Então entram só o tema (as variáveis) e as utilidades.
+
+   Os valores abaixo não são novos: são os mesmos tokens do Neriah, expostos
+   com os nomes que o shadcn espera. Um componente do shadcn colocado nesta
+   base nasce com a cor certa, sem ninguém redesenhar nada.
+   =========================================================================== */
+
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+/* --------------------------------------------------- contrato do shadcn */
+:root {
+  --background: var(--page);
+  --foreground: var(--ink);
+
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+
+  --primary: var(--verde);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+
+  --muted: var(--surface-2);
+  --muted-foreground: var(--ink-muted);
+
+  --accent: var(--verde-fundo);
+  --accent-foreground: var(--verde);
+
+  --destructive: var(--critico);
+  --destructive-foreground: #ffffff;
+
+  --border: var(--borda);
+  --input: var(--borda);
+  --ring: var(--verde);
+
+  --radius: var(--raio);
+
+  /* as séries dos gráficos, já medidas para daltonismo */
+  --chart-1: var(--series-1);
+  --chart-2: var(--series-2);
+  --chart-3: var(--series-3);
+}
+
+/* No escuro o verde fica claro, então o texto sobre ele tem de virar o preto
+   da marca — a Regra do Verde por Superfície vale aqui também. */
+:root[data-theme="dark"] {
+  --primary-foreground: var(--preto-neriah);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --primary-foreground: var(--preto-neriah);
+  }
+}
+
+/* ----------------------------------------- expõe os tokens ao Tailwind */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--fonte);
+
+  --ease-neriah: var(--curva);
+}
