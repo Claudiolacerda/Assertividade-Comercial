@@ -1,6 +1,11 @@
 {
-  // O VS Code encontra sozinho o ambiente em backend/.venv; isto só evita a pergunta.
-  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  // Onde procurar o ambiente virtual. `venvPath` aponta a PASTA que contém o
+  // `.venv`, e a extensão resolve o executável conforme o sistema: no Linux é
+  // `.venv/bin/python`, no Windows é `.venv\Scripts\python.exe`. Aqui havia um
+  // `defaultInterpreterPath` cravado no caminho do Linux, o que deixava o
+  // interpretador sem selecionar no Windows — e o F5 do launch.json depende
+  // dele. As tasks não sofriam disso porque já têm bloco `windows` próprio.
+  "python.venvPath": "${workspaceFolder}/backend",
   "python.terminal.activateEnvironment": true,
 
   "python.testing.pytestEnabled": true,

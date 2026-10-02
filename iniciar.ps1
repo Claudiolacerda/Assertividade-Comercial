@@ -76,6 +76,28 @@ if (-not (Test-Path (Join-Path $raiz "backend\.env"))) {
     exit 1
 }
 
+# Mesma logica do npm mais abaixo, pelo mesmo motivo: um `git pull` que traz
+# dependencia nova deixa a API quebrada e o script nao percebe. O sintoma do
+# lado do Python e pior que o do site — a janela da API morre com ImportError
+# e some, e sobra um site no ar conversando com nada.
+$req     = Join-Path $raiz "backend\requirements.txt"
+$carimboPy = Join-Path $raiz "backend\.venv\.instalado-em"
+$precisaPy = $false
+if (-not (Test-Path $carimboPy)) { $precisaPy = $true }
+elseif ((Get-Item $req).LastWriteTime -gt (Get-Item $carimboPy).LastWriteTime) { $precisaPy = $true }
+
+if ($precisaPy) {
+    Write-Host "[2/3] Instalando dependencias do Python..." -ForegroundColor Yellow
+    & $venv -m pip install -r $req --timeout 120 --retries 10
+    if ($LASTEXITCODE -eq 0) { Set-Content -Path $carimboPy -Value (Get-Date -Format o) }
+    else {
+        Write-Host "      Falhou a instalacao. Rode a mao:" -ForegroundColor Yellow
+        Write-Host "        cd `"$raiz\backend`"; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt" -ForegroundColor White
+        Read-Host "`nEnter para fechar"
+        exit 1
+    }
+}
+
 Write-Host "[2/3] API em http://localhost:8000 ..." -NoNewline
 Start-Process powershell -ArgumentList @(
     "-NoExit", "-Command",
