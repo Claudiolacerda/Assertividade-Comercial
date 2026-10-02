@@ -4,6 +4,7 @@
  * dela. O botão de cada plano abre o WhatsApp com a mensagem já escrita — em
  * venda consultiva o primeiro passo é a conversa, não o cartão de crédito. */
 
+import { useEffect, useState } from "react";
 import { IconeCheck } from "./Icones";
 
 export const WHATSAPP = "5583998539248";
@@ -150,11 +151,30 @@ export default function Planos() {
   );
 }
 
-/** Botão fixo de WhatsApp, presente em todo o site público. */
+/** Botão fixo de WhatsApp, presente em todo o site público.
+ *
+ *  Ele se recolhe quando o rodapé aparece: ali o próprio rodapé já traz o
+ *  número, e o botão, fixo no canto, cobria a assinatura da marca tanto no
+ *  desktop quanto no celular. */
 export function BotaoZap() {
+  const [recolhido, setRecolhido] = useState(false);
+
+  useEffect(() => {
+    const rodape = document.querySelector(".rodape");
+    if (!rodape || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      ([entrada]) => setRecolhido(entrada.isIntersecting),
+      { rootMargin: "0px 0px -24px 0px" },
+    );
+    obs.observe(rodape);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <a
-      className="zap-flutuante"
+      className={`zap-flutuante${recolhido ? " recolhido" : ""}`}
+      aria-hidden={recolhido}
+      tabIndex={recolhido ? -1 : undefined}
       href={linkZap("Olá! Vim pelo site da Neriah Data e quero saber mais.")}
       target="_blank"
       rel="noopener noreferrer"

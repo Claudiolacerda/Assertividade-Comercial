@@ -12,7 +12,7 @@ import Equipe from "./pages/Equipe";
 import Historico from "./pages/Historico";
 import Site from "./pages/Site";
 import Upload from "./pages/Upload";
-import { IconeLua, IconeSol } from "./components/Icones";
+import { IconeLua, IconeSair, IconeSol } from "./components/Icones";
 
 const CHAVE_TEMA = "neriah_tema";
 
@@ -37,8 +37,13 @@ function BotaoTema() {
   }, [tema]);
 
   return (
-    <button className="discreto" onClick={() => setTema(tema === "dark" ? "light" : "dark")} title="Alternar tema">
-      {tema === "dark" ? <><IconeSol tamanho={14} /> claro</> : <><IconeLua tamanho={14} /> escuro</>}
+    <button
+      className="controle-rail"
+      onClick={() => setTema(tema === "dark" ? "light" : "dark")}
+      aria-pressed={tema === "dark"}
+    >
+      {tema === "dark" ? <IconeSol tamanho={15} /> : <IconeLua tamanho={15} />}
+      <span>Tema {tema === "dark" ? "claro" : "escuro"}</span>
     </button>
   );
 }
@@ -140,10 +145,12 @@ function Produto() {
           </NavLink>
         )}
 
-        <div style={{ marginTop: "auto", display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div className="rodape-rail">
           <BotaoTema />
-          <button className="discreto" onClick={sair}>
-            sair ({usuario.nome.split(" ")[0]})
+          <button className="controle-rail" onClick={sair}>
+            <IconeSair tamanho={15} />
+            <span>Sair</span>
+            <span className="quem">{usuario.nome.split(" ")[0]}</span>
           </button>
         </div>
       </nav>

@@ -144,6 +144,14 @@ export const IconeLua = (p) => (
   </Svg>
 );
 
+export const IconeSair = (p) => (
+  <Svg {...p}>
+    <path d="M6.2 2.7H3.4a.9.9 0 0 0-.9.9v8.8a.9.9 0 0 0 .9.9h2.8" />
+    <path d="M10.4 11.1 13.5 8l-3.1-3.1" />
+    <path d="M13.5 8H6.4" />
+  </Svg>
+);
+
 export const IconeSubida = (p) => (
   <Svg {...p}>
     <path d="M8 13V3.4" />
