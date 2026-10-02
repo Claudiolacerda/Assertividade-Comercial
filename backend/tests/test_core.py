@@ -1,7 +1,8 @@
-"""Testes do motor de análise usando os dados reais de setembro/2026.
+"""Testes do motor de análise usando a planilha de exemplo de setembro/2026.
 
-Estes números são a referência: se um refactor mudar qualquer um deles, o teste
-quebra. É o que permite mexer no motor sem medo de entregar número errado ao cliente.
+Os dados são anonimizados: nomes de pessoa e da empresa foram trocados por
+fictícios, e os números preservados. Estes números são a referência: se um
+refactor mudar qualquer um deles, o teste quebra. É o que permite mexer no motor sem medo de entregar número errado ao cliente.
 """
 
 from __future__ import annotations
@@ -19,8 +20,8 @@ from app.core.pipeline import ErroDeAnalise
 from app.core.texto import para_data, para_numero
 
 DADOS = Path(__file__).resolve().parents[2] / "dados"
-META = DADOS / "meta" / "_CA_-Conta-ilidade-Horizonte-Campanhas-1-de-set-de-2026-24-de-set-de-2026.csv"
-REUNIOES = DADOS / "reunioes" / "Controle_Comercial_Horizonte_-_Setembro.csv"
+META = DADOS / "meta" / "Campanhas-Exemplo-1-de-set-de-2026-24-de-set-de-2026.csv"
+REUNIOES = DADOS / "reunioes" / "Controle_Comercial_Exemplo_-_Setembro.csv"
 
 pytestmark = pytest.mark.skipif(
     not (META.exists() and REUNIOES.exists()), reason="arquivos de exemplo não disponíveis"
