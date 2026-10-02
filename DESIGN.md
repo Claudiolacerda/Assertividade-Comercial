@@ -313,16 +313,29 @@ para transparência sobre o preto.
 
 ## Typography
 
-**Display Font:** system-ui (com `-apple-system`, `Segoe UI`, `sans-serif`)
-**Body Font:** a mesma — há uma única família em todo o sistema
+**Display Font:** Archivo Variable (reserva: `system-ui`, `-apple-system`, `Segoe UI`)
+**Body Font:** a mesma. Há uma única família em todo o sistema
 **Label/Mono Font:** nenhuma; alinhamento numérico vem de `tabular-nums`
 **Ícones:** desenhados, em `components/Icones.jsx` — caixa de 16px, traço 1,6,
 pontas arredondadas, sempre em `currentColor`
 
-**Character:** neutra e invisível, de propósito. A personalidade do produto está
-na cor e na densidade, não na letra. Não carregar webfont elimina um salto de
-layout e um bloqueio de pintura que custariam mais do que uma fonte bonita
-devolveria num painel de números.
+**Character:** uma grotesca de trabalho, desenhada para alta densidade de
+informação. Tem personalidade sem chamar atenção para si, que é o que um painel
+de números pede.
+
+**A Regra da Fonte Variável.** Archivo é variável, e isso não é preferência: os
+pesos deste sistema são 520, 620, 650, 660 e 680, e uma fonte estática
+arredondaria todos para a centena mais próxima, achatando a hierarquia que a
+Regra dos Pesos Quebrados existe para proteger. Medido: 7 pesos produzem 7
+larguras distintas. Trocar por uma fonte sem eixo de peso contínuo quebra o
+sistema inteiro, não só o visual.
+
+**Auto-hospedada, nunca por CDN.** Entra pelo pacote, com só o eixo de peso e os
+subsets declarados com unicode-range: o navegador baixa 35 KB de latino e só
+busca o latin-ext se algum glifo exigir. O preload é emitido pelo código, não
+pelo HTML, porque só o bundler sabe o nome final do arquivo; sem ele a troca de
+fonte aconteceria depois do layout pronto e devolveria o salto que o sistema
+zerou.
 
 ### Hierarchy
 
@@ -576,6 +589,23 @@ A oportunidade principal, promovida acima dos KPIs: lavagem verde, borda verde,
 ícone de nível e a frase em 16px/560. É a linha que paga a assinatura, e antes
 ela tinha o mesmo peso de uma observação informativa no meio de dezoito.
 
+### Base técnica
+
+React 18 com TypeScript, Vite, e Tailwind v4 com o contrato de tokens do shadcn.
+
+**A Regra do Preflight Ausente.** O reset do Tailwind **não** é importado. Ele
+zera margens, tamanhos de fonte, bordas e estilos de lista que este CSS assume
+existirem, e importá-lo recriaria o design. Entram só o tema e as utilidades, e
+as utilidades vivem na camada `utilities`, que perde para CSS sem camada: o
+sistema semântico em português continua vencendo por construção.
+
+**O contrato do shadcn não traz valores novos.** `--primary` aponta para o verde
+do Neriah, `--background` para a página, `--radius` para o raio do cartão,
+`--chart-1..3` para as séries já medidas para daltonismo. Um componente do
+shadcn colocado aqui nasce com a cor certa sem ninguém redesenhar nada, e no
+tema escuro `--primary-foreground` vira o preto da marca, porque a Regra do
+Verde por Superfície vale também para ele.
+
 ### Movimento
 
 Uma curva e três durações, e cada duração significa uma distância.
@@ -686,7 +716,8 @@ o lockup inteiro escala proporcionalmente com um único número.
 - **Don't** pôr o verde da logo sobre branco, nem texto branco sobre ele.
 - **Don't** aninhar cartão dentro de cartão.
 - **Don't** usar segundo eixo y num gráfico.
-- **Don't** adicionar webfont.
+- **Don't** trocar Archivo por uma fonte sem eixo de peso contínuo.
+- **Don't** servir a fonte por CDN de terceiro nem remover o preload.
 - **Don't** arredondar os pesos quebrados para 400/500/600/700.
 - **Don't** usar sombra para separar no tema escuro.
 - **Don't** escrever frase em caixa alta com `letter-spacing` largo.
