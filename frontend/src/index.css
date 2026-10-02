@@ -743,7 +743,12 @@ td.texto { white-space: normal; min-width: 260px; }
    recorta sem criar contêiner de rolagem, e o sticky volta a funcionar. */
 .site { overflow-x: clip; }
 
-.faixa { padding: 0 24px; }
+/* A calha lateral de toda a página. Usa padding-inline, e todas as regras de
+   ritmo vertical abaixo usam padding-block, porque o atalho `padding` zera os
+   lados: era por isso que esta calha não existia na prática — o texto encostava
+   na borda no celular, e no desktop ninguém via porque o .limite de 1140px já
+   deixava folga. */
+.faixa { padding-inline: 24px; }
 .limite { max-width: 1140px; margin: 0 auto; }
 
 .topo {
@@ -754,7 +759,7 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .topo .limite {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding: 13px 0;
+  gap: 16px; padding-block: 13px;
 }
 .topo nav { display: flex; align-items: center; gap: 22px; }
 
@@ -773,7 +778,7 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .topo nav a:hover { color: #fff; }
 
-.hero { padding: 76px 0 88px; text-align: center; }
+.hero { padding-block: 76px 88px; text-align: center; }
 .etiqueta {
   display: inline-flex; align-items: center; gap: 8px;
   border: 1px solid rgba(83, 239, 134, 0.35);
@@ -1041,7 +1046,7 @@ td.texto { white-space: normal; min-width: 260px; }
 .tira {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 30px 0;
+  padding-block: 30px;
 }
 .tira .limite {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -1064,7 +1069,7 @@ td.texto { white-space: normal; min-width: 260px; }
    seção, a alternância subindo para 1,107 (ainda discreta, agora
    perceptível) e um ritmo vertical que deixa de ser idêntico em todas.
    =================================================================== */
-.secao { padding: 86px 0; position: relative; }
+.secao { padding-block: 86px; position: relative; }
 .secao.clara { background: var(--surface); color: var(--ink); }
 .secao.alterna { background: var(--surface-2); color: var(--ink); }
 
@@ -1141,7 +1146,7 @@ td.texto { white-space: normal; min-width: 260px; }
   gap: 52px; align-items: center;
 }
 
-.chamada-final { padding: 92px 0; text-align: center; }
+.chamada-final { padding-block: 92px; text-align: center; }
 .chamada-final h2 {
   font-size: clamp(28px, 4vw, 44px);
   letter-spacing: -0.03em; max-width: 19ch; margin: 0 auto;
@@ -1153,7 +1158,7 @@ td.texto { white-space: normal; min-width: 260px; }
 
 .rodape {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 34px 0;
+  padding-block: 34px;
   color: rgba(255, 255, 255, 0.45);
   font-size: 13px;
 }
@@ -1204,6 +1209,7 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 
 @media (max-width: 880px) {
+  .faixa { padding-inline: 20px; }
   .menu-movel { display: inline-flex; }
   .topo .limite { flex-wrap: wrap; }
   .topo nav {
@@ -1237,8 +1243,8 @@ td.texto { white-space: normal; min-width: 260px; }
   .conteudo { padding: 18px 16px 48px; }
   .grade.dois { grid-template-columns: 1fr; }
   .topo nav a.oculta-movel { display: none; }
-  .secao { padding: 58px 0; }
-  .hero { padding: 52px 0 62px; }
+  .secao { padding-block: 58px; }
+  .hero { padding-block: 52px 62px; }
 }
 
 /* =================== planos =================== */
