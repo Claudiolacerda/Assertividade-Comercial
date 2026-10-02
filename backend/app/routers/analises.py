@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..core import ConfigAnalise, analisar, gerar_excel
+from ..core.jev import avaliar as avaliar_jev
 from ..core.pipeline import ErroDeAnalise
 from ..db import get_db, sessao_tenant
 from ..deps import Atual, admin_atual, usuario_atual
@@ -111,6 +112,12 @@ def criar_analise(
         except ErroDeAnalise as e:
             # Erro que o cliente resolve na planilha: devolve a mensagem dele, não um 500.
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+
+        # A leitura do JEV é acrescentada aqui, e não dentro de `analisar()`:
+        # o núcleo continua determinístico e sem rede, que é o que permite a
+        # suíte cravar os números. Se o JEV falhar, `res.jev` traz o motivo e a
+        # análise segue inteira.
+        res.jev = avaliar_jev(res, settings.anthropic_api_key or None, settings.jev_ativo)
 
         # Agora que o mês é conhecido, move os arquivos para a pasta definitiva
         definitiva = _pasta(atual, res.mes_referencia)

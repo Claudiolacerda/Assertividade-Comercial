@@ -110,6 +110,24 @@ produto, use os nomes fictícios. Trocar por nomes reais reintroduz dado
 pessoal de terceiro em repositório público, o que o usuário não tem permissão
 para fazer.
 
+**Onde entra o modelo de linguagem (JEV).** O JET calcula e o JEV escreve. A
+fronteira é dura: número vem de código, palavra vem do modelo. O produto vende
+"o CAC real", e um número que o modelo tivesse derivado poderia estar errado
+justamente onde o cliente corta verba. Por isso o modelo recebe os números
+prontos e formatados, é instruído a não fazer conta nem em algarismo nem por
+extenso, e o que ele devolve não alimenta nenhum cálculo nem aparece como
+número na tela.
+
+O usuário decidiu que só agregado sai da máquina: números, nomes de campanha
+(que são códigos de mídia) e contagens por categoria de sinal. Nome de cliente
+final, texto livre das observações e nome de quem fez a reunião ficam. Isso tem
+um custo conhecido e aceito: sem o texto livre, o JEV não conserta a
+classificação de objeção, que hoje sai de palavras-chave e erra — "Marido
+trocou de contabilidade e não tem interesse" é classificado como "decide com
+cônjuge" quando é um lead perdido. Quem for revisitar essa decisão precisa
+saber que é isso que está sobre a mesa, e que a saída limpa seria
+pseudonimizar antes de enviar.
+
 **Ausências que trabalho futuro não pode fabricar:**
 
 - Não há depoimento assinado de ninguém.

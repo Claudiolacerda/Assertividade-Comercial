@@ -165,7 +165,7 @@ export default function Analise() {
 
       {aba === "jet" && (
         <div role="tabpanel" id="painel-jet" aria-labelledby="aba-jet">
-          <Jet jet={r.jet} />
+          <Jet jet={r.jet} jev={r.jev} />
         </div>
       )}
 

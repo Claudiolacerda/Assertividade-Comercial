@@ -57,6 +57,9 @@ class Resultado:
     tipos_resultado: list[str] = field(default_factory=list)
     cobertura: dict[str, Any] = field(default_factory=dict)
     jet: dict[str, Any] = field(default_factory=dict)
+    # Preenchido fora de `analisar()`, pela camada de rota: o JEV usa rede e o
+    # núcleo não pode depender disso. Fica vazio numa análise feita sem ele.
+    jev: dict[str, Any] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -73,6 +76,7 @@ class Resultado:
             "tipos_resultado": self.tipos_resultado,
             "cobertura": self.cobertura,
             "jet": self.jet,
+            "jev": self.jev,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),

@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     dir_uploads: Path = Path("dados_clientes")
     tamanho_max_upload_mb: int = 25
 
+    # JEV: a leitura do mês escrita por modelo de linguagem. Desligado por
+    # padrão, de propósito. Ligá-lo faz dados agregados da análise saírem desta
+    # máquina para a API da Anthropic; o que sai está cravado em
+    # `core/jev.montar_payload` e conferido em `tests/test_jev.py`. Nenhum nome
+    # de cliente final e nenhum texto de observação vão junto.
+    jev_ativo: bool = False
+    anthropic_api_key: str = ""
+
     # CORS (origens do frontend)
     origens_permitidas: str = "http://localhost:5173,http://127.0.0.1:5173"
 
