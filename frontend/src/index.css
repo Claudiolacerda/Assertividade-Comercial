@@ -716,22 +716,23 @@ td.texto { white-space: normal; min-width: 260px; }
   pointer-events: none;
 }
 
-/* O véu. Sem ele um risco de luz passando atrás de uma linha de texto derruba
-   o parágrafo do hero para 1,94:1, contra os 4,5:1 exigidos — a média fica em
-   8,85, mas é o pior pixel que decide se a frase é legível.
-   O véu escurece a coluna central, onde vivem título, parágrafo e botões, e
-   deixa o campo aparecer nas laterais e embaixo. A vinheta que vem no próprio
-   componente faz o contrário: protege as bordas e expõe o centro. */
+/* O véu. Sem ele um risco de luz passando atrás de uma linha derrubava o
+   parágrafo do Hero para 1,94:1, contra os 4,5:1 exigidos — e a média ficava
+   em 8,85, que é justamente o que esconde esse tipo de problema.
+   A primeira versão era uma elipse larga que apagava o campo inteiro no centro,
+   onde todo mundo olha. Esta acompanha só a coluna de texto: forte na faixa do
+   título e do parágrafo, e some rápido para os lados e para baixo, onde o
+   campo pode correr livre. */
 .fundo-hero::after {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse 58% 42% at 50% 34%,
-    rgba(4, 13, 12, 0.93) 0%,
-    rgba(4, 13, 12, 0.78) 45%,
-    rgba(4, 13, 12, 0.3) 72%,
-    transparent 88%
+    ellipse 38% 30% at 50% 36%,
+    rgba(4, 13, 12, 0.88) 0%,
+    rgba(4, 13, 12, 0.62) 50%,
+    rgba(4, 13, 12, 0.18) 78%,
+    transparent 100%
   );
 }
 
@@ -803,7 +804,9 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .hero p.chamada {
   font-size: clamp(15.5px, 1.9vw, 19px);
-  color: rgba(255, 255, 255, 0.68);
+  /* 0.80 e não 0.68: com o campo de fluxo atrás, o parágrafo ficava em 4,59:1,
+     margem curta demais para 4,5. Texto sobre textura precisa de mais tinta. */
+  color: rgba(255, 255, 255, 0.8);
   max-width: 62ch;
   margin: 22px auto 0;
   line-height: 1.58;
@@ -1050,14 +1053,37 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .tira .l { font-size: 13px; color: rgba(255, 255, 255, 0.58); margin-top: 5px; }
 
-/* seções claras */
-.secao { padding: 86px 0; }
+/* ===================================================================
+   Divisão entre seções
+   -------------------------------------------------------------------
+   Sete seções seguidas separadas só pela alternância de fundo, que ficava
+   em 1,057 de razão — diferença de 1%, que o olho não acha. O resultado
+   era uma massa contínua sem borda onde pousar.
+
+   Três coisas resolvem juntas: uma régua de 1px marcando o começo de cada
+   seção, a alternância subindo para 1,107 (ainda discreta, agora
+   perceptível) e um ritmo vertical que deixa de ser idêntico em todas.
+   =================================================================== */
+.secao { padding: 86px 0; position: relative; }
 .secao.clara { background: var(--surface); color: var(--ink); }
-.secao.alterna { background: var(--page); color: var(--ink); }
+.secao.alterna { background: var(--surface-2); color: var(--ink); }
+
+/* a régua: começa e termina no limite do conteúdo, não encosta na borda da
+   janela — assim ela lê como divisão de assunto, não como linha de tabela */
+.secao + .secao::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1140px, calc(100% - 48px));
+  height: 1px;
+  background: var(--borda);
+}
 /* O bloco ocupava 660px de um contêiner de 1140 e a metade direita ficava
    vazia em toda seção. Agora o título usa a largura e só o parágrafo tem
    medida de leitura. */
-.secao-topo { margin-bottom: 44px; }
+.secao-topo { margin-bottom: 40px; }
 .secao-topo h2 { max-width: 20ch; }
 .secao-topo p { max-width: 62ch; }
 .secao-topo h2 {
@@ -1596,7 +1622,11 @@ td.texto { white-space: normal; min-width: 260px; }
 .palco-zap {
   display: grid;
   place-items: center;
-  padding: 26px;
+  /* O balão tem 330px. Num palco de 680 ele boiava com 175px de vazio de cada
+     lado; o teto aqui faz o palco acompanhar a mensagem em vez do contrário. */
+  max-width: 470px;
+  margin-inline: auto;
+  padding: 30px;
   border-radius: 16px;
   background:
     radial-gradient(70% 60% at 50% 30%, rgba(37, 211, 102, 0.1), transparent 70%),

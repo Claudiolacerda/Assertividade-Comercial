@@ -138,9 +138,9 @@ export default function Site() {
         <div className="fundo-hero" aria-hidden="true">
           <FlowField
             theme="neriah"
-            density="sparse"
-            dotSize={1}
-            intensity={0.5}
+            density="dense"
+            dotSize={1.25}
+            intensity={0.95}
             className="!min-h-0 absolute inset-0 block"
           >
             <></>
