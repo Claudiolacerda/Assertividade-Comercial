@@ -11,6 +11,11 @@
    base nasce com a cor certa, sem ninguém redesenhar nada.
    =========================================================================== */
 
+/* Só o eixo de peso. O arquivo traz todos os subsets declarados com
+   unicode-range, então o navegador baixa só o latino (35 KB) e vai atrás do
+   latin-ext apenas se algum glifo exigir. */
+@import "@fontsource-variable/archivo/wght.css";
+
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";
 
