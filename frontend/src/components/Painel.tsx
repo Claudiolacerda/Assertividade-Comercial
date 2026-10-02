@@ -61,7 +61,7 @@ const GRUPOS = [
   {
     id: "dados",
     titulo: "Confiabilidade do número",
-    apoio: "O que a planilha deixou de contar — e por isso o número pode estar otimista.",
+    apoio: "O que a planilha deixou de contar, e por isso o número pode estar otimista.",
     aceita: (n, area) => n === "atencao" && area === "Dados",
   },
 ];
@@ -126,7 +126,7 @@ export function Diagnostico({ itens }) {
     <div className="cartao">
       <h2>O que os números estão dizendo</h2>
       <p className="sub-cartao">
-        Conclusões do cruzamento das duas planilhas — {itens.length} apontamentos.
+        Conclusões do cruzamento das duas planilhas: {itens.length} apontamentos.
       </p>
 
       {blocos.map((b) => (
@@ -230,7 +230,7 @@ export function TabelaDados({
       </div>
       {linhas.length > limite && (
         <p style={{ color: "var(--ink-muted)", fontSize: 12.5, marginBottom: 0 }}>
-          Mostrando {limite} de {linhas.length} linhas — a planilha exportada traz todas.
+          Mostrando {limite} de {linhas.length} linhas. A planilha exportada traz todas.
         </p>
       )}
     </section>

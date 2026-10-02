@@ -43,7 +43,7 @@ const DIAGNOSTICOS = [
     tx: (
       <>
         4 dos 9 fechamentos têm marcação de parceiro no nome. Se vieram de indicação, o{" "}
-        <b>CAC real do anúncio é R$ 730,20</b> — não R$ 405,67.
+        <b>CAC real do anúncio é R$ 730,20</b>, não R$ 405,67.
       </>
     ),
   },
@@ -115,7 +115,7 @@ const CONCLUSOES = [
     marcador: "Pipeline",
     texto: (
       <>
-        “<b>7 clientes quentes</b> para fechar agora” — nominalmente, com o que cada um disse na
+        “<b>7 clientes quentes</b> para fechar agora”, nominalmente, com o que cada um disse na
         última conversa.
       </>
     ),
@@ -182,7 +182,7 @@ export default function Site() {
 
             <p className="chamada">
               Você sabe quanto gastou em anúncio. Sabe quantas reuniões aconteceram. O que ninguém
-              te diz é quanto custou <em>cada cliente que assinou</em> — e o que fazer na segunda-feira.
+              te diz é quanto custou <em>cada cliente que assinou</em>, e o que fazer na segunda-feira.
               A Neriah cruza as duas planilhas, manda o resultado no WhatsApp do cliente e desenha a
               cadência para destravar quem ficou no meio do caminho.
             </p>
@@ -196,7 +196,7 @@ export default function Site() {
               </a>
             </div>
 
-            {/* painel demonstrativo — dados reais de uma análise */}
+            {/* painel demonstrativo, com dados reais de uma análise */}
             <div className="moldura">
               {/* O facho: a luz que revela o dado, literal. Varre o painel uma
                   vez; cada elemento acende quando ele passa por cima. */}
@@ -328,7 +328,7 @@ export default function Site() {
               <h3>Recebe conclusões, não só gráficos</h3>
               <p>
                 Painel com KPIs, funil e evolução mês a mês, a leitura crítica em texto e o Excel com
-                fórmulas vivas. O resumo vai pronto para o WhatsApp do cliente — e o Neriah ainda
+                fórmulas vivas. O resumo vai pronto para o WhatsApp do cliente, e o Neriah ainda
                 desenha a cadência para destravar quem não fechou.
               </p>
             </div>
@@ -340,7 +340,7 @@ export default function Site() {
       <section className="secao alterna faixa" id="conclusoes">
         <div className="limite">
           <div className="secao-topo">
-            <h2>Ela chega às próprias conclusões — inclusive as incômodas</h2>
+            <h2>Ela chega às próprias conclusões, inclusive as incômodas</h2>
             <p>
               Um dashboard comum mostra o número. A Neriah avisa quando o número não merece
               confiança. Todas as frases abaixo saíram de análises reais, exatamente como aparecem
@@ -370,39 +370,39 @@ export default function Site() {
               <h2>O mínimo é duas colunas. O resto vai destravando.</h2>
               <p>
                 Nada de projeto de implantação. Se a sua planilha tem cliente e etapa, você já tem
-                análise hoje — e a própria Neriah te diz o que falta para liberar o resto.
+                análise hoje, e a própria Neriah te diz o que falta para liberar o resto.
               </p>
             </div>
             <ul className="lista-check">
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Cliente + etapa do funil</b> — o mínimo. Já entrega assertividade, funil, CAC e
+                  <b>Cliente + etapa do funil.</b> O mínimo. Já entrega assertividade, funil, CAC e
                   pipeline.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Valor do contrato</b> — libera receita, ticket médio, ROAS e ROI.
+                  <b>Valor do contrato.</b> Libera receita, ticket médio, ROAS e ROI.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Campanha</b> — mostra qual anúncio realmente vende, com CAC por campanha.
+                  <b>Campanha.</b> Mostra qual anúncio realmente vende, com CAC por campanha.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Quem fez</b> — compara assertividade entre vendedores.
+                  <b>Quem fez.</b> Compara assertividade entre vendedores.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Motivo da perda</b> — win rate confiável e o que mais trava a venda.
+                  <b>Motivo da perda.</b> Win rate confiável e o que mais trava a venda.
                 </span>
               </li>
             </ul>
@@ -472,8 +472,8 @@ export default function Site() {
               <div className="num"><IconeSubida /></div>
               <h3>Cada cliente no seu espaço</h3>
               <p>
-                Login próprio e banco isolado por empresa. Um cliente nunca alcança o dado do outro
-                — e você mostra isso na reunião de fechamento.
+                Login próprio e banco isolado por empresa. Um cliente nunca alcança o dado do
+                outro, e você mostra isso na reunião de fechamento.
               </p>
             </div>
             <div className="passo">
@@ -539,7 +539,7 @@ export default function Site() {
             >
               <IconeZap tamanho={16} /> {WHATSAPP_EXIBICAO}
             </a>
-            <span>Neriah · luz — inteligência de dados para quem vive de vender.</span>
+            <span>Neriah · luz · inteligência de dados para quem vive de vender.</span>
           </div>
         </footer>
       </div>

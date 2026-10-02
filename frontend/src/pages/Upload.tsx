@@ -106,7 +106,7 @@ export default function Upload() {
           <h1>Nova análise</h1>
           <p>
             Envie o relatório do Gerenciador de Anúncios e a planilha de assertividade. O sistema
-            reconhece as colunas sozinho — não precisa reformatar nada.
+            reconhece as colunas sozinho, então não precisa reformatar nada.
           </p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function Upload() {
             >
               Baixe a planilha-modelo
             </button>{" "}
-            — ela já vem com todas as colunas que liberam ROAS, CAC por campanha e ciclo de venda.
+            e ela já vem com todas as colunas que liberam ROAS, CAC por campanha e ciclo de venda.
           </div>
 
           <div style={{ maxWidth: 240 }}>

@@ -6,7 +6,7 @@ import { CANAIS } from "./EtapaCadencia";
 import { IconeCheck } from "./Icones";
 
 const MENSAGEM = [
-  { t: "*Contabilidade Horizonte — setembro/2026*", forte: true },
+  { t: "*Contabilidade Horizonte · setembro/2026*", forte: true },
   { t: "" },
   { t: "• Investido em anúncio: *R$ 3.651,02*" },
   { t: "• Leads gerados: *81*" },
@@ -58,34 +58,34 @@ export default function Recursos() {
               <h2>O seu cliente não abre dashboard. Ele abre o WhatsApp.</h2>
               <p>
                 Todo mês a análise vira uma mensagem que cabe numa tela: os números que o dono do
-                negócio cobra, o que mudou desde o mês passado e quem fechar esta semana — pelo nome.
+                negócio cobra, o que mudou desde o mês passado e quem fechar esta semana, pelo nome.
               </p>
             </div>
             <ul className="lista-check">
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Editável antes de mandar</b> — quem assina o relatório é você, não o gerador.
+                  <b>Editável antes de mandar.</b> Quem assina o relatório é você, não o gerador.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Funciona no primeiro dia</b> — abre o WhatsApp com a mensagem pronta, sem
+                  <b>Funciona no primeiro dia.</b> Abre o WhatsApp com a mensagem pronta, sem
                   precisar configurar nada.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Ou automático</b> — conecte a sua Evolution API ou a API oficial da Meta e o
+                  <b>Ou automático.</b> Conecte a sua Evolution API ou a API oficial da Meta e o
                   envio sai sozinho.
                 </span>
               </li>
               <li>
                 <span className="v"><IconeCheck tamanho={11} /></span>
                 <span>
-                  <b>Sem recado técnico</b> — o que é problema de planilha fica no painel, não vai
+                  <b>Sem recado técnico.</b> O que é problema de planilha fica no painel, não vai
                   para o cliente.
                 </span>
               </li>
@@ -104,7 +104,7 @@ export default function Recursos() {
           <div className="secao-topo">
             <h2>Descobrir onde trava é metade. A outra é o que fazer na segunda.</h2>
             <p>
-              Um canvas para desenhar o follow-up da equipe — arrastar, ligar, editar. A diferença
+              Um canvas para desenhar o follow-up da equipe: arrastar, ligar, editar. A diferença
               para um quadro branco é o botão de sugerir: o fluxo nasce das objeções que a sua
               planilha registrou, não de um modelo que serve para qualquer negócio.
             </p>

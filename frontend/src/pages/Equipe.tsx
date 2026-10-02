@@ -5,9 +5,9 @@ import { useAuth } from "../auth";
 import { mensagemDoErro } from "../erros";
 
 const PAPEIS = {
-  admin: "Administrador — gerencia clientes, metas e usuários",
-  membro: "Membro — analisa toda a carteira, não gerencia",
-  cliente: "Cliente — vê apenas os clientes liberados, sem alterar nada",
+  admin: "Administrador: gerencia clientes, metas e usuários",
+  membro: "Membro: analisa toda a carteira, não gerencia",
+  cliente: "Cliente: vê apenas os clientes liberados, sem alterar nada",
 };
 
 export default function Equipe() {
@@ -175,7 +175,7 @@ export default function Equipe() {
                     ))}
                   </div>
                   <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "6px 0 0" }}>
-                    Escolha pelo menos um — é o que ele vai enxergar ao entrar.
+                    Escolha pelo menos um. É o que ele vai enxergar ao entrar.
                   </p>
                 </div>
               )}

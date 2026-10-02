@@ -358,7 +358,7 @@ export default function Cadencia() {
         <div>
           <h1>Cadência</h1>
           <p>
-            Desenhe o fluxo de follow-up da sua equipe. Cada etapa tem canal, dia e roteiro — e o
+            Desenhe o fluxo de follow-up da sua equipe. Cada etapa tem canal, dia e roteiro, e o
             Neriah sabe sugerir o fluxo a partir das objeções que a sua análise encontrou.
           </p>
         </div>
