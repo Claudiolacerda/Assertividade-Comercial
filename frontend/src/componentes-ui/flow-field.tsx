@@ -84,8 +84,12 @@ const THEMES: Record<ColorTheme, ThemeConfig> = {
   ember: { hueStart: 0, hueRange: 55, hueDrift: 70, saturation: 95, lightness: 58, bg: "8, 4, 2", trailAlpha: 0.07 },
   ocean: { hueStart: 180, hueRange: 90, hueDrift: 70, saturation: 88, lightness: 60, bg: "2, 6, 10", trailAlpha: 0.06 },
   /* O verde da logo é hsl(140, 83%, 63%). A faixa e a deriva são estreitas de
-     propósito: o campo varia entre tons de verde, nunca sai da marca. */
-  neriah: { hueStart: 128, hueRange: 26, hueDrift: 16, saturation: 78, lightness: 58, bg: "4, 13, 12", trailAlpha: 0.055 },
+     propósito: o campo varia entre tons de verde, nunca sai da marca.
+     A luminosidade é baixa por obrigação, não por gosto: o canal verde pesa
+     0,71 na luminância, então um verde claro atrás de texto de corpo estoura o
+     contraste. Em 34% ele continua nitidamente verde contra o preto da marca e
+     cabe no teto de 0,0587 de luminância que o parágrafo do Hero exige. */
+  neriah: { hueStart: 126, hueRange: 30, hueDrift: 18, saturation: 88, lightness: 34, bg: "4, 13, 12", trailAlpha: 0.045 },
 } as const;
 
 // ─── Noise / vector-field ─────────────────────────────────────────────────────

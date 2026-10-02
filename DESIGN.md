@@ -606,6 +606,20 @@ shadcn colocado aqui nasce com a cor certa sem ninguém redesenhar nada, e no
 tema escuro `--primary-foreground` vira o preto da marca, porque a Regra do
 Verde por Superfície vale também para ele.
 
+### Divisão entre seções
+
+**A Regra da Régua.** Sete seções seguidas separadas apenas pela alternância de
+fundo ficavam em razão de contraste 1,057 entre si — diferença de 1%, que o olho
+não acha. O resultado era uma massa contínua sem borda onde pousar. Três coisas
+resolvem juntas: uma régua de 1px no topo de cada seção, limitada à largura do
+conteúdo para ler como divisão de assunto e não como linha de tabela; a
+alternância subindo para 1,107, ainda discreta e agora perceptível; e o bloco de
+título com mais espaço acima do que abaixo.
+
+**A Regra do Palco Que Acompanha.** Um balão de 330px dentro de um palco de
+680px boiava com 175px de vazio de cada lado. Contêiner de demonstração
+acompanha o conteúdo que exibe, nunca o contrário.
+
 ### Movimento
 
 Uma curva e três durações, e cada duração significa uma distância.
@@ -660,12 +674,19 @@ rastros luminosos, em canvas. Vem do Kokonut UI (MIT), adaptado.
 **Só no Hero.** Nenhuma outra seção recebe o efeito, e isso é regra, não
 acidente: a página tem sete seções e exatamente um canvas.
 
-**A Regra do Véu.** O campo fica atrás de texto, e isso é perigoso. Medido: um
-risco de luz passando atrás do parágrafo do Hero derrubava o contraste para
-**1,94:1**, contra os 4,5:1 exigidos — e a média ficava em 8,85, o que esconde o
-problema de qualquer verificador que olhe só a média. O véu (`.fundo-hero::after`)
-escurece a coluna central, onde vivem título, parágrafo e botões, e deixa o
-campo aparecer nas laterais e embaixo. Depois dele: 7,28:1 no pior pixel.
+**A Regra da Partícula Escura.** O verde é inerentemente luminoso: o canal G
+pesa 0,71 na fórmula de luminância, então um verde claro atrás de texto de corpo
+estoura o contraste por mais discreto que pareça. A partícula do campo vive em
+34% de luminosidade, e esse número saiu de cálculo, não de gosto: o parágrafo do
+Hero exige 4,5:1, o que impõe teto de 0,0587 de luminância ao fundo.
+
+**A Regra do Véu Estreito.** Um risco de luz passando atrás do parágrafo o
+derrubava para **1,94:1**, e a média ficava em 8,85 — que é justamente o que
+esconde esse tipo de problema de qualquer verificador que olhe só a média.
+A primeira tentativa de véu foi uma elipse larga, e ela apagou o campo inteiro
+no centro, onde todo mundo olha: resolveu o contraste matando o efeito. O véu
+atual acompanha só a coluna de texto e some rápido para os lados. Com ele, mais
+a partícula escura e o parágrafo em 0.80 de tinta: **6,52:1 no pior pixel**.
 A vinheta que vem no componente faz o contrário, protege as bordas e expõe o
 centro, então ela não substitui o véu.
 
