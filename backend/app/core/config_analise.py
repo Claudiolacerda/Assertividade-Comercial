@@ -92,6 +92,15 @@ COLUNAS_REUNIOES: dict[str, list[str]] = {
         # ("Proposal Made"), igual para quem ganhou e para quem perdeu.
         "Deal - Status", "Deal Status", "Deal Stage", "Deal - Stage", "Stage", "Status do negócio",
     ],
+    # A etapa do funil, quando ela existe ALÉM do campo de desfecho. Vem depois
+    # de "status" na ordem do dicionário de propósito: `padronizar` consome a
+    # coluna no primeiro campo que casa, então o desfecho escolhe primeiro e a
+    # etapa fica com o que sobrar. No Pipedrive isso dá "Deal - Status" para o
+    # desfecho e "Deal - Stage" para a etapa; no Agendor, "Status" e "Etapa".
+    "status_detalhe": [
+        "Etapa", "Etapa do funil", "Fase", "Estágio", "Estagio", "Fase do funil",
+        "Deal - Stage", "Deal Stage", "Stage", "Pipeline stage",
+    ],
     "valor": [
         "Valor", "Valor do contrato", "Valor fechado", "Ticket", "Valor da proposta", "Valor (R$)",
         "Amount", "Deal - Value", "Deal Value", "Deal amount", "Weighted amount", "Revenue",
@@ -172,6 +181,11 @@ REGRAS_STATUS: list[tuple[str, list[str]]] = [
             "andamento", "retorno", "analise", "avaliando", "quente", "morno",
             "qualificad", "em atendimento", "atendimento", "contato feito", "interessad",
             "proposal", "proposta enviada", "negotiation",
+            # Contrato ENVIADO ainda não é contrato assinado: é a última etapa
+            # antes do fechamento, e caía em "Não classificado" — o negócio
+            # sumia de todas as taxas em vez de contar como aberto. "contrato
+            # assinado" continua em Fechado, e Fechado é avaliado antes daqui.
+            "contract sent", "contrato enviado", "aguardando assinatura",
             "open", "in progress", "contacted", "qualified", "decision maker",
         ],
     ),

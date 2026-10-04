@@ -11,6 +11,7 @@ from fastapi.responses import Response
 
 from ..core.config_analise import CAMPOS_REUNIOES_INFO, ETAPAS_SUGERIDAS
 from ..core.modelo import gerar_planilha_modelo
+from ..core.modelo_hubspot import gerar_planilha_hubspot
 
 router = APIRouter(prefix="/api/modelo", tags=["modelo"])
 
@@ -27,6 +28,25 @@ def baixar_modelo():
         headers={
             "Content-Disposition": 'attachment; filename="Modelo_Comercial_Neriah.xlsx"',
             # o conteúdo só muda quando a versão muda: pode ficar em cache
+            "Cache-Control": "public, max-age=3600",
+        },
+    )
+
+
+@router.get("/planilha-hubspot.xlsx")
+def baixar_modelo_hubspot():
+    """Gabarito de exportação para quem já tem HubSpot.
+
+    Quem tem CRM não quer preencher planilha, quer exportar. Este arquivo diz
+    quais propriedades marcar na tela de export e mostra como o resultado deve
+    se parecer, na língua que a pessoa vê no CRM dela.
+    """
+    dados = gerar_planilha_hubspot()
+    return Response(
+        content=dados,
+        media_type=XLSX,
+        headers={
+            "Content-Disposition": 'attachment; filename="Modelo_HubSpot_Neriah.xlsx"',
             "Cache-Control": "public, max-age=3600",
         },
     )

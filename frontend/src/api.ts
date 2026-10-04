@@ -208,6 +208,9 @@ export const api = {
 
   // ---- planilha-modelo (público) ----
   baixarModelo: () => baixar("/modelo/planilha-comercial.xlsx", "Modelo_Comercial_Neriah.xlsx"),
+  /** Gabarito de exportação para quem já tem HubSpot: diz quais propriedades
+   *  marcar na tela de export, em vez de pedir que preencha tudo à mão. */
+  baixarModeloHubspot: () => baixar("/modelo/planilha-hubspot.xlsx", "Modelo_HubSpot_Neriah.xlsx"),
 
   urlModelo: "/api/modelo/planilha-comercial.xlsx",
 };

@@ -42,7 +42,9 @@ VERDADE = json.loads((FIXTURES / "_verdade.json").read_text(encoding="utf-8"))
 # verdade da base"; a presente é o que aquele CRM colapsa.
 CRMS = {
     "hubspot_deals_export.csv": ("HubSpot", {"noshow": 0, "agendados": 8}),
-    "pipedrive_deals_export.csv": ("Pipedrive", {"em_negociacao": 16, "noshow": 0, "agendados": 0}),
+    # O Pipedrive distingue agendado de em negociação pela etapa, mas não tem
+    # etapa de no-show: quem faltou fica na etapa da reunião marcada.
+    "pipedrive_deals_export.csv": ("Pipedrive", {"noshow": 0, "agendados": 8}),
     "rdstation_negociacoes.csv": ("RD Station", {"em_negociacao": 16, "noshow": 0, "agendados": 0}),
     "agendor_negocios.csv": ("Agendor", {}),
     "datacrazy_leads.csv": ("DataCrazy", {}),
@@ -181,3 +183,38 @@ def test_origem_organica_nao_vira_trafego_pago(tmp_path):
     assert int(res.kpi("fec")) == 8, "os oito fecharam"
     assert int(res.kpi("fecp")) == 4, "só os quatro pagos contam para o CAC"
 
+
+def test_pipedrive_usa_a_etapa_para_separar_agendado_de_negociando():
+    """"Open" não diz se a reunião já aconteceu, e a etapa diz.
+
+    O Pipedrive exporta "Deal - Status" (Won/Lost/Open) e "Deal - Stage" (a fase
+    do funil). Lendo só o status, toda reunião ainda não acontecida virava "Em
+    negociação" e entrava no denominador da assertividade: a agência aparecia
+    pior do que é, porque reunião marcada para semana que vem contava como
+    reunião que não fechou. Com 8 agendamentos em 32 negócios, 28,1% em vez de
+    37,5%.
+    """
+    res = _resultado("pipedrive_deals_export.csv")
+    assert int(res.kpi("fut")) == 8, "os 8 em etapa de reunião marcada"
+    assert int(res.kpi("real")) == 24, "realizadas não inclui quem ainda não foi atendido"
+    assert round(res.kpi("assert"), 3) == 0.375
+
+
+def test_a_etapa_nao_desfaz_um_desfecho_ja_decidido():
+    """Negócio ganho continua ganho, mesmo que a etapa diga outra coisa.
+
+    No Pipedrive o negócio ganho fica em "Negotiations Started", que sozinha
+    classificaria como em negociação. A etapa só reescreve o que está em aberto.
+    """
+    res = _resultado("pipedrive_deals_export.csv")
+    assert int(res.kpi("fec")) == 9 and int(res.kpi("per")) == 7
+
+
+def test_pipedrive_e_hubspot_concordam_apesar_do_formato_diferente():
+    """Mesma base, cabeçalhos diferentes, dois CRMs: o mesmo número.
+
+    É a prova de que o motor lê o conteúdo e não o formato.
+    """
+    pd_, hs = _resultado("pipedrive_deals_export.csv"), _resultado("hubspot_deals_export.csv")
+    for chave in ["fec", "per", "neg", "fut", "real", "rec", "cac"]:
+        assert round(pd_.kpi(chave), 2) == round(hs.kpi(chave), 2), f"divergiu em {chave}"

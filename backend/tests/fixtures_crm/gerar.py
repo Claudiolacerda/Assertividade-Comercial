@@ -15,8 +15,9 @@ Grau de confiança de cada formato, para não vender gato por lebre:
 import csv, random
 from pathlib import Path
 
-SAIDA = Path(__file__).parent / "crms"
-SAIDA.mkdir(exist_ok=True)
+# As fixtures ficam ao lado deste arquivo: rodar `python gerar.py` daqui
+# regenera todas elas no lugar certo, sem subpasta.
+SAIDA = Path(__file__).parent
 random.seed(20260904)
 
 CAMPANHAS = ["[GT] [WPP] [VENDAS] [28.10.25]", "[GT] [WPP] [VENDAS] [18.08.26]"]
@@ -88,14 +89,22 @@ escrever("hubspot_deals_export.csv",
       "newbusiness", "Paid Social", b["obs"]] for i, b in enumerate(BASE)])
 
 # --------------------------------------------------------------- Pipedrive
-# Cabeçalho com prefixo "Deal - ", em inglês.
+# Cabeçalho com prefixo "Deal - ", em inglês, e DUAS colunas de situação:
+# "Deal - Status" só diz Won/Lost/Open, e "Deal - Stage" diz em que ponto do
+# funil o negócio está. Quem lê só a primeira trata reunião ainda não
+# acontecida como negócio em negociação, e enche o denominador da
+# assertividade. O Pipedrive não tem etapa de no-show: quem faltou fica na
+# etapa da reunião marcada, igual a quem ainda vai ser atendido.
 ETAPA_PD = {"ganho": "Won", "perdido": "Lost", "negociando": "Open",
             "noshow": "Open", "agendado": "Open"}
+FASE_PD = {"ganho": "Negotiations Started", "perdido": "Proposal Made",
+           "negociando": "Proposal Made", "noshow": "Demo Scheduled",
+           "agendado": "Demo Scheduled"}
 escrever("pipedrive_deals_export.csv",
     ["Deal - ID", "Deal - Title", "Deal - Stage", "Deal - Status", "Deal - Owner",
      "Deal - Value", "Deal - Currency", "Deal - Won time", "Deal - Add time",
      "Deal - Source Campaign", "Deal - Notes"],
-    [[2000 + i, f"{b['nome']} - Negócio", "Proposal Made", ETAPA_PD[b["desfecho"]],
+    [[2000 + i, f"{b['nome']} - Negócio", FASE_PD[b["desfecho"]], ETAPA_PD[b["desfecho"]],
       b["vendedor"], f"{b['valor']:.2f}", "BRL",
       iso(b["dia"]) if b["desfecho"] == "ganho" else "", iso(b["dia_criado"]),
       b["campanha"], b["obs"]] for i, b in enumerate(BASE)])

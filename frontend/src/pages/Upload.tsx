@@ -129,17 +129,24 @@ export default function Upload() {
             arquivos={reunioes}
             onArquivos={(a) => { setReunioes(a); setErro(""); }}
           />
-          <div className="aviso" style={{ borderLeftColor: "var(--verde)" }}>
-            Não tem uma planilha organizada?{" "}
-            <button
-              type="button"
-              className="discreto"
-              onClick={() => api.baixarModelo()}
-              style={{ color: "var(--verde)", fontWeight: 650, padding: 0 }}
-            >
-              Baixe a planilha-modelo
-            </button>{" "}
-            e ela já vem com todas as colunas que liberam ROAS, CAC por campanha e ciclo de venda.
+          {/* Dois caminhos, porque são duas pessoas diferentes. Quem não tem CRM
+              precisa de uma planilha para preencher. Quem tem HubSpot não quer
+              preencher nada: quer saber o que marcar na tela de exportação. */}
+          <div className="aviso modelos" style={{ borderLeftColor: "var(--verde)" }}>
+            <p>
+              Não tem uma planilha organizada?{" "}
+              <button type="button" className="link-modelo" onClick={() => api.baixarModelo()}>
+                Baixe a planilha-modelo
+              </button>{" "}
+              e ela já vem com todas as colunas que liberam ROAS, CAC por campanha e ciclo de venda.
+            </p>
+            <p className="alternativa">
+              Já usa HubSpot?{" "}
+              <button type="button" className="link-modelo" onClick={() => api.baixarModeloHubspot()}>
+                Baixe o gabarito de exportação
+              </button>{" "}
+              e ele diz quais propriedades marcar no export, sem precisar preencher nada à mão.
+            </p>
           </div>
 
           <div style={{ maxWidth: 240 }}>

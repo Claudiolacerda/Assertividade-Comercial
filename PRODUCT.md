@@ -140,6 +140,15 @@ no feminino não casa com "ganho". Antes de prometer integração com qualquer
 CRM novo, rode uma exportação de verdade dele contra esse arquivo: o custo de
 suportar mais um costuma ser uma linha na tabela de apelidos, não código.
 
+**Dois modelos, porque são duas pessoas.** Quem não tem CRM precisa de uma
+planilha para preencher, e recebe a de sempre, em português. Quem já tem CRM não
+quer preencher nada: quer saber o que marcar na tela de exportação. Para esse,
+existe o gabarito do HubSpot, com os nomes de propriedade que ele vê no próprio
+CRM e uma aba de cinco passos. O circuito é fechado por teste: a planilha é
+gerada, preenchida e devolvida ao motor, para que modelo e tabela de apelidos
+nunca saiam de sincronia em silêncio — um modelo que o próprio sistema não lê é
+pior que nenhum modelo, porque a pessoa segue a instrução e leva um erro.
+
 Duas das seis fixtures (DataCrazy e Datalitics) são reconstruções plausíveis,
 não o arquivo real — esses produtos existem e são relevantes para o público do
 Neriah, mas o formato de exportação deles não é público. Quem tiver acesso a

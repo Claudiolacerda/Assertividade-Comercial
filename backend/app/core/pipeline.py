@@ -313,17 +313,19 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
         # data de fechamento só existe no negócio ganho: no Pipedrive ela tinha
         # 9 valores contra 32 da data de entrada, e escolhê-la jogava fora os
         # 23 negócios que não fecharam — a análise saía com 100% de conversão.
-        nomes = {"data_fechamento": "a data de fechamento", "data_lead": "a data de entrada do lead"}
+        nomes = {
+            "data_fechamento": ("a data de fechamento", "pela data de fechamento"),
+            "data_lead": ("a data de entrada do lead", "pela data de entrada do lead"),
+        }
         candidatas = [(reun[c].notna().sum(), c) for c in nomes if c in reun]
         preenchidas, coluna = max(candidatas, default=(0, None))
         if coluna and preenchidas:
-            como_se_chama = nomes[coluna]
+            usei, agrupa = nomes[coluna]
             reun["data_referencia"] = reun[coluna]
             avisos.append(
                 f"A planilha não tem data de reunião nem de agendamento, então usei "
-                f"{como_se_chama} para situar cada negócio no mês. As taxas continuam "
-                f"certas, mas o mês passa a agrupar por {como_se_chama}, não pela data "
-                f"em que a conversa aconteceu."
+                f"{usei} para situar cada negócio no mês. As taxas continuam certas, mas o "
+                f"mês passa a agrupar {agrupa}, não pela data em que a conversa aconteceu."
             )
 
     # bool() é obrigatório: .any() devolve numpy.bool_, que não serializa em JSON
@@ -337,6 +339,7 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
 
     reun["status_original"] = reun["status"].astype("string").str.strip()
     reun["status_padrao"] = reun["status_original"].map(lambda t: _classificar_status(t, cfg))
+    reun["status_padrao"] = _refinar_pela_etapa(reun, cfg)
 
     # "Cliente - Fulano" -> Marcação = Fulano (parceiro, indicação, vendedor...)
     partes_nome = reun["cliente"].str.extract(r"^\s*(.*?)\s*-\s*([^-]+?)\s*$")
@@ -377,6 +380,36 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
     reun["responsavel"] = reun["responsavel"].fillna("(sem responsável)")
     reun["produto"] = reun["produto"].fillna("(sem produto)")
     return reun, tem_valor, tem_origem, ano_padrao
+
+
+# Categorias grosseiras: dizem que o negócio está aberto, mas não em que ponto.
+# São as únicas que a etapa tem permissão de reescrever.
+ABERTAS = {"Em negociação", "Não classificado"}
+# O que a etapa pode dizer que vale mais que "está aberto".
+MAIS_ESPECIFICAS = {"Agendado", "Reunião feita", "No-show", "Remarcado", "Cancelado"}
+
+
+def _refinar_pela_etapa(reun, cfg: ConfigAnalise):
+    """Usa a etapa do funil para separar o que o campo de desfecho não separa.
+
+    O Pipedrive exporta duas colunas: "Deal - Status", que só diz Won, Lost ou
+    Open, e "Deal - Stage", que diz em que ponto do funil o negócio está. Lendo
+    só a primeira, toda reunião ainda não acontecida virava "Em negociação" e
+    entrava no denominador da assertividade — a agência aparecia pior do que é,
+    porque reunião marcada para semana que vem contava como reunião que não
+    fechou. Com 8 agendamentos em 32 negócios, a assertividade saía 28,1% em
+    vez de 37,5%.
+
+    A etapa só reescreve o que está em aberto. Negócio ganho ou perdido já tem
+    desfecho, e uma etapa como "Proposta enviada" não pode desfazer isso.
+    """
+    status = reun["status_padrao"]
+    if "status_detalhe" not in reun:
+        return status
+    detalhe = reun["status_detalhe"].astype("string").str.strip()
+    refinado = detalhe.map(lambda t: _classificar_status(t, cfg) if pd.notna(t) else "Sem status")
+    trocar = status.isin(ABERTAS) & refinado.isin(MAIS_ESPECIFICAS)
+    return status.where(~trocar, refinado)
 
 
 def _classificar_status(txt, cfg: ConfigAnalise) -> str:
