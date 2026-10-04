@@ -55,20 +55,81 @@ COLUNAS_META: dict[str, list[str]] = {
     "tipo_resultado": ["Indicador de resultado", "Tipo de resultado", "Result indicator", "Result type"],
 }
 
+# A correspondência é por prefixo normalizado, então "Valor" casa com "Valor da
+# negociação" sem precisar de entrada própria. O que NÃO casa sozinho é outro
+# idioma e outro substantivo: o cliente pode chamar a linha de "Negócio",
+# "Contato" ou "Deal - Title", e nenhum deles começa por "Cliente".
+#
+# As entradas em inglês e as com prefixo "Deal - " existem porque HubSpot e
+# Pipedrive exportam assim, e sem elas o Neriah recusava o arquivo inteiro
+# dizendo que faltava coluna de cliente.
 COLUNAS_REUNIOES: dict[str, list[str]] = {
-    "data_reuniao": ["Data da reunião", "Data da Reunião Realizada", "Data reuniao", "Data", "Dia"],
-    "data_agendamento": ["Data do Agendamento", "Data agendamento", "Data agendada", "Agendado em"],
-    "cliente": ["Cliente", "Nome", "Lead", "Empresa", "Nome do cliente"],
-    "status": ["Status", "Etapa do Funil", "Situação", "Situacao", "Resultado", "Etapa", "Andamento"],
-    "valor": ["Valor", "Valor do contrato", "Valor fechado", "Ticket", "Valor da proposta", "Valor (R$)"],
-    "responsavel": ["Responsável", "Responsavel", "Quem fez", "Vendedor", "Closer", "Consultor", "SDR"],
-    "origem": ["Origem", "Canal", "Fonte", "Origem do lead"],
-    "campanha": ["Campanha", "Nome da campanha", "Anúncio de origem"],
-    "produto": ["Produto", "Serviço", "Servico", "Plano", "Oferta"],
-    "data_fechamento": ["Data de fechamento", "Data fechamento", "Data do fechamento", "Fechado em"],
-    "data_lead": ["Data do lead", "Data de entrada", "Data do primeiro contato", "Entrada"],
-    "motivo_perda": ["Motivo da perda", "Motivo", "Objeção", "Objecao", "Por que não fechou"],
-    "observacoes": ["Observações", "Observacoes", "Obs", "Comentários", "Anotações"],
+    "data_reuniao": [
+        "Data da reunião", "Data da Reunião Realizada", "Data reuniao", "Data", "Dia",
+        "Última interação", "Ultima interacao", "Close Date", "Activity date",
+        # "Deal - Won time" e "Data da conversão" ficam FORA daqui de propósito:
+        # só vêm preenchidas no negócio ganho. Lidas como data da reunião, as
+        # linhas perdidas e em aberto ficavam sem data e sumiam da análise —
+        # 32 negócios viravam 9, todos fechados.
+    ],
+    "data_agendamento": [
+        "Data do Agendamento", "Data agendamento", "Data agendada", "Agendado em",
+        "Meeting date", "Data da reunião agendada",
+    ],
+    "cliente": [
+        "Cliente", "Nome", "Lead", "Empresa", "Nome do cliente",
+        # o nome que cada CRM dá à linha
+        "Negócio", "Negocio", "Nome da negociação", "Nome da negociacao", "Oportunidade",
+        "Nome da oportunidade", "Contato", "Pessoa", "Organização", "Organizacao",
+        "Deal Name", "Deal - Title", "Deal Title", "Company name", "Contact name",
+        "Associated Company", "Account Name", "Opportunity Name",
+    ],
+    "status": [
+        "Status", "Etapa do Funil", "Situação", "Situacao", "Resultado", "Etapa", "Andamento",
+        "Fase", "Estágio", "Estagio", "Etapa do funil de vendas",
+        # "Deal - Status" antes de "Deal - Stage": no Pipedrive o desfecho
+        # (Won/Lost/Open) está em Status, enquanto Stage guarda a fase do funil
+        # ("Proposal Made"), igual para quem ganhou e para quem perdeu.
+        "Deal - Status", "Deal Status", "Deal Stage", "Deal - Stage", "Stage", "Status do negócio",
+    ],
+    "valor": [
+        "Valor", "Valor do contrato", "Valor fechado", "Ticket", "Valor da proposta", "Valor (R$)",
+        "Amount", "Deal - Value", "Deal Value", "Deal amount", "Weighted amount", "Revenue",
+    ],
+    "responsavel": [
+        "Responsável", "Responsavel", "Quem fez", "Vendedor", "Closer", "Consultor", "SDR",
+        "Atendente", "Proprietário", "Proprietario", "Dono do negócio",
+        "Deal owner", "Deal - Owner", "Owner", "Assigned to", "Sales rep",
+    ],
+    "origem": [
+        "Origem", "Canal", "Fonte", "Origem do lead",
+        "utm_source", "utm source", "Original Traffic Source", "Source", "Lead Source",
+        "Deal - Source", "Traffic source",
+    ],
+    "campanha": [
+        "Campanha", "Nome da campanha", "Anúncio de origem",
+        "utm_campaign", "utm campaign", "Campaign", "Deal - Source Campaign",
+        "Original Traffic Source Drill-Down 1",
+    ],
+    "produto": ["Produto", "Serviço", "Servico", "Plano", "Oferta", "Product", "Line item"],
+    "data_fechamento": [
+        "Data de fechamento", "Data fechamento", "Data do fechamento", "Fechado em",
+        "Data de conclusão", "Data de conclusao", "Won date", "Closed date",
+        "Deal - Won time", "Data da conversão", "Data da conversao",
+    ],
+    "data_lead": [
+        "Data do lead", "Data de entrada", "Data do primeiro contato", "Entrada",
+        "Data de criação", "Data de criacao", "Data de início", "Data de inicio",
+        "Create Date", "Created date", "Deal - Add time", "Add time",
+    ],
+    "motivo_perda": [
+        "Motivo da perda", "Motivo", "Objeção", "Objecao", "Por que não fechou",
+        "Closed Lost Reason", "Lost reason", "Deal - Lost reason",
+    ],
+    "observacoes": [
+        "Observações", "Observacoes", "Obs", "Comentários", "Anotações", "Anotação", "Anotacao",
+        "Descrição", "Descricao", "Notes", "Note", "Deal - Notes", "Comments",
+    ],
 }
 
 # --------------------------------------------------------------------------- #
@@ -83,6 +144,9 @@ REGRAS_STATUS: list[tuple[str, list[str]]] = [
         [
             "nao fechou", "perdid", "perdeu", "recusou", "desistiu", "sem interesse", "nao tem interesse",
             "descartad", "sem fit", "nao qualificad", "desqualificad", "reprovad", "nao vai fechar",
+            # inglês: "closed lost" precisa vir antes de "closed won" ser testado,
+            # e vem, porque Perdido é avaliado antes de Fechado.
+            "closed lost", "lost", "disqualified", "unqualified", "churn",
         ],
     ),
     (
@@ -90,6 +154,10 @@ REGRAS_STATUS: list[tuple[str, list[str]]] = [
         [
             "fechou", "fechad", "ganho", "ganhou", "vendid", "venda realizada", "contrato assinado",
             "assinou", "convertid", "pago", "cliente ativo",
+            # "ganha" no feminino: o RD Station fala "a negociação", então o
+            # status vem "Ganha", e "ganho" não casava com isso.
+            "ganha", "ganhas", "venda", "vendas", "faturad",
+            "closed won", "won", "closed-won", "deal won",
         ],
     ),
     (
@@ -97,10 +165,19 @@ REGRAS_STATUS: list[tuple[str, list[str]]] = [
         [
             "em processo", "processo", "negoci", "proposta", "follow", "aguardando", "pensando",
             "andamento", "retorno", "analise", "avaliando", "quente", "morno",
+            "qualificad", "em atendimento", "atendimento", "contato feito", "interessad",
+            "proposal", "proposta enviada", "negotiation",
+            "open", "in progress", "contacted", "qualified", "decision maker",
         ],
     ),
-    ("Reunião feita", ["reuniao feita", "reuniao realizada", "realizada", "call feita", "atendid"]),
-    ("Agendado", ["agendad", "marcad", "confirmad", "a realizar", "futura"]),
+    ("Reunião feita", [
+        "reuniao feita", "reuniao realizada", "realizada", "call feita", "atendid",
+        "meeting held", "demo feita", "apresentacao feita",
+    ]),
+    ("Agendado", [
+        "agendad", "marcad", "confirmad", "a realizar", "futura",
+        "appointment scheduled", "meeting scheduled", "scheduled", "presentation scheduled",
+    ]),
 ]
 
 # --------------------------------------------------------------------------- #

@@ -54,7 +54,13 @@ def para_data(serie: pd.Series, ano_padrao: int | None = None) -> pd.Series:
     """Datas em qualquer formato brasileiro, inclusive sem ano ('31/08') e sujas ('17/09/')."""
     if pd.api.types.is_datetime64_any_dtype(serie):
         return serie.dt.normalize()
-    txt = serie.astype("string").str.replace(r"\s+", "", regex=True).str.rstrip("/")
+    # A hora é cortada ANTES de tirar os espaços. Removendo espaço primeiro,
+    # "05/09/2026 09:12" virava "05/09/202609:12" e não parseava — e um CRM de
+    # WhatsApp exporta data com hora em toda linha, então a planilha inteira
+    # ficava sem nenhuma data válida e a análise nem rodava.
+    txt = serie.astype("string").str.strip()
+    txt = txt.str.replace(r"[T ]\s*\d{1,2}:\d{2}(:\d{2})?.*$", "", regex=True)
+    txt = txt.str.replace(r"\s+", "", regex=True).str.rstrip("/")
     if ano_padrao:
         sem_ano = txt.str.fullmatch(r"\d{1,2}/\d{1,2}").fillna(False)
         txt = txt.where(~sem_ano, txt + f"/{ano_padrao}")

@@ -202,3 +202,46 @@ def test_mes_errado_em_painel_por_semanas_gera_aviso():
     """Painel por semanas não filtra por data — então o mês errado tem que ser avisado."""
     r = analisar([META], [REUNIOES], ConfigAnalise(mes_referencia="2025-01"))
     assert any("confirme se o mês está certo" in a for a in r.avisos)
+
+# --------------------------------------------------------------------- #
+# Meses de formato incomum que já derrubaram o motor
+# --------------------------------------------------------------------- #
+def _planilha(tmp_path, linhas, cabecalho=None):
+    import csv
+
+    cab = cabecalho or ["Cliente", "Etapa do Funil", "Data da Reunião Realizada", "Valor", "Observações"]
+    arq = tmp_path / "reunioes.csv"
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cab)
+        w.writerows(linhas)
+    return arq
+
+
+def test_mes_sem_ninguem_em_negociacao_nao_derruba_a_analise(tmp_path):
+    """Todo negócio decidido é um mês comum, e derrubava a análise inteira.
+
+    `np.select` recebia a Series vazia que `.map()` devolve quando o pipeline em
+    aberto não tem linha nenhuma, e recusava com "invalid entry 0 in condlist:
+    should be boolean ndarray". Não tinha nada a ver com a planilha do cliente:
+    bastava um mês em que ninguém ficou em negociação.
+    """
+    arq = _planilha(tmp_path, [
+        [f"Cliente {i}", "Fechado" if i % 2 else "Perdido", f"{10 + i}/09/2026", "1000,00", "sem obs"]
+        for i in range(6)
+    ])
+    res = analisar([META], [arq])
+    assert int(res.kpi("fec")) == 3 and int(res.kpi("per")) == 3
+    assert res.kpi("rec") == 3000.0
+    assert len(res.tabelas["pipeline"]) == 0
+
+
+def test_mes_inteiro_em_negociacao_tambem_passa(tmp_path):
+    """O contrário do teste acima: ninguém decidiu, e o pipeline é tudo."""
+    arq = _planilha(tmp_path, [
+        [f"Cliente {i}", "Follow Up", f"{10 + i}/09/2026", "1000,00", "pediu proposta"]
+        for i in range(5)
+    ])
+    res = analisar([META], [arq])
+    assert int(res.kpi("neg")) == 5 and int(res.kpi("fec")) == 0
+    assert len(res.tabelas["pipeline"]) == 5

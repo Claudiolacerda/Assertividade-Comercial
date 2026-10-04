@@ -1,0 +1,33 @@
+lead_id,Nome,Status,Vendedor,Valor,Data do lead,Data da conversão,utm_source,utm_medium,utm_campaign,Canal,Anotação
+ld_4000,Aurora,Venda,Rafael,1364.82,2026-09-01T09:00:00,2026-09-01T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Assinou o contrato na call
+ld_4001,Benedito,Venda,Juliana,2449.70,2026-09-01T09:00:00,2026-09-02T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Assinou o contrato na call
+ld_4002,Cibele,Venda,Marcos,4271.10,2026-09-01T09:00:00,2026-09-03T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Assinou o contrato na call
+ld_4003,Dagoberto,Venda,Rafael,1867.79,2026-09-01T09:00:00,2026-09-04T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Assinou o contrato na call
+ld_4004,Eunice,Venda,Juliana,1860.50,2026-09-02T09:00:00,2026-09-05T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Assinou o contrato na call
+ld_4005,Fabrício,Venda,Marcos,2805.39,2026-09-03T09:00:00,2026-09-06T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Assinou o contrato na call
+ld_4006,Gilda,Venda,Rafael,932.01,2026-09-04T09:00:00,2026-09-07T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Assinou o contrato na call
+ld_4007,Hamilton,Venda,Juliana,4038.46,2026-09-05T09:00:00,2026-09-08T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Assinou o contrato na call
+ld_4008,Ivete,Venda,Marcos,3531.07,2026-09-06T09:00:00,2026-09-09T15:00:00,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Assinou o contrato na call
+ld_4009,Joaquim,Perdido,Rafael,3798.36,2026-09-07T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4010,Ladislau,Perdido,Juliana,2917.54,2026-09-08T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4011,Marlene,Perdido,Marcos,1773.55,2026-09-09T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4012,Nivaldo,Perdido,Rafael,1972.72,2026-09-10T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4013,Odete,Perdido,Juliana,1124.59,2026-09-11T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4014,Plínio,Perdido,Marcos,3551.16,2026-09-12T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4015,Quitéria,Perdido,Rafael,1245.39,2026-09-13T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Achou caro e seguiu com o concorrente
+ld_4016,Rubens,Qualificado,Juliana,4596.00,2026-09-14T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4017,Sandra,Qualificado,Marcos,2097.21,2026-09-15T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4018,Teobaldo,Qualificado,Rafael,4311.75,2026-09-16T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4019,Ulisses,Qualificado,Juliana,1108.56,2026-09-17T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4020,Vanda,Qualificado,Marcos,3598.00,2026-09-18T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4021,Waldemar,Qualificado,Rafael,2499.53,2026-09-19T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4022,Xênia,Qualificado,Juliana,1938.52,2026-09-20T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4023,Yolanda,Qualificado,Marcos,1596.32,2026-09-21T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Pediu a proposta para analisar, retorna semana que vem"
+ld_4024,Zuleica,Não compareceu,Rafael,0.00,2026-09-01T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Não compareceu na reunião marcada
+ld_4025,Amadeu,Não compareceu,Juliana,0.00,2026-09-01T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Não compareceu na reunião marcada
+ld_4026,Bruna Lima,Não compareceu,Marcos,0.00,2026-09-01T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,Não compareceu na reunião marcada
+ld_4027,Celso Rocha,Não compareceu,Rafael,0.00,2026-09-01T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,Não compareceu na reunião marcada
+ld_4028,Dilma Prado,Agendado,Juliana,0.00,2026-09-02T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Reunião marcada, ainda vai acontecer"
+ld_4029,Edgard Sá,Agendado,Marcos,0.00,2026-09-03T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Reunião marcada, ainda vai acontecer"
+ld_4030,Fátima Luz,Agendado,Rafael,0.00,2026-09-04T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [28.10.25],Meta Ads,"Reunião marcada, ainda vai acontecer"
+ld_4031,Getúlio Pires,Agendado,Juliana,0.00,2026-09-05T09:00:00,,facebook,paid,[GT] [WPP] [VENDAS] [18.08.26],Meta Ads,"Reunião marcada, ainda vai acontecer"

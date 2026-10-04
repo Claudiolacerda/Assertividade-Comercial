@@ -128,6 +128,23 @@ cônjuge" quando é um lead perdido. Quem for revisitar essa decisão precisa
 saber que é isso que está sobre a mesa, e que a saída limpa seria
 pseudonimizar antes de enviar.
 
+**CRMs que o motor já lê.** O gargalo do produto nunca foi o motor, é a
+planilha que chega. Seis formatos de exportação foram testados com a mesma base
+de 32 negócios por baixo: HubSpot, Pipedrive, RD Station, Agendor, DataCrazy e
+Datalitics. Os seis passam, e os testes em `tests/test_crms.py` seguram isso.
+
+O que o teste revelou é o tamanho real do gargalo: quatro dos seis eram
+recusados de saída, e um derrubava a análise com exceção. A causa quase nunca
+era o motor, era vocabulário — "Deal Name" não começa por "Cliente", e "Ganha"
+no feminino não casa com "ganho". Antes de prometer integração com qualquer
+CRM novo, rode uma exportação de verdade dele contra esse arquivo: o custo de
+suportar mais um costuma ser uma linha na tabela de apelidos, não código.
+
+Duas das seis fixtures (DataCrazy e Datalitics) são reconstruções plausíveis,
+não o arquivo real — esses produtos existem e são relevantes para o público do
+Neriah, mas o formato de exportação deles não é público. Quem tiver acesso a
+uma exportação de verdade deve substituir a fixture.
+
 **Ausências que trabalho futuro não pode fabricar:**
 
 - Não há depoimento assinado de ninguém.

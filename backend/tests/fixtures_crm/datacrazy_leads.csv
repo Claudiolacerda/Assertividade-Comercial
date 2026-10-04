@@ -1,0 +1,33 @@
+ID,Contato,Telefone,Funil,Status,Atendente,Valor,Data de entrada,Última interação,Canal,Campanha,Tags,Observação
+3000,Aurora,+55 11 95181-8779,Funil de Vendas,Vendido,Rafael,"1.364,82",01/09/2026 09:00,01/09/2026 15:00,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Assinou o contrato na call
+3001,Benedito,+55 11 95368-2468,Funil de Vendas,Vendido,Juliana,"2.449,70",01/09/2026 09:01,02/09/2026 15:01,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Assinou o contrato na call
+3002,Cibele,+55 11 93000-7308,Funil de Vendas,Vendido,Marcos,"4.271,10",01/09/2026 09:02,03/09/2026 15:02,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Assinou o contrato na call
+3003,Dagoberto,+55 11 98206-1203,Funil de Vendas,Vendido,Rafael,"1.867,79",01/09/2026 09:03,04/09/2026 15:03,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Assinou o contrato na call
+3004,Eunice,+55 11 97101-1803,Funil de Vendas,Vendido,Juliana,"1.860,50",02/09/2026 09:04,05/09/2026 15:04,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Assinou o contrato na call
+3005,Fabrício,+55 11 98078-9773,Funil de Vendas,Vendido,Marcos,"2.805,39",03/09/2026 09:05,06/09/2026 15:05,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Assinou o contrato na call
+3006,Gilda,+55 11 99319-9506,Funil de Vendas,Vendido,Rafael,"932,01",04/09/2026 09:06,07/09/2026 15:06,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Assinou o contrato na call
+3007,Hamilton,+55 11 93943-3175,Funil de Vendas,Vendido,Juliana,"4.038,46",05/09/2026 09:07,08/09/2026 15:07,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Assinou o contrato na call
+3008,Ivete,+55 11 98134-7654,Funil de Vendas,Vendido,Marcos,"3.531,07",06/09/2026 09:08,09/09/2026 15:08,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Assinou o contrato na call
+3009,Joaquim,+55 11 95112-1476,Funil de Vendas,Perdido,Rafael,"3.798,36",07/09/2026 09:09,10/09/2026 15:09,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Achou caro e seguiu com o concorrente
+3010,Ladislau,+55 11 95524-3112,Funil de Vendas,Perdido,Juliana,"2.917,54",08/09/2026 09:10,11/09/2026 15:10,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Achou caro e seguiu com o concorrente
+3011,Marlene,+55 11 92589-8493,Funil de Vendas,Perdido,Marcos,"1.773,55",09/09/2026 09:11,12/09/2026 15:11,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Achou caro e seguiu com o concorrente
+3012,Nivaldo,+55 11 95522-9875,Funil de Vendas,Perdido,Rafael,"1.972,72",10/09/2026 09:12,13/09/2026 15:12,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Achou caro e seguiu com o concorrente
+3013,Odete,+55 11 96550-6271,Funil de Vendas,Perdido,Juliana,"1.124,59",11/09/2026 09:13,14/09/2026 15:13,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Achou caro e seguiu com o concorrente
+3014,Plínio,+55 11 98599-9821,Funil de Vendas,Perdido,Marcos,"3.551,16",12/09/2026 09:14,15/09/2026 15:14,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Achou caro e seguiu com o concorrente
+3015,Quitéria,+55 11 99193-2018,Funil de Vendas,Perdido,Rafael,"1.245,39",13/09/2026 09:15,16/09/2026 15:15,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Achou caro e seguiu com o concorrente
+3016,Rubens,+55 11 96569-3921,Funil de Vendas,Em atendimento,Juliana,"4.596,00",14/09/2026 09:16,17/09/2026 15:16,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3017,Sandra,+55 11 94547-8090,Funil de Vendas,Em atendimento,Marcos,"2.097,21",15/09/2026 09:17,18/09/2026 15:17,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3018,Teobaldo,+55 11 98170-6850,Funil de Vendas,Em atendimento,Rafael,"4.311,75",16/09/2026 09:18,19/09/2026 15:18,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3019,Ulisses,+55 11 94254-5714,Funil de Vendas,Em atendimento,Juliana,"1.108,56",17/09/2026 09:19,20/09/2026 15:19,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3020,Vanda,+55 11 94982-7654,Funil de Vendas,Em atendimento,Marcos,"3.598,00",18/09/2026 09:20,21/09/2026 15:20,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3021,Waldemar,+55 11 93006-2194,Funil de Vendas,Em atendimento,Rafael,"2.499,53",19/09/2026 09:21,22/09/2026 15:21,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3022,Xênia,+55 11 93167-5763,Funil de Vendas,Em atendimento,Juliana,"1.938,52",20/09/2026 09:22,23/09/2026 15:22,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3023,Yolanda,+55 11 97365-8443,Funil de Vendas,Em atendimento,Marcos,"1.596,32",21/09/2026 09:23,24/09/2026 15:23,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Pediu a proposta para analisar, retorna semana que vem"
+3024,Zuleica,+55 11 91468-4457,Funil de Vendas,Não compareceu,Rafael,"0,00",01/09/2026 09:24,01/09/2026 15:24,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Não compareceu na reunião marcada
+3025,Amadeu,+55 11 99327-9262,Funil de Vendas,Não compareceu,Juliana,"0,00",01/09/2026 09:25,02/09/2026 15:25,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Não compareceu na reunião marcada
+3026,Bruna Lima,+55 11 93257-3291,Funil de Vendas,Não compareceu,Marcos,"0,00",01/09/2026 09:26,03/09/2026 15:26,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,Não compareceu na reunião marcada
+3027,Celso Rocha,+55 11 93827-3195,Funil de Vendas,Não compareceu,Rafael,"0,00",01/09/2026 09:27,04/09/2026 15:27,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,Não compareceu na reunião marcada
+3028,Dilma Prado,+55 11 98749-8244,Funil de Vendas,Agendado,Juliana,"0,00",02/09/2026 09:28,05/09/2026 15:28,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Reunião marcada, ainda vai acontecer"
+3029,Edgard Sá,+55 11 91514-5918,Funil de Vendas,Agendado,Marcos,"0,00",03/09/2026 09:29,06/09/2026 15:29,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Reunião marcada, ainda vai acontecer"
+3030,Fátima Luz,+55 11 99122-6841,Funil de Vendas,Agendado,Rafael,"0,00",04/09/2026 09:30,07/09/2026 15:30,WhatsApp,[GT] [WPP] [VENDAS] [28.10.25],lead-quente,"Reunião marcada, ainda vai acontecer"
+3031,Getúlio Pires,+55 11 94059-6311,Funil de Vendas,Agendado,Juliana,"0,00",05/09/2026 09:31,08/09/2026 15:31,WhatsApp,[GT] [WPP] [VENDAS] [18.08.26],lead-quente,"Reunião marcada, ainda vai acontecer"

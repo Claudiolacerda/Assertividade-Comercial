@@ -1,0 +1,33 @@
+Record ID,Deal Name,Deal Stage,Deal owner,Amount,Close Date,Create Date,Pipeline,Deal Type,Original Traffic Source,Notes
+1000,Aurora - Contrato,Closed Won,Rafael,1364.82,2026-09-01,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1001,Benedito - Contrato,Closed Won,Juliana,2449.70,2026-09-02,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1002,Cibele - Contrato,Closed Won,Marcos,4271.10,2026-09-03,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1003,Dagoberto - Contrato,Closed Won,Rafael,1867.79,2026-09-04,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1004,Eunice - Contrato,Closed Won,Juliana,1860.50,2026-09-05,2026-09-02,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1005,Fabrício - Contrato,Closed Won,Marcos,2805.39,2026-09-06,2026-09-03,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1006,Gilda - Contrato,Closed Won,Rafael,932.01,2026-09-07,2026-09-04,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1007,Hamilton - Contrato,Closed Won,Juliana,4038.46,2026-09-08,2026-09-05,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1008,Ivete - Contrato,Closed Won,Marcos,3531.07,2026-09-09,2026-09-06,Sales Pipeline,newbusiness,Paid Social,Assinou o contrato na call
+1009,Joaquim - Contrato,Closed Lost,Rafael,3798.36,2026-09-10,2026-09-07,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1010,Ladislau - Contrato,Closed Lost,Juliana,2917.54,2026-09-11,2026-09-08,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1011,Marlene - Contrato,Closed Lost,Marcos,1773.55,2026-09-12,2026-09-09,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1012,Nivaldo - Contrato,Closed Lost,Rafael,1972.72,2026-09-13,2026-09-10,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1013,Odete - Contrato,Closed Lost,Juliana,1124.59,2026-09-14,2026-09-11,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1014,Plínio - Contrato,Closed Lost,Marcos,3551.16,2026-09-15,2026-09-12,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1015,Quitéria - Contrato,Closed Lost,Rafael,1245.39,2026-09-16,2026-09-13,Sales Pipeline,newbusiness,Paid Social,Achou caro e seguiu com o concorrente
+1016,Rubens - Contrato,Decision Maker Bought-In,Juliana,4596.00,2026-09-17,2026-09-14,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1017,Sandra - Contrato,Decision Maker Bought-In,Marcos,2097.21,2026-09-18,2026-09-15,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1018,Teobaldo - Contrato,Decision Maker Bought-In,Rafael,4311.75,2026-09-19,2026-09-16,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1019,Ulisses - Contrato,Decision Maker Bought-In,Juliana,1108.56,2026-09-20,2026-09-17,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1020,Vanda - Contrato,Decision Maker Bought-In,Marcos,3598.00,2026-09-21,2026-09-18,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1021,Waldemar - Contrato,Decision Maker Bought-In,Rafael,2499.53,2026-09-22,2026-09-19,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1022,Xênia - Contrato,Decision Maker Bought-In,Juliana,1938.52,2026-09-23,2026-09-20,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1023,Yolanda - Contrato,Decision Maker Bought-In,Marcos,1596.32,2026-09-24,2026-09-21,Sales Pipeline,newbusiness,Paid Social,"Pediu a proposta para analisar, retorna semana que vem"
+1024,Zuleica - Contrato,Appointment Scheduled,Rafael,0.00,2026-09-01,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Não compareceu na reunião marcada
+1025,Amadeu - Contrato,Appointment Scheduled,Juliana,0.00,2026-09-02,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Não compareceu na reunião marcada
+1026,Bruna Lima - Contrato,Appointment Scheduled,Marcos,0.00,2026-09-03,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Não compareceu na reunião marcada
+1027,Celso Rocha - Contrato,Appointment Scheduled,Rafael,0.00,2026-09-04,2026-09-01,Sales Pipeline,newbusiness,Paid Social,Não compareceu na reunião marcada
+1028,Dilma Prado - Contrato,Appointment Scheduled,Juliana,0.00,2026-09-05,2026-09-02,Sales Pipeline,newbusiness,Paid Social,"Reunião marcada, ainda vai acontecer"
+1029,Edgard Sá - Contrato,Appointment Scheduled,Marcos,0.00,2026-09-06,2026-09-03,Sales Pipeline,newbusiness,Paid Social,"Reunião marcada, ainda vai acontecer"
+1030,Fátima Luz - Contrato,Appointment Scheduled,Rafael,0.00,2026-09-07,2026-09-04,Sales Pipeline,newbusiness,Paid Social,"Reunião marcada, ainda vai acontecer"
+1031,Getúlio Pires - Contrato,Appointment Scheduled,Juliana,0.00,2026-09-08,2026-09-05,Sales Pipeline,newbusiness,Paid Social,"Reunião marcada, ainda vai acontecer"

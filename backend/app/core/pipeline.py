@@ -272,10 +272,17 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
             "Não encontrei a coluna de STATUS/ETAPA na planilha de reuniões. "
             "Renomeie a coluna para 'Etapa do Funil' ou 'Status'."
         )
-    if "data_reuniao" not in reun and "data_agendamento" not in reun:
+    # Quatro colunas servem de âncora no tempo, não duas. Vários CRMs não têm
+    # campo de reunião nenhum: o Pipedrive exporta "Add time" e "Won time", e
+    # exigir data de reunião fazia o Neriah recusar o arquivo inteiro. A ordem
+    # de preferência está em DATAS_REFERENCIA, e quando a escolhida não é a da
+    # reunião o usuário é avisado, porque o mês passa a significar outra coisa.
+    DATAS_REFERENCIA = ["data_reuniao", "data_agendamento", "data_fechamento", "data_lead"]
+    if not any(c in reun for c in DATAS_REFERENCIA):
         raise ErroDeAnalise(
             "Não encontrei nenhuma coluna de DATA na planilha de reuniões "
-            "(ex.: 'Data da Reunião Realizada' ou 'Data do Agendamento')."
+            "(ex.: 'Data da Reunião Realizada', 'Data do Agendamento', "
+            "'Data de fechamento' ou 'Data de criação')."
         )
 
     ano_padrao = cfg.ano_padrao
@@ -297,8 +304,27 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
         reun["data_agendamento"] = pd.NaT
     if "data_reuniao" not in reun:
         reun["data_reuniao"] = pd.NaT
-    # data usada no filtro/semana: data da reunião; se vazia, a do agendamento
+    # Data usada no filtro e na semana: a da reunião; se vazia, a do agendamento;
+    # e, só se nenhuma das duas existir na planilha, a de fechamento ou a de
+    # entrada do lead.
     reun["data_referencia"] = reun["data_reuniao"].fillna(reun["data_agendamento"])
+    if not reun["data_referencia"].notna().any():
+        # Escolhe a coluna MAIS PREENCHIDA, não a primeira que tenha algo. A
+        # data de fechamento só existe no negócio ganho: no Pipedrive ela tinha
+        # 9 valores contra 32 da data de entrada, e escolhê-la jogava fora os
+        # 23 negócios que não fecharam — a análise saía com 100% de conversão.
+        nomes = {"data_fechamento": "a data de fechamento", "data_lead": "a data de entrada do lead"}
+        candidatas = [(reun[c].notna().sum(), c) for c in nomes if c in reun]
+        preenchidas, coluna = max(candidatas, default=(0, None))
+        if coluna and preenchidas:
+            como_se_chama = nomes[coluna]
+            reun["data_referencia"] = reun[coluna]
+            avisos.append(
+                f"A planilha não tem data de reunião nem de agendamento, então usei "
+                f"{como_se_chama} para situar cada negócio no mês. As taxas continuam "
+                f"certas, mas o mês passa a agrupar por {como_se_chama}, não pela data "
+                f"em que a conversa aconteceu."
+            )
 
     # bool() é obrigatório: .any() devolve numpy.bool_, que não serializa em JSON
     # e derruba a gravação no banco — só aparece quando a planilha TEM a coluna.
@@ -615,11 +641,16 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
     pipe = r[r["status_padrao"].isin(["Em negociação", "Reunião feita"])].copy()
     pipe["Dias em aberto"] = (hoje - pipe["data_referencia"]).dt.days
     pipe["Valor ponderado (R$)"] = pipe["valor"].fillna(0) * cfg.prob_fechamento_negociacao
+    # `.astype(bool)` não é decoração: num mês sem ninguém em negociação, `pipe`
+    # fica vazio, `.map()` devolve uma Series vazia de dtype object, e `np.select`
+    # recusa isso com "invalid entry 0 in condlist: should be boolean ndarray".
+    # Derrubava a análise inteira de um mês em que todo negócio já foi decidido,
+    # que é um mês perfeitamente comum.
+    tem_sinal = lambda sinal: pipe["sinais_obs"].map(lambda l: sinal in l).astype(bool)  # noqa: E731
     pipe["Temperatura"] = np.select(
         [
-            pipe["sinais_obs"].map(lambda l: "Provável perda" in l),
-            pipe["status_padrao"].eq("Em negociação")
-            | pipe["sinais_obs"].map(lambda l: "Promessa de fechamento" in l),
+            tem_sinal("Provável perda"),
+            (pipe["status_padrao"].eq("Em negociação") | tem_sinal("Promessa de fechamento")).astype(bool),
         ],
         ["❄️ Fria (sinal de perda)", "🔥 Quente"],
         "🌤️ Morna",
