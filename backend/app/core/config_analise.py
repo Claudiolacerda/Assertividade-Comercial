@@ -104,7 +104,12 @@ COLUNAS_REUNIOES: dict[str, list[str]] = {
     "origem": [
         "Origem", "Canal", "Fonte", "Origem do lead",
         "utm_source", "utm source", "Original Traffic Source", "Source", "Lead Source",
-        "Deal - Source", "Traffic source",
+        "Traffic source",
+        # "Deal - Source" NÃO entra aqui: a correspondência é por prefixo e o
+        # campo é consumido pelo primeiro que casa, então ele engolia
+        # "Deal - Source Campaign" do Pipedrive. A campanha ficava órfã e a
+        # origem virava o nome da campanha, que não é reconhecido como tráfego
+        # pago — o CAC saía R$ 0,00 numa análise em que tudo veio de anúncio.
     ],
     "campanha": [
         "Campanha", "Nome da campanha", "Anúncio de origem",
@@ -204,8 +209,13 @@ SINAIS_OBSERVACAO: dict[str, list[str]] = {
     "Pediu contrato/proposta": ["contrato", "proposta"],
 }
 
+# Basta a origem CONTER um destes para a linha contar como tráfego pago.
+# "paid" cobre Paid Social, Paid Search e Paid Media, que é como o HubSpot
+# nomeia a fonte. "social" sozinho ficou de fora de propósito: casaria com
+# "Organic Social", que é exatamente o oposto.
 ORIGENS_TRAFEGO_PAGO: list[str] = [
     "meta", "facebook", "instagram ads", "insta ads", "ads", "trafego", "anuncio", "fb", "pago",
+    "paid", "cpc", "ppc", "adwords", "google ads", "sponsored", "midia paga",
 ]
 
 STATUS_REALIZADA = ["Fechado", "Perdido", "Em negociação", "Reunião feita"]

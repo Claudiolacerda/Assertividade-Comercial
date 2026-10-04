@@ -140,3 +140,44 @@ def test_data_com_hora_nao_derruba_a_leitura():
     res = _resultado("datacrazy_leads.csv")
     assert res.mes_referencia == "2026-09"
     assert len(res.tabelas["base_reunioes"]) == 32
+
+@pytest.mark.parametrize("arquivo,crm", [(a, v[0]) for a, v in CRMS.items()])
+def test_o_cac_sai_igual_em_todos_os_formatos(arquivo, crm):
+    """O CAC é número de capa, e saía R$ 0,00 em dois dos seis formatos.
+
+    Ele depende de a origem ser reconhecida como tráfego pago. Duas causas
+    diferentes davam o mesmo sintoma: o HubSpot diz "Paid Social", que não
+    estava no vocabulário; e no Pipedrive o apelido "Deal - Source" casava por
+    prefixo com "Deal - Source Campaign" e consumia a coluna, então a origem
+    virava o nome da campanha e a campanha ficava órfã.
+
+    Nenhum teste pegou isso porque todos olhavam contagem e receita. Quem pegou
+    foi a tela: o cartão de CAC mostrando zero numa análise em que todo negócio
+    veio de anúncio.
+    """
+    res = _resultado(arquivo)
+    assert int(res.kpi("fecp")) == VERDADE["fechados"], f"{crm}: fechados vindos de tráfego pago"
+    assert round(res.kpi("cac"), 2) == 405.67, f"{crm}: CAC"
+
+
+def test_origem_organica_nao_vira_trafego_pago(tmp_path):
+    """"paid" entrou no vocabulário; "social" sozinho não, e por um motivo.
+
+    "Organic Social" é o oposto de tráfego pago, e um vocabulário com "social"
+    solto contaria o lead orgânico como vindo do anúncio — inflando o número de
+    clientes atribuídos à campanha e derrubando o CAC artificialmente.
+    """
+    import csv
+
+    arq = tmp_path / "misto.csv"
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Deal Name", "Deal Stage", "Close Date", "Amount", "Original Traffic Source"])
+        for i in range(4):
+            w.writerow([f"Pago {i}", "Closed Won", f"1{i}/09/2026", "1000,00", "Paid Social"])
+        for i in range(4):
+            w.writerow([f"Organico {i}", "Closed Won", f"1{i}/09/2026", "1000,00", "Organic Social"])
+    res = analisar([META], [arq])
+    assert int(res.kpi("fec")) == 8, "os oito fecharam"
+    assert int(res.kpi("fecp")) == 4, "só os quatro pagos contam para o CAC"
+
