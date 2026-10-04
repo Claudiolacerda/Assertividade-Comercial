@@ -15,6 +15,22 @@ Write-Host "  NERIAH DATA - iniciando" -ForegroundColor Green
 Write-Host "  $raiz" -ForegroundColor DarkGray
 Write-Host ""
 
+# ------------------------------------------------- 0. Estado do repositorio
+# Um `git pull` interrompido deixa MERGE_HEAD para tras e todo pull seguinte
+# falha. Sem este aviso o script subia alegremente a versao ANTIGA, e quem
+# rodou o pull junto com o script no mesmo bloco acha que atualizou.
+$merge = Join-Path $raiz ".git\MERGE_HEAD"
+if (Test-Path $merge) {
+    Write-Host "[0/3] Ha uma fusao do git pela metade neste repositorio." -ForegroundColor Yellow
+    Write-Host "      Enquanto ela existir, nenhum 'git pull' funciona e voce roda codigo antigo." -ForegroundColor Yellow
+    Write-Host "      Veja o que ha com 'git status' e, se nao houver nada seu, resolva com:" -ForegroundColor Yellow
+    Write-Host "        git merge --abort" -ForegroundColor White
+    Write-Host "        git fetch origin" -ForegroundColor White
+    Write-Host "        git reset --hard origin/claude/jolly-dirac-q1cf0x" -ForegroundColor White
+    $segue = Read-Host "`nSubir assim mesmo, com o codigo como esta? (s/N)"
+    if ($segue -notmatch '^[sS]') { exit 1 }
+}
+
 # ---------------------------------------------------------------- 1. Banco
 Write-Host "[1/3] Banco de dados..." -NoNewline
 try {
@@ -71,7 +87,12 @@ if (-not (Test-Path $venv)) {
 }
 if (-not (Test-Path (Join-Path $raiz "backend\.env"))) {
     Write-Host "[2/3] Falta o backend\.env." -ForegroundColor Yellow
-    Write-Host "      Copie o .env.example e ajuste DATABASE_URL e JWT_SECRET." -ForegroundColor Yellow
+    Write-Host "      Ele e ignorado pelo git, entao numa copia nova do projeto nao vem junto." -ForegroundColor Yellow
+    Write-Host "      Crie com:" -ForegroundColor Yellow
+    Write-Host "        Copy-Item backend\.env.example backend\.env" -ForegroundColor White
+    Write-Host "      e no arquivo: AMBIENTE=desenvolvimento, descomente o DATABASE_URL local" -ForegroundColor Yellow
+    Write-Host "      e gere o JWT_SECRET com:" -ForegroundColor Yellow
+    Write-Host "        python -c `"import secrets; print(secrets.token_urlsafe(48))`"" -ForegroundColor White
     Read-Host "`nEnter para fechar"
     exit 1
 }
