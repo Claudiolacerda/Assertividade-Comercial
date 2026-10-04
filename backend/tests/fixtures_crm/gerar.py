@@ -25,7 +25,7 @@ VENDEDORES = ["Rafael", "Juliana", "Marcos"]
 PRIMEIROS = ["Aurora", "Benedito", "Cibele", "Dagoberto", "Eunice", "Fabrício", "Gilda",
              "Hamilton", "Ivete", "Joaquim", "Ladislau", "Marlene", "Nivaldo", "Odete",
              "Plínio", "Quitéria", "Rubens", "Sandra", "Teobaldo", "Ulisses", "Vanda",
-             "Waldemar", "Xênia", "Yolanda", "Zuleica", "Amadeu", "Bruna Lima",
+             "Waldemar", "Xênia", "Yolanda", "Zuleica", "Amadeu", "Noemia Braga",
              "Celso Rocha", "Dilma Prado", "Edgard Sá", "Fátima Luz", "Getúlio Pires"]
 
 # desfecho: quantos de cada, cravado para poder conferir depois

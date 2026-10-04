@@ -13,6 +13,14 @@ backups-local/
 dados_clientes/
 backups-local/
 
+# relatorios/ guarda o .xlsx que o sistema GERA a partir da análise, e um
+# relatório gerado contém tudo o que a planilha de origem continha: nome de
+# cliente, observação, valor. Ele não estava ignorado, e um relatório de
+# setembro com 38 nomes reais ficou versionado e público. A varredura que fiz
+# na primeira limpeza pulava arquivos .xlsx por serem binários, e era num
+# .xlsx que o dado estava. Nada aqui dentro é versionado.
+relatorios/
+
 # Planilhas em dados/: só os exemplos anonimizados ficam versionados.
 # Qualquer arquivo real que você largar aqui fica fora do repositório por padrão.
 dados/*
