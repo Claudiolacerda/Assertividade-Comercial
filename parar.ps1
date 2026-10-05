@@ -1,6 +1,6 @@
-# Desliga o Neriah: para a API, o site e o contêiner do banco.
+# Desliga o Neriah: para a API, o site e o conteiner do banco.
 #
-# Os dados NAO sao apagados — ficam no volume neriah_dados e nas pastas do
+# Os dados NAO sao apagados - ficam no volume neriah_dados e nas pastas do
 # projeto. Para religar tudo: .\iniciar.ps1
 
 $raiz = $PSScriptRoot

@@ -125,7 +125,7 @@ $modulos = Join-Path $raiz "frontend\node_modules"
 if (Test-Path (Join-Path $modulos ".instalado-em")) {
     Ok "frontend\node_modules ja existe"
 } else {
-    Write-Host "  npm install ($n) — 1 a 2 minutos..." -ForegroundColor DarkGray
+    Write-Host "  npm install ($n) - 1 a 2 minutos..." -ForegroundColor DarkGray
     Push-Location (Join-Path $raiz "frontend")
     npm install
     Pop-Location
@@ -141,7 +141,7 @@ try {
     Ok "Docker Desktop esta rodando"
 } catch {
     Aviso "o Docker Desktop nao esta aberto."
-    Aviso "Abra ele antes de rodar .\iniciar.ps1 — e dele que vem o banco de dados."
+    Aviso "Abra ele antes de rodar .\iniciar.ps1 - e dele que vem o banco de dados."
 }
 
 Write-Host ""

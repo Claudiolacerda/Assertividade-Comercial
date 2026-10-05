@@ -1,9 +1,9 @@
 # Sobe o Neriah inteiro no Windows: banco, API e site.
 #
-# Pode ser executado de qualquer lugar — $PSScriptRoot aponta para a pasta deste
-# arquivo, então não importa em que diretório o PowerShell esteja.
+# Pode ser executado de qualquer lugar - $PSScriptRoot aponta para a pasta deste
+# arquivo, entao nao importa em que diretorio o PowerShell esteja.
 #
-# Uso: clique com o botão direito neste arquivo -> "Executar com o PowerShell"
+# Uso: clique com o botao direito neste arquivo -> "Executar com o PowerShell"
 #      ou, no terminal:  .\iniciar.ps1
 
 $ErrorActionPreference = "Stop"
@@ -44,7 +44,7 @@ try {
 
 $existe = docker ps -a --filter "name=pg-assertividade" --format "{{.Names}}"
 if (-not $existe) {
-    Write-Host " criando contêiner..." -NoNewline
+    Write-Host " criando conteiner..." -NoNewline
     # -v: volume nomeado, para os dados sobreviverem a remocao do conteiner
     docker run --name pg-assertividade `
         -e POSTGRES_PASSWORD=assert123 -e POSTGRES_DB=assertividade `
@@ -55,8 +55,8 @@ if (-not $existe) {
 }
 Write-Host " ok" -ForegroundColor Green
 
-# -------------------------------------------------- 1b. Migrações pendentes
-# Idempotentes: se já estiver tudo certo, não fazem nada e não demoram nada.
+# -------------------------------------------------- 1b. Migracoes pendentes
+# Idempotentes: se ja estiver tudo certo, nao fazem nada e nao demoram nada.
 $venvPy = Join-Path $raiz "backend\.venv\Scripts\python.exe"
 if (Test-Path $venvPy) {
     Write-Host "[1b/3] Migracoes..." -NoNewline
@@ -99,7 +99,7 @@ if (-not (Test-Path (Join-Path $raiz "backend\.env"))) {
 
 # Mesma logica do npm mais abaixo, pelo mesmo motivo: um `git pull` que traz
 # dependencia nova deixa a API quebrada e o script nao percebe. O sintoma do
-# lado do Python e pior que o do site — a janela da API morre com ImportError
+# lado do Python e pior que o do site - a janela da API morre com ImportError
 # e some, e sobra um site no ar conversando com nada.
 $req     = Join-Path $raiz "backend\requirements.txt"
 $carimboPy = Join-Path $raiz "backend\.venv\.instalado-em"
@@ -131,7 +131,7 @@ Write-Host " ok (janela separada)" -ForegroundColor Green
 # ---------------------------------------------------------------- 3. Frontend
 # Instala quando node_modules nao existe OU quando o package-lock mudou depois
 # da ultima instalacao. Sem a segunda condicao, um `git pull` que traz dependencia
-# nova deixa o site quebrado e o script nao percebe — foi o que aconteceu.
+# nova deixa o site quebrado e o script nao percebe - foi o que aconteceu.
 $frontend = Join-Path $raiz "frontend"
 $modulos  = Join-Path $frontend "node_modules"
 $lock     = Join-Path $frontend "package-lock.json"
