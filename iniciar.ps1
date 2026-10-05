@@ -53,7 +53,28 @@ if (-not $existe) {
 } else {
     docker start pg-assertividade *> $null
 }
-Write-Host " ok" -ForegroundColor Green
+Write-Host " ok" -NoNewline -ForegroundColor Green
+
+# O `docker start` devolve na hora, mas o Postgres ainda leva alguns segundos
+# para aceitar conexao. Sem esta espera, a migracao logo abaixo bate numa porta
+# que nao abriu e a mensagem que aparece e um traceback de Python, que nao diz
+# nada sobre o verdadeiro motivo.
+Write-Host ", esperando aceitar conexao..." -NoNewline -ForegroundColor DarkGray
+$pronto = $false
+foreach ($tentativa in 1..40) {
+    docker exec pg-assertividade pg_isready -U postgres *> $null
+    if ($LASTEXITCODE -eq 0) { $pronto = $true; break }
+    Start-Sleep -Seconds 1
+}
+if ($pronto) {
+    Write-Host " ok" -ForegroundColor Green
+} else {
+    Write-Host " NAO RESPONDEU" -ForegroundColor Red
+    Write-Host "      O conteiner subiu mas o Postgres nao aceitou conexao em 40s." -ForegroundColor Yellow
+    Write-Host "      Veja o que ele diz com:  docker logs --tail 30 pg-assertividade" -ForegroundColor White
+    Read-Host "`nEnter para fechar"
+    exit 1
+}
 
 # -------------------------------------------------- 1b. Migracoes pendentes
 # Idempotentes: se ja estiver tudo certo, nao fazem nada e nao demoram nada.
@@ -61,9 +82,24 @@ $venvPy = Join-Path $raiz "backend\.venv\Scripts\python.exe"
 if (Test-Path $venvPy) {
     Write-Host "[1b/3] Migracoes..." -NoNewline
     Push-Location (Join-Path $raiz "backend")
-    $saida = & $venvPy "scripts\migrar_ordem_colunas.py" 2>&1
+    # `$ErrorActionPreference = "Stop"` faz o PowerShell tratar QUALQUER coisa
+    # que o Python escreva em stderr como erro fatal, inclusive um aviso. Era
+    # o que derrubava o script inteiro aqui. Dentro deste bloco o controle do
+    # sucesso e o codigo de saida, que e o que de fato diz se deu certo.
+    $anterior = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $saida = (& $venvPy "scripts\migrar_ordem_colunas.py" 2>&1 | Out-String)
+    $codigo = $LASTEXITCODE
+    $ErrorActionPreference = $anterior
     Pop-Location
-    if ($saida -match "convertida") {
+    if ($codigo -ne 0) {
+        Write-Host " falhou (seguindo mesmo assim)" -ForegroundColor Yellow
+        Write-Host "      A migracao e opcional: ela so reordena colunas de analises antigas." -ForegroundColor DarkGray
+        Write-Host "      O sistema sobe sem ela. O que o script disse:" -ForegroundColor DarkGray
+        $saida.Trim().Split("`n") | Select-Object -Last 4 | ForEach-Object {
+            Write-Host "        $($_.Trim())" -ForegroundColor DarkGray
+        }
+    } elseif ($saida -match "convertida") {
         Write-Host " aplicada" -ForegroundColor Green
         Write-Host "      As colunas do resultado passaram de JSONB para JSON." -ForegroundColor DarkGray
         Write-Host "      Analises antigas seguem com a ordem de coluna embaralhada;" -ForegroundColor DarkGray

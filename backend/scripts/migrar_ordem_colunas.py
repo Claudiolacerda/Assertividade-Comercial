@@ -14,7 +14,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import text  # noqa: E402
+from sqlalchemy.exc import OperationalError  # noqa: E402
 
+from app.config import settings  # noqa: E402
 from app.db import engine  # noqa: E402
 
 COLUNAS = ("resultado", "kpis_resumo", "config_usada")
@@ -72,4 +74,26 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # Falha de conexão aqui saía como traceback cru do SQLAlchemy, e o que a
+    # pessoa via era "Traceback (most recent call last)" sem nenhuma pista de
+    # que o problema era o banco não estar no ar ou o DATABASE_URL apontar para
+    # o lugar errado. O traceback continua disponível com --debug.
+    try:
+        main()
+    except OperationalError as e:
+        from sqlalchemy.engine.url import make_url
+
+        url = make_url(settings.database_url)
+        print(
+            f"Não consegui falar com o banco em {url.host}:{url.port}, "
+            f"base '{url.database}', usuário '{url.username}'.\n"
+            "\nAs causas prováveis, em ordem:\n"
+            "  1. O Postgres ainda está subindo. Espere uns segundos e rode de novo.\n"
+            "  2. O contêiner não está no ar:  docker start pg-assertividade\n"
+            "  3. O DATABASE_URL do backend/.env aponta para outro lugar.\n"
+            f"\nO que o driver respondeu: {str(e.orig).strip().splitlines()[0]}",
+            file=sys.stderr,
+        )
+        if "--debug" in sys.argv:
+            raise
+        sys.exit(1)
