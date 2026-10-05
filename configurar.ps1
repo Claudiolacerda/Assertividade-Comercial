@@ -108,12 +108,24 @@ if (Test-Path $env_) {
         -replace "JWT_SECRET=troque-esta-chave", "JWT_SECRET=$chave" `
         -replace 'ORIGENS_PERMITIDAS=https://seu-dominio\.com\.br', 'ORIGENS_PERMITIDAS=http://localhost:5173,http://127.0.0.1:5173' `
         -replace "PERMITIR_AUTOCADASTRO=False", "PERMITIR_AUTOCADASTRO=True" `
-        -replace '(?m)^DATABASE_URL=postgresql\+psycopg2://usuario:senha@host:5432/assertividade$', `
+        -replace '(?m)^DATABASE_URL=postgresql\+psycopg2://usuario:senha@host:5432/assertividade', `
                  'DATABASE_URL=postgresql+psycopg2://postgres:assert123@localhost:5432/assertividade'
     # UTF8 SEM BOM. O `Set-Content -Encoding UTF8` do PowerShell 5.1 escreve com
     # BOM, e o BOM entra como parte da primeira linha do .env.
     [System.IO.File]::WriteAllText($env_, $texto, (New-Object System.Text.UTF8Encoding $false))
-    Ok "backend\.env criado, apontando para o Postgres local e com JWT_SECRET gerado"
+    # Confere o que ACABOU de ser escrito. A primeira versao desta troca
+    # terminava com `$`, que no Windows nunca casava: o arquivo tem quebra de
+    # linha CRLF e o \r fica entre o texto e o fim da linha. O .env saia
+    # apontando para um servidor chamado "host", que nao existe, e o sintoma
+    # aparecia tres passos adiante como erro 500 na tela de entrada.
+    $escrito = Get-Content $env_ -Raw
+    if ($escrito -match "(?m)^DATABASE_URL=.*@localhost:5432/assertividade") {
+        Ok "backend\.env criado, apontando para o Postgres local e com JWT_SECRET gerado"
+    } else {
+        $linha = ($escrito -split "`r?`n" | Where-Object { $_ -match "^DATABASE_URL=" }) -join ""
+        Parar "o .env saiu com o banco errado." `
+              "A linha ficou:  $linha`n  Ela deveria apontar para localhost:5432. Corrija a mao em backend\.env."
+    }
 }
 
 # -------------------------------------------------------------- 5. Frontend

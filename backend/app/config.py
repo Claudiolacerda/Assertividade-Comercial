@@ -8,8 +8,17 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# O .env fica ao lado do pacote, e o caminho tem de ser ABSOLUTO. Com o
+# relativo ".env", o pydantic procura no diretório de onde o processo foi
+# lançado: o uvicorn sobe de dentro de backend/ e achava, mas qualquer script
+# rodado da raiz do projeto não achava e caía nos valores padrão daqui de
+# baixo, em silêncio. O diagnóstico chegou a relatar um banco que ninguém
+# configurou, e a mentira parecia um defeito do banco.
+ARQUIVO_ENV = Path(__file__).resolve().parent.parent / ".env"
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=ARQUIVO_ENV, env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Assertividade Comercial"
     ambiente: str = "desenvolvimento"
