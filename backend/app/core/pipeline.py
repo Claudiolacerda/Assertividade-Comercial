@@ -18,7 +18,7 @@ import pandas as pd
 
 from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
 from .jet import avaliar as avaliar_jet
-from .leitura import ler_arquivos, ler_metas_da_planilha, padronizar
+from .leitura import ler_arquivos, ler_funil_da_planilha, ler_metas_da_planilha, padronizar
 from .metricas import (
     TAXAS_COMERCIAIS,
     TAXAS_CRUZADAS,
@@ -60,6 +60,9 @@ class Resultado:
     # Preenchido fora de `analisar()`, pela camada de rota: o JEV usa rede e o
     # núcleo não pode depender disso. Fica vazio numa análise feita sem ele.
     jev: dict[str, Any] = field(default_factory=dict)
+    # Leads e MQL que o usuário informou na aba Funil. Vazio quando a planilha
+    # não traz a aba, e aí as taxas de topo não são calculadas.
+    funil_informado: dict[str, float] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -77,6 +80,7 @@ class Resultado:
             "cobertura": self.cobertura,
             "jet": self.jet,
             "jev": self.jev,
+            "funil_informado": self.funil_informado,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),
@@ -128,6 +132,10 @@ def analisar(
     if metas_planilha:
         cfg = replace(cfg, metas={**cfg.metas, **metas_planilha})
 
+    # O topo do funil: dois números que a planilha de reuniões não tem como dar,
+    # porque ela só lista quem chegou a agendar.
+    funil_informado = ler_funil_da_planilha(arquivos_reunioes)
+
     m_bruto, r_bruto, em_blocos, log_meta, log_reun = _ler(arquivos_meta, arquivos_reunioes, cfg, avisos)
     meta = _tratar_meta(m_bruto, cfg, avisos)
     reun, tem_valor, tem_origem, ano_padrao = _tratar_reunioes(r_bruto, cfg, avisos)
@@ -141,6 +149,7 @@ def analisar(
         tem_origem=tem_origem,
         config=cfg,
         avisos=avisos,
+        funil_informado=funil_informado,
     )
 
     ctx = _Contexto(
@@ -765,19 +774,24 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
 # ---------------------------------------------------------------------- #
 def _cruzamento(ctx: _Contexto) -> None:
     res, tv = ctx.res, ctx.res.tem_valor
-    funil = pd.DataFrame(
-        {
-            "Etapa": [
-                "Impressões", "Cliques no link", "Leads / conversas (Meta)",
-                "Reuniões agendadas (tráfego pago)", "Reuniões realizadas (tráfego pago)",
-                "Clientes fechados (tráfego pago)",
-            ],
-            "Quantidade": [
-                ctx.imp, ctx.clq, ctx.leads,
-                ctx.pago["Reuniões agendadas"], ctx.pago["Reuniões realizadas"], ctx.pago["Fechados"],
-            ],
-        }
-    )
+    # O MQL entra entre o lead e o agendamento, que é onde ele de fato mora no
+    # funil. Só aparece quando o usuário informou o número na aba Funil: etapa
+    # inventada em gráfico de funil é pior que etapa ausente, porque a queda
+    # entre duas barras passa a medir uma coisa que ninguém contou.
+    etapas = ["Impressões", "Cliques no link", "Leads / conversas (Meta)"]
+    quantidades = [ctx.imp, ctx.clq, ctx.leads]
+    mql_informado = float(res.funil_informado.get("mql") or 0)
+    if mql_informado > 0:
+        etapas.append("MQL (qualificados pelo marketing)")
+        quantidades.append(mql_informado)
+    etapas += [
+        "Reuniões agendadas (tráfego pago)", "Reuniões realizadas (tráfego pago)",
+        "Clientes fechados (tráfego pago)",
+    ]
+    quantidades += [
+        ctx.pago["Reuniões agendadas"], ctx.pago["Reuniões realizadas"], ctx.pago["Fechados"],
+    ]
+    funil = pd.DataFrame({"Etapa": etapas, "Quantidade": quantidades})
     funil["Conversão da etapa anterior (%)"] = div(funil["Quantidade"], funil["Quantidade"].shift(1).fillna(0))
     funil["Conversão desde impressões (%)"] = div(funil["Quantidade"], ctx.imp)
     funil["Custo por etapa (R$)"] = div(ctx.inv, funil["Quantidade"])
@@ -832,8 +846,9 @@ def _kpis(ctx: _Contexto) -> None:
         "cpm": ("CPM", "={inv}/{imp}*1000", "brl", "Custo por mil impressões", None),
         "cpl": ("Custo por lead/conversa (CPL)", "={inv}/{leads}", "brl", "Investimento ÷ leads",
                 ("max", metas["cpl_max"])),
-        "ag": ("Reuniões agendadas (total)", geral["Reuniões agendadas"], "int",
-               "Todas as linhas do mês na planilha de reuniões", None),
+        "ag": ("Reuniões agendadas (leads qualificados)", geral["Reuniões agendadas"], "int",
+               "Todas as linhas do mês na planilha de reuniões. São os leads que chegaram a "
+               "marcar reunião, o que a operação chama de lead qualificado", None),
         "real": ("Reuniões realizadas (total)", geral["Reuniões realizadas"], "int",
                  "Fechado + Perdido + Em negociação + Reunião feita", None),
         "ns": ("No-show (total)", geral["No-show"], "int", "Cliente não compareceu", None),
@@ -859,7 +874,11 @@ def _kpis(ctx: _Contexto) -> None:
                 "Considera só quem já decidiu (fechou ou perdeu)"
                 + (" — SEM PERDAS REGISTRADAS, por isso não é confiável" if geral["Perdidos"] == 0 else ""),
                 ("min", metas["win_rate"]) if geral["Perdidos"] > 0 else None),
-        "fag": ("Fechamento sobre agendadas", "={fec}/{ag}", "pct", "Fechados ÷ tudo que foi agendado", None),
+        # Sem a estrela: ela marca UM número, a assertividade. Duas estrelas na
+        # mesma tela não destacam nada. Aqui a prioridade vem da posição, que é
+        # logo ao lado dela no Resumo.
+        "fag": ("Taxa de conversão (agendado → fechado)", "={fec}/{ag}", "pct",
+                "De cada 100 reuniões marcadas, quantas viraram venda", None),
         "rec": ("Receita fechada (total)", g(geral, "Receita fechada (R$)"), "brl",
                 "Soma do valor dos fechados", None),
         "tm": ("Ticket médio", "={rec}/{fec}", "brl", "Receita ÷ fechados", None),
@@ -874,8 +893,8 @@ def _kpis(ctx: _Contexto) -> None:
         "fecp": ("Fechados (tráfego pago)", pago["Fechados"], "int", "Clientes vindos do tráfego pago", None),
         "recp": ("Receita fechada (tráfego pago)", receita_pago, "brl",
                  "Receita dos clientes vindos do tráfego pago", None),
-        "l2r": ("Lead → reunião agendada", "={agp}/{leads}", "pct", "Reuniões agendadas pagas ÷ leads da Meta",
-                ("min", metas["lead_para_reuniao"])),
+        "l2r": ("Taxa de agendamento do tráfego pago", "={agp}/{leads}", "pct",
+                "Reuniões agendadas pagas ÷ leads da Meta", ("min", metas["lead_para_reuniao"])),
         "l2c": ("Lead → cliente", "={fecp}/{leads}", "pct", "Fechados pagos ÷ leads da Meta", None),
         "cpr": ("Custo por reunião realizada", "={inv}/{realp}", "brl",
                 "Investimento ÷ reuniões realizadas pagas", None),
@@ -884,7 +903,44 @@ def _kpis(ctx: _Contexto) -> None:
         "roas": ("ROAS", "={recp}/{inv}", "x", "Receita do tráfego pago ÷ investimento", ("min", metas["roas"])),
         "roi": ("ROI", "=({recp}-{inv})/{inv}", "pct", "(Receita − investimento) ÷ investimento", None),
     }
+
+    # ---- Topo do funil, só quando o usuário informou os números ----
+    # A planilha de reuniões lista quem chegou a agendar; quem virou lead e não
+    # marcou reunião não está nela. Sem a aba Funil preenchida não há como medir
+    # esta parte, e ela simplesmente não aparece, em vez de aparecer zerada.
+    leads_inf = float(res.funil_informado.get("leads_recebidos") or 0)
+    mql = float(res.funil_informado.get("mql") or 0)
+    if leads_inf > 0:
+        K["leadsinf"] = (
+            "Leads recebidos", leads_inf, "int",
+            "O que você informou na aba Funil da planilha. É a boca do funil, de qualquer origem",
+            None,
+        )
+        K["txag"] = (
+            "Taxa de agendamento", "={ag}/{leadsinf}", "pct",
+            "De cada 100 leads recebidos, quantos marcaram reunião",
+            ("min", metas["lead_para_reuniao"]),
+        )
+    if mql > 0:
+        K["mql"] = (
+            "MQL (qualificados pelo marketing)", mql, "int",
+            "O que você informou na aba Funil: dos leads recebidos, quantos tinham perfil",
+            None,
+        )
+        K["mql2ag"] = (
+            "MQL → agendamento", "={ag}/{mql}", "pct",
+            "De cada 100 MQL, quantos marcaram reunião. Mede a passagem do marketing para o "
+            "comercial, que é onde mais se perde sem ninguém ver",
+            None,
+        )
+    if leads_inf > 0 and mql > 0:
+        K["l2mql"] = (
+            "Lead → MQL", "={mql}/{leadsinf}", "pct",
+            "Quanto do que entra tem perfil. Mede a mira do anúncio", None,
+        )
+    chaves_topo = [c for c in ("leadsinf", "mql", "l2mql", "txag", "mql2ag") if c in K]
     blocos = [
+        *([("TOPO DO FUNIL (INFORMADO POR VOCÊ)", chaves_topo)] if chaves_topo else []),
         ("TRÁFEGO PAGO (META)", ["inv", "imp", "alc", "clq", "leads", "ctr", "cpc", "cpm", "cpl"]),
         (
             "COMERCIAL — TODAS AS ORIGENS",

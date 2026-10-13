@@ -235,3 +235,44 @@ def _para_numero_meta(valor) -> float | None:
         return float(texto)
     except ValueError:
         return None
+
+
+def ler_funil_da_planilha(caminhos) -> dict[str, float]:
+    """Lê a aba 'Funil' da planilha de reuniões, se ela existir.
+
+    São os dois números que a planilha de reuniões não consegue dar: quantos
+    leads entraram e quantos o marketing qualificou. Ela lista quem chegou a
+    agendar; quem virou lead e não marcou reunião não está lá.
+
+    Opcional como a aba Metas, e pelo mesmo motivo: planilha antiga, CSV e
+    export de CRM nenhum tem essa aba, e todos continuam analisando igual. O
+    que falta simplesmente não vira indicador.
+    """
+    from .modelo import ABA_FUNIL, CAMPOS_FUNIL
+
+    por_rotulo = {normalizar(rot): chave for chave, rot, _f, _e, _ex in CAMPOS_FUNIL}
+    achados: dict[str, float] = {}
+
+    for caminho in caminhos if isinstance(caminhos, (list, tuple)) else [caminhos]:
+        caminho = Path(caminho)
+        if caminho.suffix.lower() not in (".xlsx", ".xlsm", ".xls"):
+            continue
+        try:
+            abas = pd.read_excel(caminho, sheet_name=None, header=None, dtype=object)
+        except Exception:
+            continue
+        nome_aba = next((n for n in abas if normalizar(n) == normalizar(ABA_FUNIL)), None)
+        if nome_aba is None:
+            continue
+        for _, linha in abas[nome_aba].iterrows():
+            valores = list(linha)
+            if len(valores) < 2:
+                continue
+            chave = por_rotulo.get(normalizar(valores[0]))
+            if not chave:
+                continue
+            numero = _para_numero_meta(valores[1])
+            if numero is None or numero <= 0:
+                continue
+            achados[chave] = numero
+    return achados

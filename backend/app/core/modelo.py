@@ -218,6 +218,86 @@ def _aba_metas(wb: Workbook) -> None:
         lin += 1
 
 
+# A aba Funil guarda o que ACONTECEU no topo, e por isso é separada de Metas,
+# que guarda o que se QUER. Misturar as duas faria o JET comparar um número
+# com ele mesmo.
+#
+# Ela existe porque a planilha de reuniões só tem linha para quem chegou a
+# agendar: o lead que nunca marcou reunião não está lá, e sem esses dois
+# números não há como medir o topo do funil. É o mesmo padrão do bloco "Leads
+# por Semana" que a planilha antiga já usava.
+ABA_FUNIL = "Funil"
+CAMPOS_FUNIL = [
+    ("leads_recebidos", "Leads recebidos no mês", "int",
+     "Todo contato que entrou, de qualquer origem. É a boca do funil.", 120),
+    ("mql", "MQL (leads qualificados pelo marketing)", "int",
+     "Dos leads recebidos, quantos tinham perfil e interesse para passar ao comercial.", 72),
+]
+
+
+def _aba_funil(wb: Workbook) -> None:
+    """O topo do funil, que a planilha de reuniões não consegue enxergar.
+
+    Em branco não é erro: sem estes números o sistema segue usando os leads que
+    a Meta reporta, e as taxas de topo simplesmente não aparecem. Preencher só
+    o que você de fato conta é melhor que inventar.
+    """
+    ws = wb.create_sheet(ABA_FUNIL, 2)
+    ws["A1"] = "Topo do funil"
+    ws["A1"].font = F_TIT
+    ws["A2"] = (
+        "Dois números que só você tem. A planilha de reuniões lista quem chegou a agendar; quem "
+        "virou lead e não marcou reunião não aparece nela. Preencha aqui e o sistema passa a "
+        "medir o funil inteiro, do primeiro contato até a venda."
+    )
+    ws["A2"].font = F_SUB
+    ws.sheet_view.showGridLines = False
+
+    lin = 4
+    for i, h in enumerate(["O que", "Quantos", "O que é"], 1):
+        c = ws.cell(lin, i, h)
+        c.font, c.fill, c.border = F_CAB, FILL_CAB, BORDA
+        c.alignment = Alignment(horizontal="center", vertical="center")
+    lin += 1
+
+    for j, (_chave, rotulo, _formato, explicacao, exemplo) in enumerate(CAMPOS_FUNIL):
+        rot = ws.cell(lin, 1, rotulo)
+        val = ws.cell(lin, 2, exemplo)
+        exp = ws.cell(lin, 3, explicacao)
+        for cel in (rot, val, exp):
+            cel.font, cel.border = F_TXT, BORDA
+            cel.alignment = Alignment(wrap_text=True, vertical="center")
+        val.fill = FILL_OBR
+        val.alignment = Alignment(horizontal="right", vertical="center")
+        val.number_format = "0"
+        if j % 2:
+            rot.fill = exp.fill = FILL_ZEBRA
+        ws.row_dimensions[lin].height = 26
+        lin += 1
+
+    for letra, largura in zip("ABC", [40, 14, 66]):
+        ws.column_dimensions[letra].width = largura
+
+    lin += 1
+    ws.cell(lin, 1, "Os números acima são exemplos — troque pelos seus.").font = F_SUB
+    lin += 2
+    ws.cell(lin, 1, "O que isto destrava").font = F_SEC
+    lin += 1
+    for texto in [
+        "Quantidade de leads: o número real que entrou, em vez do que a Meta reporta como resultado.",
+        "Lead para MQL: quanto do que entra tem perfil. Mede a mira do anúncio.",
+        "MQL para agendamento: quanto do que o marketing aprova vira reunião. Mede a passagem "
+        "de marketing para comercial, que é onde mais se perde sem ninguém ver.",
+        "Taxa de agendamento: de cada 100 leads, quantos marcaram reunião.",
+    ]:
+        cel = ws.cell(lin, 1, texto)
+        cel.font = F_TXT
+        cel.alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells(start_row=lin, start_column=1, end_row=lin, end_column=3)
+        ws.row_dimensions[lin].height = 26
+        lin += 1
+
+
 def _aba_instrucoes(wb: Workbook) -> None:
     ws = wb.create_sheet("Como preencher")
     ws["A1"] = "O que cada coluna destrava"
@@ -326,6 +406,7 @@ def gerar_planilha_modelo(destino: str | Path | None = None) -> bytes:
     wb.remove(wb.active)
     _aba_reunioes(wb)
     _aba_metas(wb)
+    _aba_funil(wb)
     _aba_instrucoes(wb)
     _aba_etapas(wb)
 

@@ -1991,3 +1991,20 @@ td.texto { white-space: normal; min-width: 260px; }
   text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
 }
 .link-modelo:hover:not(:disabled) { background: none; opacity: 0.8; }
+
+/* Divisão dentro de uma aba. A aba Tráfego pago passou a ter duas leituras
+   diferentes — o topo do funil, que vem da mão do usuário, e a mídia, que vem
+   da Meta — e sem um rótulo entre elas os doze cartões viram uma parede. */
+.titulo-secao {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 4px 0 2px;
+  letter-spacing: -0.01em;
+}
+.sub-secao {
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 78ch;
+}

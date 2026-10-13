@@ -148,6 +148,7 @@ export default function Analise() {
           <Destaque itens={r.diagnostico} />
           <div className="grade tiles">
             <Tile kpi={kpis.assert} destaque />
+            <Tile kpi={kpis.fag} />
             <Tile kpi={kpis.cac} />
             <Tile kpi={kpis.cpl} />
             <Tile kpi={kpis.inv} />
@@ -177,6 +178,27 @@ export default function Analise() {
           aria-labelledby="aba-trafego"
           tabIndex={-1}
         >
+          {/* O topo do funil só aparece quando a aba Funil da planilha foi
+              preenchida: sem os números, `Tile` devolve null e a seção inteira
+              some, em vez de mostrar zeros que ninguém contou. */}
+          {kpis.leadsinf && (
+            <>
+              <h2 className="titulo-secao">Topo do funil</h2>
+              <p className="sub-secao">
+                O que você informou na aba Funil da planilha. A planilha de reuniões só lista quem
+                chegou a agendar, então estes números são os únicos que enxergam a parte de cima.
+              </p>
+              <div className="grade tiles">
+                <Tile kpi={kpis.leadsinf} />
+                <Tile kpi={kpis.mql} />
+                <Tile kpi={kpis.l2mql} />
+                <Tile kpi={kpis.txag} />
+                <Tile kpi={kpis.mql2ag} />
+                <Tile kpi={kpis.ag} />
+              </div>
+            </>
+          )}
+          <h2 className="titulo-secao">Mídia</h2>
           <div className="grade tiles">
             <Tile kpi={kpis.inv} />
             <Tile kpi={kpis.imp} />

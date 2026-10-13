@@ -128,6 +128,20 @@ cônjuge" quando é um lead perdido. Quem for revisitar essa decisão precisa
 saber que é isso que está sobre a mesa, e que a saída limpa seria
 pseudonimizar antes de enviar.
 
+**O topo do funil só existe se o usuário contar.** A planilha de reuniões tem
+uma linha por negócio que chegou a agendar. O lead que entrou e nunca marcou
+reunião não está nela, e nenhuma esperteza de código o faz aparecer: ele só
+existe como um número que alguém digita. Por isso a aba Funil, com leads
+recebidos e MQL, é a única fonte das taxas de topo.
+
+A regra que vale para ela, e para qualquer coisa parecida que venha depois:
+**sem o número informado, o indicador não aparece — não aparece zerado.** Zero
+numa taxa de agendamento é uma afirmação sobre a operação; a ausência é uma
+afirmação sobre a planilha. Trocar uma pela outra faz o cliente ler um mês
+péssimo onde havia só uma aba em branco. Vale também para o gráfico de funil:
+uma etapa inventada ali faz a queda entre duas barras medir uma perda que
+ninguém contou.
+
 **CRMs que o motor já lê.** O gargalo do produto nunca foi o motor, é a
 planilha que chega. Seis formatos de exportação foram testados com a mesma base
 de 32 negócios por baixo: HubSpot, Pipedrive, RD Station, Agendor, DataCrazy e
