@@ -140,6 +140,16 @@ npm install
 npm run dev                   # http://localhost:5173
 ```
 
+O `package.json` do site mora em `frontend/`, mas a raiz tem atalhos para os
+comandos do dia a dia, porque `npm run dev` digitado na raiz respondia com um
+ENOENT que não explica nada:
+
+```bash
+npm run dev        # sobe o site (equivale a: cd frontend && npm run dev)
+npm run build
+npm run typecheck
+```
+
 As tabelas do schema `public` são criadas sozinhas na primeira subida; o schema de cada
 empresa é criado no cadastro dela.
 

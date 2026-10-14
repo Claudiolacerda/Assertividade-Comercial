@@ -1,0 +1,13 @@
+{
+  "name": "neriah",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Atalhos da raiz. O projeto de verdade esta em frontend/ (site) e backend/ (API).",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "typecheck": "cd frontend && npm run typecheck",
+    "install:site": "cd frontend && npm install"
+  }
+}
