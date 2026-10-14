@@ -227,11 +227,17 @@ def _aba_metas(wb: Workbook) -> None:
 # números não há como medir o topo do funil. É o mesmo padrão do bloco "Leads
 # por Semana" que a planilha antiga já usava.
 ABA_FUNIL = "Funil"
+# Só o primeiro campo é o que a planilha de reuniões não tem como dar. O
+# segundo existe para quem mantém uma etapa de qualificação ANTES de marcar a
+# reunião; quem chama de lead qualificado quem marcou reunião pode deixar em
+# branco, porque esse número o sistema conta sozinho nas linhas da aba Reuniões.
 CAMPOS_FUNIL = [
     ("leads_recebidos", "Leads recebidos no mês", "int",
-     "Todo contato que entrou, de qualquer origem. É a boca do funil.", 120),
-    ("mql", "MQL (leads qualificados pelo marketing)", "int",
-     "Dos leads recebidos, quantos tinham perfil e interesse para passar ao comercial.", 72),
+     "Todo contato que entrou, de qualquer origem. É a boca do funil, e é o único número aqui "
+     "que o sistema não tem como contar sozinho.", 120),
+    ("mql", "MQL antes do agendamento (opcional)", "int",
+     "Só preencha se você qualifica o lead ANTES de marcar a reunião e conta essa etapa. "
+     "Se para você lead qualificado é quem marcou reunião, deixe em branco: isso já é contado.", None),
 ]
 
 
@@ -285,10 +291,12 @@ def _aba_funil(wb: Workbook) -> None:
     lin += 1
     for texto in [
         "Quantidade de leads: o número real que entrou, em vez do que a Meta reporta como resultado.",
-        "Lead para MQL: quanto do que entra tem perfil. Mede a mira do anúncio.",
-        "MQL para agendamento: quanto do que o marketing aprova vira reunião. Mede a passagem "
-        "de marketing para comercial, que é onde mais se perde sem ninguém ver.",
-        "Taxa de agendamento: de cada 100 leads, quantos marcaram reunião.",
+        "Taxa de agendamento: de cada 100 leads, quantos marcaram reunião, ou seja, quantos "
+        "viraram lead qualificado.",
+        "Leads qualificados: quem marcou reunião. Este o sistema conta sozinho, uma linha por "
+        "lead na aba Reuniões, e aparece como MQL na análise.",
+        "Só para quem preenche o campo opcional: lead para MQL mede a mira do anúncio, e MQL "
+        "para agendamento mede a passagem de marketing para comercial.",
     ]:
         cel = ws.cell(lin, 1, texto)
         cel.font = F_TXT

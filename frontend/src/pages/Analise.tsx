@@ -157,11 +157,14 @@ export default function Analise() {
           <Destaque itens={r.diagnostico} />
           <div className="grade tiles">
             <Tile kpi={kpis.assert} destaque />
-            {/* Topo do funil no Resumo tambem: eles respondem "quantos leads e
-                quantos MQL" sem obrigar a abrir a aba de trafego. Ausentes,
-                `Tile` devolve null e a grade se fecha. */}
+            {/* Topo do funil no Resumo tambem: respondem "quantos leads e
+                quantos qualificados" sem obrigar a abrir a aba de trafego. O
+                lead qualificado e o `ag`, contado na planilha; `leadsinf` e
+                `mql` dependem do que foi informado e, ausentes, `Tile` devolve
+                null e a grade se fecha. */}
             <Tile kpi={kpis.leadsinf} />
             <Tile kpi={kpis.mql} />
+            <Tile kpi={kpis.ag} />
             <Tile kpi={kpis.txag} />
             <Tile kpi={kpis.fag} />
             <Tile kpi={kpis.cac} />
@@ -203,8 +206,9 @@ export default function Analise() {
             <>
               <h2 className="titulo-secao">Topo do funil</h2>
               <p className="sub-secao">
-                O que você informou na aba Funil da planilha. A planilha de reuniões só lista quem
-                chegou a agendar, então estes números são os únicos que enxergam a parte de cima.
+                O total de leads vem de você: a planilha de reuniões só lista quem chegou a agendar,
+                então ela não enxerga quem entrou e não marcou. O lead qualificado, esse ela conta
+                sozinha.
               </p>
               <div className="grade tiles">
                 <Tile kpi={kpis.leadsinf} />
@@ -228,18 +232,19 @@ export default function Analise() {
           {!temTopo && (
             <div className="aviso">
               <p>
-                <strong>Leads, MQL e taxa de agendamento não entraram nesta análise.</strong> A
-                planilha de reuniões só tem linha para quem chegou a marcar reunião, então ela não
-                sabe quantos leads entraram no mês nem quantos o marketing qualificou. Esses dois
-                números são informados por você, na aba <strong>Funil</strong> da planilha.
+                <strong>Falta o total de leads do mês para fechar o topo do funil.</strong> Seus
+                leads qualificados já estão contados: são as{" "}
+                <strong>{kpis.ag?.texto}</strong> reuniões marcadas, uma linha por lead na sua
+                planilha. O que ela não tem é quem entrou e <em>não</em> marcou reunião, e sem esse
+                total não dá para calcular a taxa de agendamento.
               </p>
               <p className="alternativa">
-                Informe aqui e eu recalculo esta mesma análise. Para os próximos meses, a aba Funil
-                da{" "}
+                Informe aqui e eu recalculo esta mesma análise. Para os próximos meses, a aba{" "}
+                <strong>Funil</strong> da{" "}
                 <button type="button" className="link-modelo" onClick={() => api.baixarModelo()}>
                   planilha-modelo
                 </button>{" "}
-                (ou do gabarito do HubSpot) já traz os dois campos.
+                (ou do gabarito do HubSpot) já traz o campo.
               </p>
               <InformarFunil analiseId={analise.id} informado={r.funil_informado} />
             </div>

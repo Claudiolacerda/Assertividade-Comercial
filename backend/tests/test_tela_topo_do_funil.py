@@ -45,14 +45,30 @@ def test_a_ausencia_do_topo_e_explicada_na_tela():
     planilha de reuniões não tem.
     """
     assert "{!temTopo && (" in ANALISE
-    assert "aba <strong>Funil</strong>" in ANALISE
+    assert "<strong>Funil</strong>" in ANALISE
     assert "baixarModelo" in ANALISE, "o aviso precisa oferecer a planilha que tem a aba"
 
 
-def test_leads_e_mql_aparecem_no_resumo():
-    """Foram pedidos como indicadores de primeira linha, não como detalhe de tráfego."""
+def test_leads_e_qualificados_aparecem_no_resumo():
+    """Foram pedidos como indicadores de primeira linha, não como detalhe de tráfego.
+
+    O lead qualificado é o `ag`, contado na planilha: ele tem de estar no Resumo
+    mesmo quando nada foi informado, que é o caso de toda análise antiga.
+    """
     resumo = ANALISE.split('aba === "resumo"')[1].split('aba === "jet"')[0]
     assert "kpis.leadsinf" in resumo and "kpis.mql" in resumo
+    assert "kpis.ag" in resumo, "sem ele, uma análise sem a aba Funil não mostra o qualificado"
+
+
+def test_o_aviso_de_falta_nao_pede_o_mql():
+    """Ele vinha dizendo que o MQL era informado, e não é: a planilha o conta.
+
+    Pedir ao usuário um número que o sistema já tem é o defeito que esta tela
+    tinha, e o texto era parte dele.
+    """
+    aviso = ANALISE.split("{!temTopo && (")[1].split("</div>")[0]
+    assert "total de leads" in aviso
+    assert "já estão contados" in aviso
 
 
 # --------------------------------------------------------------------- #

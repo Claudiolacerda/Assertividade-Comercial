@@ -49,7 +49,8 @@ def test_o_gabarito_do_hubspot_tambem_tem_a_aba_funil(planilha):
     from app.core.modelo import CAMPOS_FUNIL
 
     lidos = ler_funil_da_planilha([planilha])
-    assert lidos == pytest.approx({chave: exemplo for chave, _r, _f, _e, exemplo in CAMPOS_FUNIL})
+    esperado = {chave: ex for chave, _r, _f, _e, ex in CAMPOS_FUNIL if ex is not None}
+    assert lidos == pytest.approx(esperado)
 
 
 def test_o_passo_a_passo_explica_como_informar_leads_e_mql(planilha):

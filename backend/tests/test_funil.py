@@ -183,16 +183,19 @@ def test_nenhum_funil_tem_barra_que_cresce(completo, tabela: str):
         )
 
 
-def test_sem_mql_o_funil_do_topo_comeca_nos_leads(tmp_path):
-    """Etapa inventada é pior que etapa ausente.
+def test_sem_mql_informado_o_funil_nao_ganha_barra_repetida(tmp_path):
+    """Etapa inventada é pior que etapa ausente, e etapa repetida também.
 
-    A queda entre duas barras de um funil é lida como perda. Pôr ali uma etapa
-    que ninguém contou faz o gráfico afirmar uma perda que não existe.
+    Para quem chama de MQL quem marcou reunião, a barra do MQL e a das reuniões
+    agendadas são o mesmo número com dois nomes. Duas barras iguais, com uma
+    queda de 0% entre elas, ocupam espaço afirmando nada. Então o agendamento
+    carrega os dois nomes e a barra é uma só.
     """
     res = analisar([META], [_planilha(tmp_path, leads=200)])
     etapas = _etapas(res, "funil_topo")
-    assert not any("MQL" in e for e in etapas)
     assert etapas[0].startswith("Leads recebidos")
+    assert etapas[1] == "MQL / reuniões agendadas"
+    assert len([e for e in etapas if "MQL" in e]) == 1
 
 
 def test_sem_a_aba_nao_existe_funil_do_topo(tmp_path):
@@ -209,15 +212,71 @@ def test_mql_maior_que_os_leads_e_apontado_como_erro_de_preenchimento(tmp_path):
 
 
 # --------------------------------------------------------------------- #
+# O MQL na definição de quem opera: quem marcou reunião
+# --------------------------------------------------------------------- #
+# Eu havia implementado o MQL do livro de marketing, uma etapa ANTES do
+# agendamento, e exigido que fosse digitado. Mas na operação lead qualificado é
+# quem marcou reunião, e esse número a planilha já tem: é a contagem de linhas.
+# Pedir que fosse informado era pedir um dado que o sistema tinha na mão.
+def test_o_lead_qualificado_e_contado_da_propria_planilha(tmp_path):
+    """Sem informar nada, o número de leads qualificados já existe."""
+    res = analisar([META], [_planilha(tmp_path)])
+    k = res.kpis["ag"]
+    assert int(k["valor"]) == 5, "as 5 linhas da planilha"
+    assert "MQL" in k["rotulo"] and "qualificados" in k["rotulo"]
+
+
+def test_nao_ha_dois_indicadores_com_o_mesmo_numero(tmp_path):
+    """Um cartão "MQL" ao lado de "reuniões agendadas", ambos 5, é ruído."""
+    res = analisar([META], [_planilha(tmp_path)])
+    assert "mql" not in res.kpis
+
+
+def test_mql_igual_as_reunioes_marcadas_nao_vira_etapa_separada(tmp_path):
+    """Informar o mesmo número que a planilha conta não cria uma etapa.
+
+    A taxa entre os dois daria 100% por construção, o que não é medição.
+    """
+    res = analisar([META], [_planilha(tmp_path, leads=200, mql=5)])
+    assert "mql" not in res.kpis and "mql2ag" not in res.kpis
+    assert len([e for e in _etapas(res, "funil_topo") if "MQL" in e]) == 1
+
+
+def test_quem_tem_etapa_de_qualificacao_propria_continua_medindo_as_duas(tmp_path):
+    """O MQL do livro: uma etapa anterior ao agendamento, com número maior.
+
+    Quem de fato mantém essa etapa informa o número, ele difere da contagem de
+    reuniões, e as duas passagens passam a dizer algo.
+    """
+    res = analisar([META], [_planilha(tmp_path, leads=200, mql=80)])
+    assert int(res.kpi("mql")) == 80
+    assert res.kpi("mql2ag") == pytest.approx(5 / 80)
+    assert res.kpi("l2mql") == pytest.approx(80 / 200)
+    etapas = _etapas(res, "funil_topo")
+    assert etapas[1].startswith("MQL") and etapas[2] == "Reuniões agendadas"
+
+
+def test_a_taxa_de_agendamento_e_nomeada_como_passagem_para_qualificado(tmp_path):
+    """É a mesma coisa: de cada 100 leads, quantos viraram lead qualificado."""
+    res = analisar([META], [_planilha(tmp_path, leads=200)])
+    assert "lead → MQL" in res.kpis["txag"]["rotulo"]
+
+
+# --------------------------------------------------------------------- #
 # A aba na planilha-modelo
 # --------------------------------------------------------------------- #
 def test_a_aba_funil_do_modelo_volta_inteira_na_leitura(tmp_path):
-    """Modelo e leitor usam a mesma lista; se um mudar sozinho, isto quebra."""
+    """Modelo e leitor usam a mesma lista; se um mudar sozinho, isto quebra.
+
+    O campo opcional sai em branco no modelo, e branco tem de voltar como
+    ausente: um exemplo ali viraria uma etapa de funil que ninguém contou.
+    """
     arq = tmp_path / "modelo.xlsx"
     gerar_planilha_modelo(arq)
     lidos = ler_funil_da_planilha([arq])
-    esperado = {chave: exemplo for chave, _r, _f, _e, exemplo in CAMPOS_FUNIL}
+    esperado = {chave: ex for chave, _r, _f, _e, ex in CAMPOS_FUNIL if ex is not None}
     assert lidos == pytest.approx(esperado)
+    assert "mql" not in lidos, "o campo opcional vem com exemplo e inventa uma etapa"
 
 
 def test_a_aba_funil_e_separada_da_de_metas(tmp_path):
@@ -261,7 +320,7 @@ def test_o_relatorio_de_whatsapp_usa_o_lead_informado_e_mostra_o_mql(completo):
 
     texto = gerar_texto(completo.to_payload(), "Cliente Exemplo", "2026-09")
     assert "Leads recebidos" in texto and "Leads gerados" not in texto
-    assert "Leads qualificados (MQL)" in texto
+    assert "Leads qualificados (marcaram reunião)" in texto
     assert "Taxa de agendamento" in texto
 
 
@@ -271,7 +330,9 @@ def test_sem_a_aba_o_relatorio_volta_a_usar_o_lead_da_meta(tmp_path):
 
     texto = gerar_texto(res.to_payload(), "Cliente Exemplo", "2026-09")
     assert "Leads gerados" in texto and "Leads recebidos" not in texto
-    assert "MQL" not in texto
+    # O lead qualificado continua lá: ele vem da planilha, não da aba Funil.
+    assert "Leads qualificados (marcaram reunião)" in texto
+    assert "MQL antes do agendamento" not in texto
 
 
 def test_a_planilha_entregue_ganha_a_aba_do_funil_completo(completo):
@@ -287,3 +348,15 @@ def test_a_planilha_entregue_ganha_a_aba_do_funil_completo(completo):
     ws = wb["Funil do Lead ao Cliente"]
     texto = " ".join(str(c.value) for linha in ws.iter_rows() for c in linha if c.value)
     assert "MQL" in texto and "Leads recebidos" in texto
+
+
+def test_a_taxa_de_agendamento_nao_repete_o_nome_de_outra_taxa(tmp_path):
+    """Com etapa de MQL própria, "lead → MQL" já é outra taxa.
+
+    Dois indicadores com o mesmo rótulo e valores diferentes na mesma tela não
+    se explicam.
+    """
+    res = analisar([META], [_planilha(tmp_path, leads=200, mql=80)])
+    rotulos = [res.kpis[c]["rotulo"] for c in ("txag", "l2mql")]
+    assert len(set(rotulos)) == 2
+    assert res.kpis["txag"]["rotulo"] == "Taxa de agendamento (lead → reunião)"

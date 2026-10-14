@@ -101,7 +101,8 @@ def gerar_texto(
             if kpis.get("leadsinf")
             else _linha_kpi(resultado, "leads", "Leads gerados")
         ),
-        _linha_kpi(resultado, "mql", "Leads qualificados (MQL)"),
+        _linha_kpi(resultado, "mql", "MQL antes do agendamento"),
+        _linha_kpi(resultado, "ag", "Leads qualificados (marcaram reunião)"),
         _linha_kpi(resultado, "real", "Reuniões realizadas"),
         _linha_kpi(resultado, "fec", "Clientes fechados"),
     ]

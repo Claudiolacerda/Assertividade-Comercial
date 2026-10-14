@@ -797,27 +797,33 @@ def _funil_do_topo(ctx: _Contexto) -> None:
     origem. Misturar os dois numa barra só fazia a etapa do MQL crescer em
     relação à anterior, o que num funil é impossível e mentiroso.
 
-    Cada etapa só entra se foi contada. Sem leads informados o funil começa no
-    MQL; sem MQL ele não existe; sem nenhum dos dois a tabela não é criada, e a
-    tela não tem o que desenhar.
+    Cada etapa só entra se foi contada, e só se for uma etapa de verdade: o MQL
+    só ganha barra própria quando o número informado difere das reuniões
+    marcadas. Para quem chama de MQL quem marcou reunião, as duas barras seriam
+    o mesmo número com dois nomes, e a queda entre elas, 0%, ocuparia espaço
+    afirmando nada.
     """
     res = ctx.res
     leads_inf = float(res.funil_informado.get("leads_recebidos") or 0)
     mql = float(res.funil_informado.get("mql") or 0)
-    if leads_inf <= 0 and mql <= 0:
+    agendadas = float(ctx.geral["Reuniões agendadas"])
+    mql_proprio = mql > 0 and mql != agendadas
+    if leads_inf <= 0 and not mql_proprio:
         return
 
     etapas, quantidades = [], []
     if leads_inf > 0:
         etapas.append("Leads recebidos (todas as origens)")
         quantidades.append(leads_inf)
-    if mql > 0:
+    if mql_proprio:
         etapas.append("MQL (qualificados pelo marketing)")
         quantidades.append(mql)
-    etapas += ["Reuniões agendadas", "Reuniões realizadas", "Clientes fechados"]
-    quantidades += [
-        ctx.geral["Reuniões agendadas"], ctx.geral["Reuniões realizadas"], ctx.geral["Fechados"],
+    etapas += [
+        "MQL / reuniões agendadas" if not mql_proprio else "Reuniões agendadas",
+        "Reuniões realizadas",
+        "Clientes fechados",
     ]
+    quantidades += [agendadas, ctx.geral["Reuniões realizadas"], ctx.geral["Fechados"]]
 
     topo = pd.DataFrame({"Etapa": etapas, "Quantidade": [float(q) for q in quantidades]})
     topo["Conversão da etapa anterior (%)"] = div(
@@ -912,9 +918,13 @@ def _kpis(ctx: _Contexto) -> None:
         "cpm": ("CPM", "={inv}/{imp}*1000", "brl", "Custo por mil impressões", None),
         "cpl": ("Custo por lead/conversa (CPL)", "={inv}/{leads}", "brl", "Investimento ÷ leads",
                 ("max", metas["cpl_max"])),
-        "ag": ("Reuniões agendadas (leads qualificados)", geral["Reuniões agendadas"], "int",
+        # Um número, os dois nomes. Para quem opera, o lead qualificado (o MQL) é
+        # quem marcou reunião, e isso a planilha já tem: cada linha dela é um.
+        # Um indicador "MQL" separado, com o mesmo valor ao lado deste, seriam
+        # dois cartões iguais na tela dizendo a mesma coisa.
+        "ag": ("MQL / reuniões agendadas (leads qualificados)", geral["Reuniões agendadas"], "int",
                "Todas as linhas do mês na planilha de reuniões. São os leads que chegaram a "
-               "marcar reunião, o que a operação chama de lead qualificado", None),
+               "marcar reunião, o que a operação chama de lead qualificado ou MQL", None),
         "real": ("Reuniões realizadas (total)", geral["Reuniões realizadas"], "int",
                  "Fechado + Perdido + Em negociação + Reunião feita", None),
         "ns": ("No-show (total)", geral["No-show"], "int", "Cliente não compareceu", None),
@@ -970,27 +980,47 @@ def _kpis(ctx: _Contexto) -> None:
         "roi": ("ROI", "=({recp}-{inv})/{inv}", "pct", "(Receita − investimento) ÷ investimento", None),
     }
 
-    # ---- Topo do funil, só quando o usuário informou os números ----
-    # A planilha de reuniões lista quem chegou a agendar; quem virou lead e não
-    # marcou reunião não está nela. Sem a aba Funil preenchida não há como medir
-    # esta parte, e ela simplesmente não aparece, em vez de aparecer zerada.
+    # ---- Topo do funil ----
+    # Só os LEADS precisam ser informados: a planilha de reuniões lista quem
+    # chegou a agendar, então quem virou lead e não marcou reunião não está
+    # nela, e não há de onde tirar esse total.
+    #
+    # O MQL é diferente, e eu havia errado isto: na operação, lead qualificado
+    # é quem marcou reunião, e esse número a planilha JÁ TEM — é a contagem de
+    # linhas, o `ag`. Pedir que fosse digitado era pedir um dado que o sistema
+    # tinha na mão. Ele continua aceito na aba Funil, mas para quem de fato
+    # mantém uma etapa de qualificação ANTES do agendamento (o MQL de livro de
+    # marketing); aí os dois números são diferentes e as duas passagens
+    # (lead → MQL, MQL → agendamento) passam a dizer algo.
     leads_inf = float(res.funil_informado.get("leads_recebidos") or 0)
-    mql = float(res.funil_informado.get("mql") or 0)
+    mql_informado = float(res.funil_informado.get("mql") or 0)
+    # Igual à contagem da planilha não é uma etapa a mais: é o mesmo número com
+    # outro nome, e as taxas entre eles dariam 100% por construção.
+    mql_proprio = mql_informado > 0 and mql_informado != geral["Reuniões agendadas"]
     if leads_inf > 0:
         K["leadsinf"] = (
             "Leads recebidos", leads_inf, "int",
             "O que você informou na aba Funil da planilha. É a boca do funil, de qualquer origem",
             None,
         )
+        # O nome depende de haver ou não uma etapa de MQL própria: sem ela,
+        # virar lead qualificado é marcar reunião, e dizer "lead → MQL" é o
+        # nome que o usuário reconhece. Com ela, "lead → MQL" é outra taxa, a
+        # `l2mql`, e repetir o nome aqui faria duas linhas diferentes com o
+        # mesmo rótulo.
         K["txag"] = (
-            "Taxa de agendamento", "={ag}/{leadsinf}", "pct",
-            "De cada 100 leads recebidos, quantos marcaram reunião",
+            "Taxa de agendamento (lead → reunião)" if mql_proprio
+            else "Taxa de agendamento (lead → MQL)",
+            "={ag}/{leadsinf}", "pct",
+            "De cada 100 leads recebidos, quantos marcaram reunião"
+            + ("" if mql_proprio else ", ou seja, quantos viraram lead qualificado"),
             ("min", metas["lead_para_reuniao"]),
         )
-    if mql > 0:
+    if mql_proprio:
         K["mql"] = (
-            "MQL (qualificados pelo marketing)", mql, "int",
-            "O que você informou na aba Funil: dos leads recebidos, quantos tinham perfil",
+            "MQL (qualificados pelo marketing, antes de agendar)", mql_informado, "int",
+            "O que você informou na aba Funil: dos leads recebidos, quantos tinham perfil. É uma "
+            "etapa anterior ao agendamento, por isso maior que as reuniões marcadas",
             None,
         )
         K["mql2ag"] = (
@@ -999,14 +1029,14 @@ def _kpis(ctx: _Contexto) -> None:
             "comercial, que é onde mais se perde sem ninguém ver",
             None,
         )
-    if leads_inf > 0 and mql > 0:
-        K["l2mql"] = (
-            "Lead → MQL", "={mql}/{leadsinf}", "pct",
-            "Quanto do que entra tem perfil. Mede a mira do anúncio", None,
-        )
+        if leads_inf > 0:
+            K["l2mql"] = (
+                "Lead → MQL", "={mql}/{leadsinf}", "pct",
+                "Quanto do que entra tem perfil. Mede a mira do anúncio", None,
+            )
     chaves_topo = [c for c in ("leadsinf", "mql", "l2mql", "txag", "mql2ag") if c in K]
     blocos = [
-        *([("TOPO DO FUNIL (INFORMADO POR VOCÊ)", chaves_topo)] if chaves_topo else []),
+        *([("TOPO DO FUNIL", chaves_topo)] if chaves_topo else []),
         ("TRÁFEGO PAGO (META)", ["inv", "imp", "alc", "clq", "leads", "ctr", "cpc", "cpm", "cpl"]),
         (
             "COMERCIAL — TODAS AS ORIGENS",

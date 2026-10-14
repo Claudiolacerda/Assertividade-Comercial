@@ -60,15 +60,21 @@ export default function InformarFunil({ analiseId, informado }) {
           <p className="dica-campo">Todo contato que entrou, de qualquer origem.</p>
         </div>
         <div>
-          <label htmlFor="funil-mql">MQL (qualificados pelo marketing)</label>
+          <label htmlFor="funil-mql">MQL antes do agendamento (opcional)</label>
           <input
             id="funil-mql"
             inputMode="numeric"
-            placeholder="ex.: 168"
+            placeholder="deixe em branco"
             value={mql}
             onChange={(e) => setMql(e.target.value)}
           />
-          <p className="dica-campo">Dos leads, quantos tinham perfil para passar ao comercial.</p>
+          {/* Opcional de verdade: se lead qualificado para você é quem marcou
+              reunião, esse número ja esta contado nas linhas da planilha, e
+              digitá-lo aqui seria repetir um dado que o sistema tem. */}
+          <p className="dica-campo">
+            Só se você qualifica o lead <em>antes</em> de marcar a reunião. Quem marcou reunião já
+            é contado como lead qualificado.
+          </p>
         </div>
         <button className="primario" onClick={recalcular} disabled={rodando}>
           {rodando ? "Recalculando…" : "Recalcular análise"}
