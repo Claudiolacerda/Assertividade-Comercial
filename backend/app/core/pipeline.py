@@ -772,23 +772,71 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
 # ---------------------------------------------------------------------- #
 # 6. Cruzamento Meta × Comercial
 # ---------------------------------------------------------------------- #
+def _funil_do_topo(ctx: _Contexto) -> None:
+    """O funil de todas as origens, que começa nos leads que o usuário informou.
+
+    Separado do funil do tráfego pago porque os dois medem universos diferentes:
+    lá são os leads que a Meta reportou, aqui é tudo que entrou, de qualquer
+    origem. Misturar os dois numa barra só fazia a etapa do MQL crescer em
+    relação à anterior, o que num funil é impossível e mentiroso.
+
+    Cada etapa só entra se foi contada. Sem leads informados o funil começa no
+    MQL; sem MQL ele não existe; sem nenhum dos dois a tabela não é criada, e a
+    tela não tem o que desenhar.
+    """
+    res = ctx.res
+    leads_inf = float(res.funil_informado.get("leads_recebidos") or 0)
+    mql = float(res.funil_informado.get("mql") or 0)
+    if leads_inf <= 0 and mql <= 0:
+        return
+
+    etapas, quantidades = [], []
+    if leads_inf > 0:
+        etapas.append("Leads recebidos (todas as origens)")
+        quantidades.append(leads_inf)
+    if mql > 0:
+        etapas.append("MQL (qualificados pelo marketing)")
+        quantidades.append(mql)
+    etapas += ["Reuniões agendadas", "Reuniões realizadas", "Clientes fechados"]
+    quantidades += [
+        ctx.geral["Reuniões agendadas"], ctx.geral["Reuniões realizadas"], ctx.geral["Fechados"],
+    ]
+
+    topo = pd.DataFrame({"Etapa": etapas, "Quantidade": [float(q) for q in quantidades]})
+    topo["Conversão da etapa anterior (%)"] = div(
+        topo["Quantidade"], topo["Quantidade"].shift(1).fillna(0)
+    )
+    topo["Conversão desde o primeiro contato (%)"] = div(topo["Quantidade"], quantidades[0])
+    res.tabelas["funil_topo"] = topo
+
+    # Um MQL maior que os leads informados é erro de preenchimento, não um mês
+    # extraordinário. Vale avisar em vez de desenhar a barra subindo.
+    if leads_inf > 0 and mql > leads_inf:
+        ctx.add(
+            "Planilha", "Atenção",
+            f"A aba Funil diz {mql:.0f} MQL e só {leads_inf:.0f} leads recebidos. O MQL é um "
+            "recorte dos leads, então ele não pode ser maior. Confira os dois números.",
+        )
+
+
+
 def _cruzamento(ctx: _Contexto) -> None:
     res, tv = ctx.res, ctx.res.tem_valor
-    # O MQL entra entre o lead e o agendamento, que é onde ele de fato mora no
-    # funil. Só aparece quando o usuário informou o número na aba Funil: etapa
-    # inventada em gráfico de funil é pior que etapa ausente, porque a queda
-    # entre duas barras passa a medir uma coisa que ninguém contou.
-    etapas = ["Impressões", "Cliques no link", "Leads / conversas (Meta)"]
-    quantidades = [ctx.imp, ctx.clq, ctx.leads]
-    mql_informado = float(res.funil_informado.get("mql") or 0)
-    if mql_informado > 0:
-        etapas.append("MQL (qualificados pelo marketing)")
-        quantidades.append(mql_informado)
-    etapas += [
+    # Este funil é só do tráfego pago, do anúncio ao cliente: cada etapa é um
+    # recorte do anterior, e por isso as barras só podem cair.
+    #
+    # O MQL informado ficou aqui dentro por um tempo, entre o lead da Meta e o
+    # agendamento, e foi um erro: o MQL é de TODAS as origens, e a Meta reportou
+    # 81 leads num mês de 168 MQL. A barra do meio subia 207%, e num gráfico de
+    # funil uma barra que cresce não é um dado estranho, é uma afirmação falsa.
+    # O topo informado virou o funil separado abaixo, onde ele é comparável.
+    etapas = [
+        "Impressões", "Cliques no link", "Leads / conversas (Meta)",
         "Reuniões agendadas (tráfego pago)", "Reuniões realizadas (tráfego pago)",
         "Clientes fechados (tráfego pago)",
     ]
-    quantidades += [
+    quantidades = [
+        ctx.imp, ctx.clq, ctx.leads,
         ctx.pago["Reuniões agendadas"], ctx.pago["Reuniões realizadas"], ctx.pago["Fechados"],
     ]
     funil = pd.DataFrame({"Etapa": etapas, "Quantidade": quantidades})
@@ -796,6 +844,7 @@ def _cruzamento(ctx: _Contexto) -> None:
     funil["Conversão desde impressões (%)"] = div(funil["Quantidade"], ctx.imp)
     funil["Custo por etapa (R$)"] = div(ctx.inv, funil["Quantidade"])
     res.tabelas["funil"] = funil
+    _funil_do_topo(ctx)
 
     # Resultado por campanha: só é possível se a planilha de reuniões tiver "Campanha"
     if ctx.rp["campanha"].notna().any():

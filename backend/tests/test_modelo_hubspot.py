@@ -33,9 +33,35 @@ def planilha(tmp_path_factory):
     return arq
 
 
-def test_a_planilha_tem_as_tres_abas(planilha):
+def test_a_planilha_tem_as_quatro_abas(planilha):
     wb = openpyxl.load_workbook(planilha)
-    assert wb.sheetnames == [ABA, "Metas", "Como exportar"]
+    assert wb.sheetnames == [ABA, "Metas", "Funil", "Como exportar"]
+
+
+def test_o_gabarito_do_hubspot_tambem_tem_a_aba_funil(planilha):
+    """Sem ela, quem usa CRM nunca teria leads nem MQL.
+
+    O export do HubSpot traz uma linha por negócio, isto é, só quem chegou a
+    agendar. Os dois números do topo do funil são exatamente o que o export não
+    sabe dar, e por isso a aba tem de viajar com o gabarito.
+    """
+    from app.core.leitura import ler_funil_da_planilha
+    from app.core.modelo import CAMPOS_FUNIL
+
+    lidos = ler_funil_da_planilha([planilha])
+    assert lidos == pytest.approx({chave: exemplo for chave, _r, _f, _e, exemplo in CAMPOS_FUNIL})
+
+
+def test_o_passo_a_passo_explica_como_informar_leads_e_mql(planilha):
+    """A instrução tem de dizer para subir UM arquivo, não dois.
+
+    Subir o gabarito ao lado do export faria os exemplos do gabarito entrarem
+    na conta como negócios de verdade.
+    """
+    ws = openpyxl.load_workbook(planilha)["Como exportar"]
+    texto = " ".join(str(c.value) for linha in ws.iter_rows() for c in linha if c.value)
+    assert "Funil" in texto and "MQL" in texto
+    assert "ESTE arquivo" in texto
 
 
 def test_o_cabecalho_e_a_propriedade_do_hubspot(planilha):

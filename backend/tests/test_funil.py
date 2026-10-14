@@ -148,24 +148,64 @@ def test_os_agendados_sao_nomeados_como_leads_qualificados(completo):
 # --------------------------------------------------------------------- #
 # O gráfico de funil
 # --------------------------------------------------------------------- #
-def test_o_mql_entra_no_funil_entre_o_lead_e_o_agendamento(completo):
-    etapas = [linha["Etapa"] for linha in completo.tabelas["funil"].to_dict("records")]
-    assert any("MQL" in e for e in etapas)
+def _etapas(res, tabela: str) -> list[str]:
+    return [linha["Etapa"] for linha in res.tabelas[tabela].to_dict("records")]
+
+
+def test_o_mql_entra_no_funil_do_topo_entre_o_lead_e_o_agendamento(completo):
+    etapas = _etapas(completo, "funil_topo")
     i_mql = next(i for i, e in enumerate(etapas) if "MQL" in e)
     i_lead = next(i for i, e in enumerate(etapas) if "Leads" in e)
     i_ag = next(i for i, e in enumerate(etapas) if "agendadas" in e)
     assert i_lead < i_mql < i_ag
 
 
-def test_sem_mql_o_funil_nao_ganha_etapa_inventada(tmp_path):
+def test_o_mql_nao_entra_no_funil_do_trafego_pago(completo):
+    """Os dois funis medem universos diferentes, e misturá-los produz uma barra
+    que cresce.
+
+    O MQL é de todas as origens; os leads do funil pago são os que a Meta
+    reportou. Num mês de 81 leads da Meta e 168 MQL, a etapa do meio subia
+    207%. Num gráfico de funil, uma barra que cresce não é um dado estranho: é
+    uma afirmação falsa, porque toda etapa ali é um recorte da anterior.
+    """
+    assert not any("MQL" in e for e in _etapas(completo, "funil"))
+
+
+@pytest.mark.parametrize("tabela", ["funil", "funil_topo"])
+def test_nenhum_funil_tem_barra_que_cresce(completo, tabela: str):
+    """A regra que o MQL quebrou, agora medida nos dois funis."""
+    linhas = completo.tabelas[tabela].to_dict("records")
+    for anterior, atual in zip(linhas, linhas[1:]):
+        assert atual["Quantidade"] <= anterior["Quantidade"], (
+            f"{tabela}: '{atual['Etapa']}' ({atual['Quantidade']}) é maior que "
+            f"'{anterior['Etapa']}' ({anterior['Quantidade']})"
+        )
+
+
+def test_sem_mql_o_funil_do_topo_comeca_nos_leads(tmp_path):
     """Etapa inventada é pior que etapa ausente.
 
     A queda entre duas barras de um funil é lida como perda. Pôr ali uma etapa
     que ninguém contou faz o gráfico afirmar uma perda que não existe.
     """
     res = analisar([META], [_planilha(tmp_path, leads=200)])
-    etapas = [linha["Etapa"] for linha in res.tabelas["funil"].to_dict("records")]
+    etapas = _etapas(res, "funil_topo")
     assert not any("MQL" in e for e in etapas)
+    assert etapas[0].startswith("Leads recebidos")
+
+
+def test_sem_a_aba_nao_existe_funil_do_topo(tmp_path):
+    """Sem nenhum dos dois números não há o que desenhar."""
+    res = analisar([META], [_planilha(tmp_path)])
+    assert "funil_topo" not in res.tabelas
+
+
+def test_mql_maior_que_os_leads_e_apontado_como_erro_de_preenchimento(tmp_path):
+    """O MQL é um recorte dos leads: maior que eles é lapso, não mês histórico."""
+    res = analisar([META], [_planilha(tmp_path, leads=50, mql=200)])
+    texto = " ".join(res.diagnostico["Diagnóstico"])
+    assert "não pode ser maior" in texto
 
 
 # --------------------------------------------------------------------- #
@@ -205,3 +245,45 @@ def test_a_analise_de_um_csv_continua_igual(tmp_path):
     res = analisar([META], [reunioes])
     assert "leadsinf" not in res.kpis
     assert int(res.kpi("fec")) == 9, "o número cravado da planilha de exemplo"
+
+
+# --------------------------------------------------------------------- #
+# Onde mais os números aparecem
+# --------------------------------------------------------------------- #
+def test_o_relatorio_de_whatsapp_usa_o_lead_informado_e_mostra_o_mql(completo):
+    """Dois "leads" com valores diferentes na mesma mensagem não se explicam.
+
+    Com a aba Funil preenchida, o lead que vale no WhatsApp é o informado: ele
+    conta todas as origens e é o que o dono do negócio chama de "os leads do
+    mês". O da Meta continua no painel e na planilha.
+    """
+    from app.core.relatorio_zap import gerar_texto
+
+    texto = gerar_texto(completo.to_payload(), "Cliente Exemplo", "2026-09")
+    assert "Leads recebidos" in texto and "Leads gerados" not in texto
+    assert "Leads qualificados (MQL)" in texto
+    assert "Taxa de agendamento" in texto
+
+
+def test_sem_a_aba_o_relatorio_volta_a_usar_o_lead_da_meta(tmp_path):
+    res = analisar([META], [_planilha(tmp_path)])
+    from app.core.relatorio_zap import gerar_texto
+
+    texto = gerar_texto(res.to_payload(), "Cliente Exemplo", "2026-09")
+    assert "Leads gerados" in texto and "Leads recebidos" not in texto
+    assert "MQL" not in texto
+
+
+def test_a_planilha_entregue_ganha_a_aba_do_funil_completo(completo):
+    """O relatório que o cliente recebe tem de carregar os números novos."""
+    import io
+
+    import openpyxl as _opx
+
+    from app.core.excel import gerar_excel
+
+    wb = _opx.load_workbook(io.BytesIO(gerar_excel(completo)))
+    assert "Funil do Lead ao Cliente" in wb.sheetnames
+    ws = wb["Funil do Lead ao Cliente"]
+    texto = " ".join(str(c.value) for linha in ws.iter_rows() for c in linha if c.value)
+    assert "MQL" in texto and "Leads recebidos" in texto

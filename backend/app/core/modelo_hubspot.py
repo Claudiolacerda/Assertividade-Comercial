@@ -39,6 +39,7 @@ from .modelo import (
     FILL_CAB,
     FILL_OBR,
     FILL_ZEBRA,
+    _aba_funil,
     _aba_metas,
 )
 
@@ -99,6 +100,10 @@ PASSOS = [
     "são obrigatórias; cada uma das outras acende um indicador.",
     "Escolha o formato CSV ou XLSX e confirme. O HubSpot manda o arquivo por e-mail.",
     "Suba esse arquivo no Neriah junto com o relatório de campanhas da Meta.",
+    "Para medir leads e MQL: o export do HubSpot só traz quem chegou a agendar, então ele "
+    "não sabe quantos leads entraram. Cole as linhas exportadas na aba Negócios deste "
+    "arquivo, por cima dos exemplos, preencha a aba Funil e suba ESTE arquivo em vez do "
+    "export. Um arquivo só, para nenhum negócio ser contado duas vezes.",
 ]
 
 
@@ -235,11 +240,18 @@ def _aba_como_exportar(wb: Workbook) -> None:
 
 
 def gerar_planilha_hubspot(destino: str | Path | None = None) -> bytes:
-    """Monta o gabarito de exportação do HubSpot. Mesma aba de Metas do modelo padrão."""
+    """Monta o gabarito de exportação do HubSpot.
+
+    Reaproveita as abas Metas e Funil do modelo padrão, e a de Funil é
+    indispensável aqui: o export do HubSpot traz uma linha por negócio, isto é,
+    só quem chegou a agendar. Sem esta aba, quem usa CRM nunca teria leads nem
+    MQL, que é justamente a métrica que o export não sabe dar.
+    """
     wb = Workbook()
     wb.remove(wb.active)
     _aba_negocios(wb)
     _aba_metas(wb)
+    _aba_funil(wb)
     _aba_como_exportar(wb)
 
     dados = BytesIO()

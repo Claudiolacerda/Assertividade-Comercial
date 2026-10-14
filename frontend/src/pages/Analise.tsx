@@ -7,6 +7,7 @@ import { api } from "../api";
 import {
   GraficoCampanhas,
   GraficoFunil,
+  GraficoFunilTopo,
   GraficoResponsavel,
   GraficoSemanas,
   GraficoStatus,
@@ -79,6 +80,13 @@ export default function Analise() {
   const { kpis, tabelas } = r;
   const tabela = (nome) => tabelas?.[nome] || [];
 
+  /* Os indicadores de topo nascem da aba Funil da planilha, e cada um nasce
+     sozinho: quem informa só o MQL recebe só MQL. A primeira versao daqui
+     condicionava a seção inteira a `kpis.leadsinf`, então uma planilha com MQL
+     e sem leads escondia o MQL que o motor tinha calculado. */
+  const TOPO = ["leadsinf", "mql", "l2mql", "txag", "mql2ag"];
+  const temTopo = TOPO.some((c) => kpis[c]);
+
   async function baixar() {
     setBaixando(true);
     try {
@@ -148,6 +156,12 @@ export default function Analise() {
           <Destaque itens={r.diagnostico} />
           <div className="grade tiles">
             <Tile kpi={kpis.assert} destaque />
+            {/* Topo do funil no Resumo tambem: eles respondem "quantos leads e
+                quantos MQL" sem obrigar a abrir a aba de trafego. Ausentes,
+                `Tile` devolve null e a grade se fecha. */}
+            <Tile kpi={kpis.leadsinf} />
+            <Tile kpi={kpis.mql} />
+            <Tile kpi={kpis.txag} />
             <Tile kpi={kpis.fag} />
             <Tile kpi={kpis.cac} />
             <Tile kpi={kpis.cpl} />
@@ -157,6 +171,9 @@ export default function Analise() {
           </div>
           <Diagnostico itens={r.diagnostico} />
           <NotaPlanilha cobertura={r.cobertura} />
+          {/* O funil completo vem antes do funil do anúncio: ele começa onde
+              a operação começa, no lead. Ausente, o componente devolve null. */}
+          <GraficoFunilTopo funil={tabela("funil_topo")} />
           <div className="grade dois">
             <GraficoFunil funil={tabela("funil")} />
             <GraficoStatus porStatus={tabela("por_status")} />
@@ -181,7 +198,7 @@ export default function Analise() {
           {/* O topo do funil só aparece quando a aba Funil da planilha foi
               preenchida: sem os números, `Tile` devolve null e a seção inteira
               some, em vez de mostrar zeros que ninguém contou. */}
-          {kpis.leadsinf && (
+          {temTopo && (
             <>
               <h2 className="titulo-secao">Topo do funil</h2>
               <p className="sub-secao">
@@ -197,6 +214,26 @@ export default function Analise() {
                 <Tile kpi={kpis.ag} />
               </div>
             </>
+          )}
+          {/* Sem a aba Funil, antes nao aparecia nada: nem o numero nem o
+              motivo. Quem procurava o MQL na tela nao tinha como descobrir que
+              ele vem de um campo que a planilha de reunioes nao tem. */}
+          {!temTopo && (
+            <div className="aviso">
+              <p>
+                <strong>Leads, MQL e taxa de agendamento não entraram nesta análise.</strong> A
+                planilha de reuniões só tem linha para quem chegou a marcar reunião, então ela não
+                sabe quantos leads entraram no mês nem quantos o marketing qualificou. Esses dois
+                números são informados por você, na aba <strong>Funil</strong> da planilha.
+              </p>
+              <p className="alternativa">
+                <button type="button" className="link-modelo" onClick={() => api.baixarModelo()}>
+                  Baixe a planilha-modelo
+                </button>{" "}
+                (ou o gabarito do HubSpot), preencha a aba Funil e suba de novo: a taxa de
+                agendamento, a passagem de lead para MQL e a de MQL para reunião aparecem aqui.
+              </p>
+            </div>
           )}
           <h2 className="titulo-secao">Mídia</h2>
           <div className="grade tiles">

@@ -90,9 +90,18 @@ def gerar_texto(
     partes.append("")
 
     # ---- os números que o dono do negócio cobra
+    # Quando a aba Funil foi preenchida, o lead que vale é o informado: ele conta
+    # todas as origens, e é o número que o dono do negócio reconhece como "os
+    # leads do mês". O da Meta continua no painel e na planilha. Os dois juntos
+    # aqui seriam duas linhas chamadas "leads" com valores diferentes.
     linhas = [
         _linha_kpi(resultado, "inv", "Investido em anúncio"),
-        _linha_kpi(resultado, "leads", "Leads gerados"),
+        (
+            _linha_kpi(resultado, "leadsinf", "Leads recebidos")
+            if kpis.get("leadsinf")
+            else _linha_kpi(resultado, "leads", "Leads gerados")
+        ),
+        _linha_kpi(resultado, "mql", "Leads qualificados (MQL)"),
         _linha_kpi(resultado, "real", "Reuniões realizadas"),
         _linha_kpi(resultado, "fec", "Clientes fechados"),
     ]
@@ -106,6 +115,8 @@ def gerar_texto(
         _linha_kpi(resultado, "assert", "Assertividade (fechados ÷ reuniões)"),
         _linha_kpi(resultado, "cac", "Custo por cliente (CAC)"),
     ]
+    if kpis.get("txag"):
+        destaque.append(_linha_kpi(resultado, "txag", "Taxa de agendamento (lead → reunião)"))
     if kpis.get("roas"):
         destaque.append(_linha_kpi(resultado, "roas", "ROAS (retorno do anúncio)"))
     if kpis.get("rec"):

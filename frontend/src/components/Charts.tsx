@@ -242,6 +242,66 @@ export function GraficoFunil({ funil }) {
 }
 
 /* ---------------------------------------------------------------- */
+/* Funil de todas as origens, a partir dos números informados.      */
+/* Separado do funil do anúncio porque mede outro universo: lá são  */
+/* os leads que a Meta reportou, aqui é tudo que entrou. Juntá-los  */
+/* fazia a barra do MQL crescer, o que num funil é impossível.      */
+export function GraficoFunilTopo({ funil }) {
+  if (!funil?.length) return null;
+  const dados = funil.map((f) => ({
+    etapa: f.Etapa.replace(" (todas as origens)", ""),
+    quantidade: f.Quantidade,
+    conversao: f["Conversão da etapa anterior (%)"],
+    desde: f["Conversão desde o primeiro contato (%)"],
+  }));
+  return (
+    <Quadro
+      titulo="Funil completo, do lead ao cliente"
+      subtitulo="Começa nos números que você informou na aba Funil da planilha. Todas as origens, não só o tráfego pago."
+      altura={250}
+      tabela={{
+        colunas: [
+          { chave: "etapa", titulo: "Etapa" },
+          { chave: "quantidade", titulo: "Quantidade", num: true, formato: "int" },
+          { chave: "conversao", titulo: "Conversão da etapa anterior", num: true, formato: "pct" },
+          { chave: "desde", titulo: "Desde o primeiro contato", num: true, formato: "pct" },
+        ],
+        linhas: dados,
+      }}
+    >
+      <BarChart data={dados} layout="vertical" margin={{ ...MARGEM, left: 8, right: 56 }} barSize={18}>
+        <CartesianGrid horizontal={false} stroke="var(--grid)" />
+        <XAxis type="number" tick={EIXO} axisLine={{ stroke: "var(--axis)" }} tickLine={false} />
+        <YAxis
+          type="category"
+          dataKey="etapa"
+          width={168}
+          tick={EIXO}
+          axisLine={false}
+          tickLine={false}
+        />
+        <Tooltip
+          content={<Dica formatos={{ quantidade: "int" }} />}
+          cursor={{ fill: "var(--surface-2)" }}
+        />
+        <Bar
+          dataKey="quantidade"
+          name="Quantidade"
+          fill={S1}
+          radius={[0, 4, 4, 0]}
+          label={{
+            position: "right",
+            fill: "var(--ink-2)",
+            fontSize: 11.5,
+            formatter: (v) => inteiro(v),
+          }}
+        />
+      </BarChart>
+    </Quadro>
+  );
+}
+
+/* ---------------------------------------------------------------- */
 /* Status das reuniões: categorias nominais, uma cor só.            */
 export function GraficoStatus({ porStatus }) {
   const dados = porStatus.map((s) => ({

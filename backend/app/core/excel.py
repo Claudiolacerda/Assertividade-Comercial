@@ -274,6 +274,26 @@ def gerar_excel(res: Resultado, destino: str | Path | None = None) -> bytes:
         for letra, w in zip("ABCDE", [40, 16, 20, 20, 18]):
             ws.column_dimensions[letra].width = w
 
+    # ---------------- 3b. Funil do topo (informado) ----------------
+    # Aba separada, e não linhas no funil acima, pelo mesmo motivo que na tela:
+    # ali tudo é tráfego pago, aqui é todas as origens. Juntar os dois fazia a
+    # etapa do MQL ficar maior que a anterior.
+    topo = t.get("funil_topo", pd.DataFrame())
+    if not topo.empty:
+        ws = wb.create_sheet("Funil do Lead ao Cliente")
+        lin = _cabecalho(ws, "Funil completo: do lead ao cliente (todas as origens)", nome_mes)
+        ws.cell(
+            lin, 1,
+            "Começa nos números informados na aba Funil da planilha: a de reuniões só lista quem "
+            "chegou a agendar.",
+        ).font = F_SUB
+        lin += 2
+        # Sem `taxas`: as duas colunas de conversão já vêm calculadas, e o
+        # formato de porcentagem sai do próprio nome da coluna.
+        _escrever_tabela(ws, topo, lin, total=False)
+        for letra, w in zip("ABCD", [40, 16, 26, 30]):
+            ws.column_dimensions[letra].width = w
+
     # ---------------- 4. Meta ----------------
     ws = wb.create_sheet("Meta - Campanhas")
     lin = _cabecalho(ws, "Meta Ads — desempenho por campanha", nome_mes)
