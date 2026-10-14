@@ -53,3 +53,35 @@ def test_leads_e_mql_aparecem_no_resumo():
     """Foram pedidos como indicadores de primeira linha, não como detalhe de tráfego."""
     resumo = ANALISE.split('aba === "resumo"')[1].split('aba === "jet"')[0]
     assert "kpis.leadsinf" in resumo and "kpis.mql" in resumo
+
+
+# --------------------------------------------------------------------- #
+# Informar os números sem refazer o upload
+# --------------------------------------------------------------------- #
+INFORMAR = (Path(__file__).resolve().parents[2] / "frontend/src/components/InformarFunil.tsx").read_text(
+    encoding="utf-8"
+)
+
+
+def test_a_tela_oferece_informar_os_numeros_quando_eles_faltam():
+    """Baixar a planilha e subir de novo era a única saída, e não é saída.
+
+    O resultado de uma análise fica gravado como JSON, então mandar o usuário
+    preencher a planilha não resolvia o mês que ele já tinha analisado.
+    """
+    assert "InformarFunil" in ANALISE
+    assert ANALISE.count("<InformarFunil") == 2, (
+        "faltou um dos dois lugares: no aviso de ausência e no ajuste dos números já informados"
+    )
+
+
+def test_o_formulario_chama_o_reprocessamento_e_vai_para_a_versao_nova():
+    assert "api.reprocessar" in INFORMAR
+    assert "navegar(`/analises/${nova.id}`)" in INFORMAR, (
+        "ficar na análise antiga depois de recalcular faz parecer que nada mudou"
+    )
+
+
+def test_o_formulario_aceita_recalcular_sem_informar_nada():
+    """É o caminho de pôr uma análise antiga no motor de hoje."""
+    assert "Informe pelo menos um dos dois" not in INFORMAR

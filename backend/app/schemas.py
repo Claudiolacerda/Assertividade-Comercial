@@ -145,6 +145,26 @@ class AnaliseDetalhe(AnaliseResumo):
     resultado: dict[str, Any] | None = None
 
 
+class FunilIn(BaseModel):
+    """Os números do topo do funil, digitados na tela.
+
+    Existem porque a planilha de reuniões não tem como dar nenhum dos dois: ela
+    só lista quem chegou a agendar. Antes, a única porta era a aba Funil da
+    planilha, o que obrigava a refazer o upload para medir o topo de um mês já
+    analisado.
+
+    Zero vale como "não informado", igual à célula em branco: ninguém teve um
+    mês de zero leads com reuniões marcadas, então o zero ali é lapso de
+    preenchimento, não medição.
+    """
+
+    leads_recebidos: float | None = Field(default=None, ge=0, le=10_000_000)
+    mql: float | None = Field(default=None, ge=0, le=10_000_000)
+
+    def informados(self) -> dict[str, float]:
+        return {k: v for k, v in self.model_dump().items() if v}
+
+
 class ConfigAnaliseIn(BaseModel):
     """Configuração editável pelo cliente no painel."""
 

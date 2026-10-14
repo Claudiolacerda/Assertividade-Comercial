@@ -156,6 +156,16 @@ export const api = {
 
   evolucao: () => requisitar<Record<string, unknown>[]>("/analises/evolucao"),
 
+  /** Roda a análise de novo sobre os mesmos arquivos e devolve a versão nova.
+   *  É o caminho para informar leads e MQL de um mês já analisado: o resultado
+   *  fica gravado como JSON, então uma análise antiga continua mostrando o que
+   *  o código daquele dia calculou até ser reprocessada. */
+  reprocessar: (id: number | string, funil?: { leads_recebidos?: number; mql?: number }) =>
+    requisitar<Analise>(`/analises/${id}/reprocessar`, {
+      method: "POST",
+      body: JSON.stringify(funil || {}),
+    }),
+
   excluirAnalise: (id: number) => requisitar(`/analises/${id}`, { method: "DELETE" }),
 
   configuracao: () => requisitar<Record<string, unknown>>("/configuracao"),

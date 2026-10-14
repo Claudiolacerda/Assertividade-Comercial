@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from ..core.pipeline import ErroDeAnalise
 from ..db import get_db, sessao_tenant
 from ..deps import Atual, admin_atual, usuario_atual
 from ..models import Analise, Arquivo, Empresa
-from ..schemas import AnaliseDetalhe, AnaliseResumo, ConfigAnaliseIn
+from ..schemas import AnaliseDetalhe, AnaliseResumo, ConfigAnaliseIn, FunilIn
 
 router = APIRouter(prefix="/api/analises", tags=["análises"])
 
@@ -183,6 +184,114 @@ def criar_analise(
         ) from e
 
 
+@router.post("/{analise_id}/reprocessar", response_model=AnaliseDetalhe, status_code=status.HTTP_201_CREATED)
+def reprocessar(
+    analise_id: int,
+    funil: FunilIn | None = None,
+    atual: Atual = Depends(usuario_atual),
+):
+    """Roda a análise de novo sobre os MESMOS arquivos, e guarda como nova versão.
+
+    Serve a dois casos que antes exigiam refazer o upload:
+
+    1. Informar leads e MQL de um mês já analisado. A planilha de reuniões não
+       tem como dar esses números, e a aba Funil era a única porta.
+    2. Aproveitar correções do motor numa análise antiga. O resultado é gravado
+       como JSON no momento da análise, então uma análise de ontem continua
+       mostrando o que o código de ontem calculou, para sempre.
+
+    Guarda como versão nova, nunca por cima: a análise que o cliente já recebeu
+    continua existindo, e dá para comparar as duas.
+    """
+    with sessao_tenant(atual.schema) as st:
+        analise = st.get(Analise, analise_id)
+        if not analise:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Análise não encontrada.")
+        arquivos = list(
+            st.scalars(select(Arquivo).where(Arquivo.analise_id == analise_id).order_by(Arquivo.id))
+        )
+        mes = analise.mes_referencia
+        config_anterior = analise.config_usada
+        # Herda o que já estava informado e deixa o pedido sobrescrever só o que
+        # vier preenchido: quem corrige o MQL não precisa redigitar os leads.
+        informado = dict((analise.resultado or {}).get("funil_informado") or {})
+        informado.update((funil or FunilIn()).informados())
+
+    if not arquivos:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Esta análise não tem os arquivos originais guardados. Suba as planilhas de novo.",
+        )
+    faltando = [a.nome_original for a in arquivos if not Path(a.caminho).exists()]
+    if faltando:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Os arquivos originais não estão mais no servidor ("
+                + ", ".join(faltando[:3])
+                + "). Suba as planilhas de novo."
+            ),
+        )
+
+    cfg = ConfigAnalise.from_dict(config_anterior or atual.empresa.config_analise)
+    cfg = replace(cfg, mes_referencia=mes)
+    try:
+        res = analisar(
+            [a.caminho for a in arquivos if a.tipo == "meta"],
+            [a.caminho for a in arquivos if a.tipo == "reunioes"],
+            cfg,
+            funil=informado,
+        )
+    except ErroDeAnalise as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+    res.jev = avaliar_jev(res, settings.anthropic_api_key or None, settings.jev_ativo)
+
+    with sessao_tenant(atual.schema) as st:
+        versao = (
+            st.scalar(
+                select(Analise.versao)
+                .where(Analise.mes_referencia == res.mes_referencia)
+                .order_by(Analise.versao.desc())
+                .limit(1)
+            )
+            or 0
+        ) + 1
+        nova = Analise(
+            mes_referencia=res.mes_referencia,
+            versao=versao,
+            status="concluida",
+            resultado=res.to_payload(),
+            kpis_resumo=_resumir(res),
+            config_usada=cfg.to_dict(),
+            criada_por=atual.usuario.id,
+            concluida_em=datetime.now(timezone.utc),
+        )
+        st.add(nova)
+        st.flush()
+
+        destino = _pasta(atual, res.mes_referencia)
+        caminho_excel = destino / f"Assertividade_{res.mes_referencia}_v{versao}.xlsx"
+        gerar_excel(res, caminho_excel)
+        nova.caminho_excel = str(caminho_excel)
+
+        # Os arquivos ficam apontados pelas duas análises: são os mesmos bytes,
+        # e apagar a versão nova não pode levar o original da antiga embora.
+        for a in arquivos:
+            st.add(
+                Arquivo(
+                    analise_id=nova.id,
+                    tipo=a.tipo,
+                    nome_original=a.nome_original,
+                    caminho=a.caminho,
+                    tamanho_bytes=a.tamanho_bytes,
+                    hash_md5=a.hash_md5,
+                    enviado_por=atual.usuario.id,
+                )
+            )
+        st.flush()
+        return AnaliseDetalhe.model_validate(nova)
+
+
 @router.get("", response_model=list[AnaliseResumo])
 def listar(atual: Atual = Depends(usuario_atual)):
     """Histórico da empresa, mais recente primeiro."""
@@ -255,8 +364,17 @@ def excluir(analise_id: int, atual: Atual = Depends(admin_atual)):
         analise = st.get(Analise, analise_id)
         if analise is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Análise não encontrada.")
+        # O mesmo arquivo pode estar apontado por mais de uma análise, desde que
+        # existe o reprocessamento: a versão nova aponta para os bytes da antiga.
+        # Apagar a versão nova não pode levar o original da outra embora.
         for arq in st.scalars(select(Arquivo).where(Arquivo.analise_id == analise.id)).all():
-            Path(arq.caminho).unlink(missing_ok=True)
+            usado_por_outra = st.scalar(
+                select(Arquivo.id)
+                .where(Arquivo.caminho == arq.caminho, Arquivo.analise_id != analise.id)
+                .limit(1)
+            )
+            if not usado_por_outra:
+                Path(arq.caminho).unlink(missing_ok=True)
         if analise.caminho_excel:
             Path(analise.caminho_excel).unlink(missing_ok=True)
         st.delete(analise)

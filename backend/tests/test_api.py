@@ -633,3 +633,125 @@ def test_relatorio_de_outra_organizacao_e_recusado(client, org):
     a, b = org("Agência Rho"), org("Agência Sigma")
     analise = subir(client, a).json()
     assert client.get(f"/api/analises/{analise['id']}/whatsapp", headers=cab(b)).status_code == 404
+
+
+# --------------------------------------------------------------------- #
+# Reprocessar: informar o topo do funil num mês já analisado
+# --------------------------------------------------------------------- #
+# O resultado de uma análise é gravado como JSON no momento em que roda, então
+# uma análise de ontem continua mostrando o que o código de ontem calculou, para
+# sempre. Era por isso que leads e MQL não apareciam nas análises já existentes
+# mesmo depois de o motor passar a calculá-los.
+def test_reprocessar_informa_leads_e_mql_numa_analise_existente(client, org):
+    dados = org("Reprocessa Ltda")
+    resp = subir(client, dados)
+    assert resp.status_code == 201, resp.text
+    antiga = resp.json()
+    assert "mql" not in antiga["resultado"]["kpis"], "o CSV de exemplo não tem aba Funil"
+
+    resp = client.post(
+        f"/api/analises/{antiga['id']}/reprocessar",
+        headers=cab(dados),
+        json={"leads_recebidos": 412, "mql": 168},
+    )
+    assert resp.status_code == 201, resp.text
+    nova = resp.json()
+    kpis = nova["resultado"]["kpis"]
+    assert int(kpis["leadsinf"]["valor"]) == 412
+    assert int(kpis["mql"]["valor"]) == 168
+    assert kpis["l2mql"]["valor"] == pytest.approx(168 / 412)
+    assert "funil_topo" in nova["resultado"]["tabelas"]
+
+
+def test_reprocessar_guarda_versao_nova_e_preserva_a_antiga(client, org):
+    """A análise que o cliente já recebeu não pode mudar embaixo dele."""
+    dados = org("Versiona Ltda")
+    antiga = subir(client, dados).json()
+    nova = client.post(
+        f"/api/analises/{antiga['id']}/reprocessar",
+        headers=cab(dados),
+        json={"leads_recebidos": 300},
+    ).json()
+
+    assert nova["id"] != antiga["id"]
+    assert nova["versao"] == antiga["versao"] + 1
+    assert nova["mes_referencia"] == antiga["mes_referencia"]
+    ainda_la = client.get(f"/api/analises/{antiga['id']}", headers=cab(dados)).json()
+    assert "leadsinf" not in ainda_la["resultado"]["kpis"]
+
+
+def test_reprocessar_herda_o_que_ja_estava_informado(client, org):
+    """Quem corrige só o MQL não precisa redigitar os leads."""
+    dados = org("Herda Ltda")
+    primeira = subir(client, dados).json()
+    com_leads = client.post(
+        f"/api/analises/{primeira['id']}/reprocessar",
+        headers=cab(dados),
+        json={"leads_recebidos": 412},
+    ).json()
+    so_mql = client.post(
+        f"/api/analises/{com_leads['id']}/reprocessar",
+        headers=cab(dados),
+        json={"mql": 168},
+    ).json()
+    kpis = so_mql["resultado"]["kpis"]
+    assert int(kpis["leadsinf"]["valor"]) == 412, "os leads da chamada anterior se perderam"
+    assert int(kpis["mql"]["valor"]) == 168
+
+
+def test_reprocessar_sem_numeros_apenas_reroda_a_analise(client, org):
+    """O outro uso: aproveitar correções do motor numa análise antiga."""
+    dados = org("Rerroda Ltda")
+    antiga = subir(client, dados).json()
+    resp = client.post(f"/api/analises/{antiga['id']}/reprocessar", headers=cab(dados), json={})
+    assert resp.status_code == 201, resp.text
+    nova = resp.json()
+    assert int(nova["resultado"]["kpis"]["fec"]["valor"]) == int(
+        antiga["resultado"]["kpis"]["fec"]["valor"]
+    )
+
+
+def test_zero_conta_como_nao_informado_no_reprocessamento(client, org):
+    """Igual à célula em branco: ninguém teve zero leads com reuniões marcadas."""
+    dados = org("Zero Ltda")
+    antiga = subir(client, dados).json()
+    nova = client.post(
+        f"/api/analises/{antiga['id']}/reprocessar",
+        headers=cab(dados),
+        json={"leads_recebidos": 0, "mql": 0},
+    ).json()
+    assert "leadsinf" not in nova["resultado"]["kpis"]
+
+
+def test_reprocessar_de_outra_organizacao_nao_alcanca(client, org):
+    """A fronteira que o resto deste arquivo defende, no endpoint novo."""
+    uma = org("Dona dos Dados")
+    outra = org("Curiosa Ltda")
+    analise = subir(client, uma).json()
+    resp = client.post(
+        f"/api/analises/{analise['id']}/reprocessar",
+        headers=cab(outra),
+        json={"leads_recebidos": 999},
+    )
+    assert resp.status_code == 404
+
+
+def test_apagar_a_versao_nova_nao_leva_os_arquivos_da_antiga(client, org):
+    """As duas versões apontam para os mesmos bytes no disco.
+
+    Antes do reprocessamento, cada análise tinha os seus arquivos e apagá-la
+    podia apagá-los sem pensar. Agora o arquivo só vai embora quando nenhuma
+    outra análise o aponta, senão apagar a versão nova cegava a antiga.
+    """
+    dados = org("Apaga Ltda")
+    antiga = subir(client, dados).json()
+    nova = client.post(
+        f"/api/analises/{antiga['id']}/reprocessar", headers=cab(dados), json={"mql": 100}
+    ).json()
+
+    assert client.delete(f"/api/analises/{nova['id']}", headers=cab(dados)).status_code == 204
+    # a antiga continua reprocessável, o que só é verdade se os arquivos existem
+    de_novo = client.post(
+        f"/api/analises/{antiga['id']}/reprocessar", headers=cab(dados), json={"mql": 100}
+    )
+    assert de_novo.status_code == 201, de_novo.text

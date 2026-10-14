@@ -12,6 +12,7 @@ import {
   GraficoSemanas,
   GraficoStatus,
 } from "../components/Charts";
+import InformarFunil from "../components/InformarFunil";
 import Jet from "../components/Jet";
 import NotaPlanilha from "../components/NotaPlanilha";
 import RelatorioZap from "../components/RelatorioZap";
@@ -213,6 +214,12 @@ export default function Analise() {
                 <Tile kpi={kpis.mql2ag} />
                 <Tile kpi={kpis.ag} />
               </div>
+              {/* Corrigir sem refazer o upload: um MQL digitado errado era, até
+                  aqui, motivo para subir as planilhas de novo. */}
+              <details className="ajustar-funil">
+                <summary>Corrigir os números informados</summary>
+                <InformarFunil analiseId={analise.id} informado={r.funil_informado} />
+              </details>
             </>
           )}
           {/* Sem a aba Funil, antes nao aparecia nada: nem o numero nem o
@@ -227,12 +234,14 @@ export default function Analise() {
                 números são informados por você, na aba <strong>Funil</strong> da planilha.
               </p>
               <p className="alternativa">
+                Informe aqui e eu recalculo esta mesma análise. Para os próximos meses, a aba Funil
+                da{" "}
                 <button type="button" className="link-modelo" onClick={() => api.baixarModelo()}>
-                  Baixe a planilha-modelo
+                  planilha-modelo
                 </button>{" "}
-                (ou o gabarito do HubSpot), preencha a aba Funil e suba de novo: a taxa de
-                agendamento, a passagem de lead para MQL e a de MQL para reunião aparecem aqui.
+                (ou do gabarito do HubSpot) já traz os dois campos.
               </p>
+              <InformarFunil analiseId={analise.id} informado={r.funil_informado} />
             </div>
           )}
           <h2 className="titulo-secao">Mídia</h2>

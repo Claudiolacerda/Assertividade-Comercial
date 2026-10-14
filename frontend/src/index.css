@@ -1992,6 +1992,26 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .link-modelo:hover:not(:disabled) { background: none; opacity: 0.8; }
 
+/* Informar leads e MQL na propria tela. Eles nao saem da planilha de reunioes,
+   que so lista quem chegou a agendar, e antes a unica porta era a aba Funil do
+   arquivo: um mes ja analisado exigia subir tudo de novo. */
+.informar-funil { margin-top: 12px; }
+.informar-funil .campos {
+  display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+}
+.informar-funil .campos > div { flex: 1 1 190px; min-width: 0; }
+.informar-funil input { width: 100%; font-variant-numeric: tabular-nums; }
+.informar-funil .campos > button { flex: none; }
+.dica-campo {
+  font-size: 12px; color: var(--ink-muted); margin: 5px 0 0; line-height: 1.35;
+}
+.erro-inline { color: var(--critico-texto); font-size: 13px; margin: 9px 0 0; }
+.ajustar-funil { margin-top: 14px; }
+.ajustar-funil > summary {
+  cursor: pointer; font-size: 13px; color: var(--ink-2); width: fit-content;
+}
+.ajustar-funil > summary:hover { color: var(--verde); }
+
 /* Divisão dentro de uma aba. A aba Tráfego pago passou a ter duas leituras
    diferentes — o topo do funil, que vem da mão do usuário, e a mídia, que vem
    da Meta — e sem um rótulo entre elas os doze cartões viram uma parede. */

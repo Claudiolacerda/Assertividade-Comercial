@@ -121,7 +121,15 @@ def analisar(
     arquivos_meta: list[str | Path],
     arquivos_reunioes: list[str | Path],
     cfg: ConfigAnalise | None = None,
+    funil: dict[str, float] | None = None,
 ) -> Resultado:
+    """Roda a análise do mês.
+
+    `funil` são os números do topo (leads recebidos, MQL) informados por fora da
+    planilha, pela tela. Eles vencem a aba Funil: quem digitou agora está
+    corrigindo o que a planilha dizia, e é o caminho para pôr o topo do funil
+    numa análise que já existe, sem subir arquivo de novo.
+    """
     cfg = cfg or ConfigAnalise()
     avisos: list[str] = []
 
@@ -135,6 +143,15 @@ def analisar(
     # O topo do funil: dois números que a planilha de reuniões não tem como dar,
     # porque ela só lista quem chegou a agendar.
     funil_informado = ler_funil_da_planilha(arquivos_reunioes)
+    for chave, valor in (funil or {}).items():
+        try:
+            numero = float(valor)
+        except (TypeError, ValueError):
+            continue
+        # Zero e negativo contam como "não informado", igual à célula em branco:
+        # ninguém teve um mês de zero leads com reuniões marcadas.
+        if numero > 0:
+            funil_informado[chave] = numero
 
     m_bruto, r_bruto, em_blocos, log_meta, log_reun = _ler(arquivos_meta, arquivos_reunioes, cfg, avisos)
     meta = _tratar_meta(m_bruto, cfg, avisos)
