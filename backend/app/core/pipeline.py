@@ -63,6 +63,11 @@ class Resultado:
     # Leads e MQL que o usuário informou na aba Funil. Vazio quando a planilha
     # não traz a aba, e aí as taxas de topo não são calculadas.
     funil_informado: dict[str, float] = field(default_factory=dict)
+    # Qual universo as razões "leads por resultado" usaram: "informada" (tudo
+    # que entrou, contra todas as reuniões e vendas) ou "paga" (leads da Meta,
+    # contra o que veio do tráfego pago). A tela precisa saber: nos dois casos
+    # o número é correto, mas só na base paga ele multiplica pelo CPL.
+    base_esforco: str = ""
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -81,6 +86,7 @@ class Resultado:
             "jet": self.jet,
             "jev": self.jev,
             "funil_informado": self.funil_informado,
+            "base_esforco": self.base_esforco,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),
@@ -1034,6 +1040,60 @@ def _kpis(ctx: _Contexto) -> None:
                 "Lead → MQL", "={mql}/{leadsinf}", "pct",
                 "Quanto do que entra tem perfil. Mede a mira do anúncio", None,
             )
+    # ---- Quantos leads custa cada resultado ----
+    # A pergunta que o dono do negócio faz de verdade não é "qual a taxa de
+    # conversão": é "de quantos leads eu preciso para marcar uma reunião, e
+    # para fechar um cliente". É a mesma medida de cabeça para baixo, e a
+    # inversa é a que se usa para planejar o mês: multiplicada pelo CPL, ela
+    # diz quanto custa a próxima venda antes de ela acontecer.
+    #
+    # A base tem de ter numerador e denominador no mesmo universo. Com o total
+    # de leads informado, é tudo que entrou contra todas as reuniões e vendas;
+    # sem ele, são os leads da Meta contra o que veio do tráfego pago. Misturar
+    # os dois (leads só do anúncio, vendas de qualquer origem) daria um número
+    # otimista e falso.
+    if leads_inf > 0:
+        base, chave_ag, chave_fec = "leadsinf", "ag", "fec"
+        de_onde = "sobre os leads que você informou, contra todas as reuniões e vendas do mês"
+    else:
+        base, chave_ag, chave_fec = "leads", "agp", "fecp"
+        de_onde = "sobre os leads da Meta, contra o que veio do tráfego pago"
+    # Os denominadores são contagens cravadas em K, não fórmulas: dá para olhar
+    # o valor antes de montar o indicador, e é o que impede "0 leads por
+    # reunião" num mês sem reunião marcada. Zero ali não é um número bom, é a
+    # ausência de denominador.
+    quantos = lambda chave: float(K[chave][1]) if not isinstance(K[chave][1], str) else 0.0  # noqa: E731
+    meta_ag = metas["lead_para_reuniao"]
+    if quantos(chave_ag) > 0:
+        K["lpag"] = (
+            "Leads para 1 reunião marcada", f"={{{base}}}/{{{chave_ag}}}", "num",
+            f"Quantos leads entram, em média, para uma reunião ser marcada ({de_onde})",
+            # A meta de agendamento ao contrário: 20% de agendamento é uma
+            # reunião a cada 5 leads, e aqui menos é melhor.
+            ("max", 1 / meta_ag) if meta_ag > 0 else None,
+        )
+    if quantos(chave_fec) > 0:
+        K["lpfec"] = (
+            "Leads para 1 cliente fechado", f"={{{base}}}/{{{chave_fec}}}", "num",
+            f"Quantos leads entram, em média, para um contrato ser assinado ({de_onde})",
+            None,
+        )
+        K["agfec"] = (
+            "Reuniões para 1 cliente fechado", f"={{{chave_ag}}}/{{{chave_fec}}}", "num",
+            "Quantas reuniões precisam ser marcadas, em média, para uma virar venda",
+            None,
+        )
+    # O custo de cada um não entra aqui: para a base paga ele JÁ existe, e com
+    # outro nome (CAC é investimento ÷ fechados pagos, que é exatamente o CPL
+    # vezes os leads por venda). Para a base informada ele não existiria: o CPL
+    # é do tráfego pago e os leads informados são de todas as origens, então o
+    # produto dos dois somaria investimento de anúncio a leads de indicação.
+    chaves_esforco = [c for c in ("lpag", "agfec", "lpfec") if c in K]
+    # Fica vazio quando nenhuma razão existe, para a tela não anunciar uma base
+    # de cálculo que não foi usada para nada.
+    if chaves_esforco:
+        res.base_esforco = "informada" if leads_inf > 0 else "paga"
+
     chaves_topo = [c for c in ("leadsinf", "mql", "l2mql", "txag", "mql2ag") if c in K]
     blocos = [
         *([("TOPO DO FUNIL", chaves_topo)] if chaves_topo else []),
@@ -1047,6 +1107,7 @@ def _kpis(ctx: _Contexto) -> None:
             "RESULTADO DO TRÁFEGO PAGO (META × REUNIÕES)",
             ["agp", "realp", "fecp", "recp", "l2r", "l2c", "cpr", "cac", "roas", "roi"],
         ),
+        *([("QUANTOS LEADS CUSTA CADA RESULTADO", chaves_esforco)] if chaves_esforco else []),
     ]
     if not res.tem_valor:  # sem coluna de valor: tira receita/ROAS em vez de mostrar zero
         fora = {"rec", "tm", "vneg", "fcst", "recp", "roas", "roi"}

@@ -55,6 +55,11 @@ export function formatar(valor, formato) {
   if (formato === "brl") return reais(valor);
   if (formato === "pct") return porcento(valor);
   if (formato === "x") return `${Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
+  /* "num": uma casa decimal, para contagens que não são inteiras — "11,4 leads
+     por reunião". Arredondar para 11 esconderia a diferença entre 11,4 e 11,9,
+     que num plano de mídia é dinheiro. */
+  if (formato === "num")
+    return Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return inteiro(valor);
 }
 

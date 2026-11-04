@@ -2012,6 +2012,47 @@ td.texto { white-space: normal; min-width: 260px; }
 }
 .ajustar-funil > summary:hover { color: var(--verde); }
 
+/* Aba "Quantos leads": a cadeia de uma venda e as duas calculadoras.
+   Numeros grandes com a unidade pequena ao lado, porque o que se le aqui e a
+   ordem de grandeza ("46 leads"), nao o numero isolado. */
+.cadeia h3, .simulador h3 {
+  font-size: 14px; font-weight: 650; margin: 0 0 12px;
+}
+.cadeia .elos {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.cadeia .elo {
+  display: flex; align-items: baseline; gap: 6px;
+  font-size: 13px; color: var(--ink-2);
+}
+.cadeia .elo strong {
+  font-size: 26px; font-weight: 680; color: var(--ink);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.cadeia .elo.destacado strong { color: var(--verde); }
+.cadeia .seta { color: var(--ink-muted); font-size: 18px; }
+.nota-cadeia {
+  margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--grid);
+  font-size: 13px; color: var(--ink-2);
+}
+.simulador input { width: 100%; max-width: 220px; font-variant-numeric: tabular-nums; }
+.simulador .saida {
+  list-style: none; margin: 16px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.simulador .saida li {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: 13px; color: var(--ink-2);
+}
+.simulador .saida strong {
+  font-size: 20px; font-weight: 670; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  /* Sem isto, "R$ 4.868,03" quebra entre o cifrao e o numero na largura de
+     celular, e o valor aparece em duas linhas. */
+  white-space: nowrap;
+}
+
 /* Divisão dentro de uma aba. A aba Tráfego pago passou a ter duas leituras
    diferentes — o topo do funil, que vem da mão do usuário, e a mídia, que vem
    da Meta — e sem um rótulo entre elas os doze cartões viram uma parede. */

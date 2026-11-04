@@ -95,4 +95,8 @@ def fmt(v: float, f: str) -> str:
         "pct": f"{v:.1%}",
         "int": f"{v:,.0f}",
         "x": f"{v:.2f}x",
+        # Já sai com a pontuação brasileira: `br()` só troca os separadores
+        # dentro de R$, % e x, e um número solto passaria por ele intacto,
+        # mostrando "11.4" onde se lê "11,4".
+        "num": f"{v:,.1f}".translate(str.maketrans(",.", ".,")),
     }[f]

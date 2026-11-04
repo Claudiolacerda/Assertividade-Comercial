@@ -39,6 +39,10 @@ FMT = {
     "int": '#,##0;-#,##0;"-"',
     "x": '0.00"x";-0.00"x";"-"',
     "dec": '#,##0.0;-#,##0.0;"-"',
+    # Mesmo desenho do "dec", com o nome que os KPIs usam. A linha 204 lê
+    # FMT[formato] direto: um formato sem entrada aqui derruba a planilha
+    # inteira com KeyError, e não só a célula dele.
+    "num": '#,##0.0;-#,##0.0;"-"',
     "data": "dd/mm/yyyy",
 }
 

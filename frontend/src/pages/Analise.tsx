@@ -15,6 +15,7 @@ import {
 import InformarFunil from "../components/InformarFunil";
 import Jet from "../components/Jet";
 import NotaPlanilha from "../components/NotaPlanilha";
+import PorLead from "../components/PorLead";
 import RelatorioZap from "../components/RelatorioZap";
 import { Destaque, Diagnostico, TabelaDados, Tile } from "../components/Painel";
 import { mensagemDoErro } from "../erros";
@@ -23,6 +24,7 @@ const ABAS = [
   { id: "resumo", titulo: "Resumo" },
   { id: "jet", titulo: "JET" },
   { id: "trafego", titulo: "Tráfego pago" },
+  { id: "porlead", titulo: "Quantos leads" },
   { id: "comercial", titulo: "Comercial" },
   { id: "pipeline", titulo: "Pipeline e objeções" },
   { id: "relatorio", titulo: "Relatório WhatsApp" },
@@ -282,6 +284,18 @@ export default function Analise() {
           )}
           <TabelaDados titulo="Por conjunto de anúncios" linhas={tabela("meta_conjuntos")} />
           <TabelaDados titulo="Por anúncio (criativo)" linhas={tabela("meta_anuncios")} />
+        </div>
+      )}
+
+      {aba === "porlead" && (
+        <div
+          className="grade"
+          role="tabpanel"
+          id="painel-porlead"
+          aria-labelledby="aba-porlead"
+          tabIndex={-1}
+        >
+          <PorLead kpis={kpis} base={r.base_esforco} />
         </div>
       )}
 

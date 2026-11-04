@@ -101,3 +101,69 @@ def test_o_formulario_chama_o_reprocessamento_e_vai_para_a_versao_nova():
 def test_o_formulario_aceita_recalcular_sem_informar_nada():
     """É o caminho de pôr uma análise antiga no motor de hoje."""
     assert "Informe pelo menos um dos dois" not in INFORMAR
+
+
+# --------------------------------------------------------------------- #
+# A aba "Quantos leads"
+# --------------------------------------------------------------------- #
+POR_LEAD = (Path(__file__).resolve().parents[2] / "frontend/src/components/PorLead.tsx").read_text(
+    encoding="utf-8"
+)
+CHARTS = (Path(__file__).resolve().parents[2] / "frontend/src/components/Charts.tsx").read_text(
+    encoding="utf-8"
+)
+
+
+def test_a_aba_existe_e_tem_painel():
+    """Aba sem painel é um botão que não faz nada."""
+    assert '{ id: "porlead"' in ANALISE
+    assert 'aba === "porlead"' in ANALISE
+    assert 'id="painel-porlead"' in ANALISE and 'aria-labelledby="aba-porlead"' in ANALISE
+    assert "<PorLead kpis={kpis}" in ANALISE
+
+
+@pytest.mark.parametrize("chave", ["lpag", "agfec", "lpfec"])
+def test_a_aba_mostra_os_indicadores_que_o_motor_emite(chave: str):
+    assert f"kpis.{chave}" in POR_LEAD
+
+
+def test_o_cac_entra_pela_conta_e_nao_como_cartao_repetido():
+    """Ele já tem cartão no Resumo e na aba de tráfego.
+
+    Aqui o que importa dele é o preço de uma venda dentro da cadeia e o
+    orçamento do simulador, não um quarto cartão quebrando a fileira de três.
+    """
+    assert 'valor(kpis, "cac")' in POR_LEAD
+    assert "<Tile kpi={kpis.cac}" not in POR_LEAD
+
+
+def test_as_duas_calculadoras_andam_nos_dois_sentidos():
+    """"Tenho leads, o que espero" e "quero vender, de quanto preciso"."""
+    assert "leadsSimulados / lpag" in POR_LEAD, "faltou estimar as reuniões a partir dos leads"
+    assert "vendasDesejadas * lpfec" in POR_LEAD, "faltou estimar os leads a partir das vendas"
+
+
+def test_a_aba_nao_inventa_numero_quando_nao_ha_razao():
+    """Mês sem reunião e sem venda: nada a calcular, e a tela diz isso."""
+    assert "if (!lpag && !lpfec)" in POR_LEAD
+
+
+def test_o_formato_num_existe_nos_dois_lados():
+    """O motor emite "num" e a tela tem de saber formatá-lo.
+
+    Sem isso o valor cai no formatador de inteiros e "11,4 leads por reunião"
+    aparece como "11".
+    """
+    assert 'formato === "num"' in CHARTS
+
+
+def test_a_aba_recebe_a_base_de_calculo_e_a_declara():
+    """Sem ela a tela escreveria "leads a gerar" sem dizer de onde.
+
+    Na base informada, parte dos leads vem de indicação e de busca, que não
+    custam mídia: dizer o número sem o universo convida a multiplicar pelo CPL
+    e chegar a um orçamento que não existe.
+    """
+    assert "base={r.base_esforco}" in ANALISE
+    assert 'base === "informada"' in POR_LEAD
+    assert "todas as origens" in POR_LEAD and "do tráfego pago" in POR_LEAD
