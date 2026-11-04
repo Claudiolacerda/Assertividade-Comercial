@@ -65,3 +65,14 @@ def test_a_previsao_nao_finge_precisao_de_centavos():
     """"R$ 15.028,33 no mês que vem" promete o que ninguém pode prever."""
     assert "function previsto" in PROJECAO
     assert "Math.round(valor).toLocaleString" in PROJECAO
+
+
+def test_a_tela_mostra_a_leitura_com_icone_por_nivel():
+    """A cor sozinha não comunica prioridade a quem não a distingue."""
+    assert "dados.leitura" in PROJECAO
+    assert "ICONES_NIVEL" in PROJECAO
+
+
+def test_coluna_sem_modelo_nao_vira_fileira_de_travessoes():
+    """Acontece de verdade: um mês sem coluna de valor deixa a receita sem reta."""
+    assert "dados.alvos || []).filter" in PROJECAO

@@ -142,10 +142,18 @@ def _qualidade(reta: Reta, rotulo: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def projetar(pontos: list[dict]) -> dict:
+def projetar(
+    pontos: list[dict],
+    metas: dict[str, float] | None = None,
+    total_analises: int | None = None,
+) -> dict:
     """Monta a projeção do efeito do investimento sobre os resultados.
 
     `pontos` são os meses, cada um com `mes_referencia`, `inv` e os alvos.
+    `metas` são as do cliente (o teto de CAC entra na leitura). `total_analises`
+    é quantas análises existem ao todo: quando ele é maior que o número de
+    meses, a tela precisa explicar a diferença, porque "tenho 3 análises" e "a
+    conta usa 2 meses" parece erro do sistema e não é.
     """
     pontos = [p for p in pontos if p.get("inv")]
     pontos = sorted(pontos, key=lambda p: p.get("mes_referencia") or "")
@@ -155,6 +163,7 @@ def projetar(pontos: list[dict]) -> dict:
 
     base = {
         "n_meses": n,
+        "n_analises": total_analises if total_analises is not None else n,
         "minimo_meses": MINIMO_MESES,
         "investimento_atual": atual,
         "faixa_observada": (
@@ -182,7 +191,8 @@ def projetar(pontos: list[dict]) -> dict:
             retas[chave] = reta
 
     if not retas:
-        return {**base, **_regra_de_tres(pontos, atual, n)}
+        parcial = {**base, **_regra_de_tres(pontos, atual, n)}
+        return {**parcial, "leitura": _ler(parcial, metas or {})}
 
     modelos, avisos = {}, []
     for chave, rotulo, _f in ALVOS:
@@ -198,7 +208,7 @@ def projetar(pontos: list[dict]) -> dict:
             "confiavel": confiavel,
             "aviso": aviso,
         }
-        if aviso:
+        if aviso and aviso not in avisos:
             avisos.append(aviso)
 
     faixa = base["faixa_observada"]
@@ -226,13 +236,222 @@ def projetar(pontos: list[dict]) -> dict:
             }
         cenarios.append(cenario)
 
-    return {
+    # ---- A faixa que não informa nada é pior que faixa nenhuma ----
+    # Com 3 meses sobra 1 grau de liberdade e o t de Student é 12,7: o
+    # intervalo fica mais largo que a própria estimativa, e a tabela imprime
+    # "8,5 clientes (0,0 a 18,5)" oito vezes. O número continua certo e a
+    # leitura vira ruído. Melhor dizer uma vez que a margem não cabe na tela do
+    # que repeti-la em cada linha.
+    hoje = next((c for c in cenarios if c["variacao"] == 0), None)
+    for chave, rotulo, _f in ALVOS:
+        dado = (hoje or {}).get(chave)
+        if not dado or dado.get("min") is None:
+            continue
+        util = dado["valor"] > 0 and dado["min"] > 0 and (dado["max"] - dado["min"]) <= dado["valor"]
+        if util:
+            continue
+        for c in cenarios:
+            if chave in c:
+                c[chave]["min"] = c[chave]["max"] = None
+        avisos.append(
+            f"Com {n} meses, a margem de erro de {rotulo.lower()} fica maior que a própria "
+            "previsão, então ela não é mostrada: leia os números como ordem de grandeza. Cada "
+            "mês novo analisado estreita essa margem rápido."
+        )
+        # O genérico "são N meses, a margem é larga" passa a sobrar: esta frase
+        # diz a mesma coisa com o tamanho junto.
+        avisos[:] = [a for a in avisos if not a.startswith(f"São {n} meses")]
+
+    completo = {
         **base,
         "metodo": "regressao",
         "modelos": modelos,
         "cenarios": cenarios,
         "avisos": avisos,
     }
+    return {**completo, "leitura": _ler(completo, metas or {})}
+
+
+def _brl(v: float) -> str:
+    """R$ 1.234,56 com a pontuação brasileira, sem depender do locale do servidor."""
+    return "R$ " + f"{v:,.2f}".translate(str.maketrans(",.", ".,"))
+
+
+def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
+    """A leitura dos números: o que eles dizem, em frases.
+
+    A tabela de cenários mostra o QUE; isto diz o E DAÍ. São as mesmas contas,
+    ditas na ordem em que a decisão é tomada: o anúncio ainda se paga na
+    margem? o próximo cliente custa mais ou menos que os de hoje? até onde dá
+    para subir sem apostar? e o quanto dessa conta é firme?
+
+    Tudo determinístico, pela mesma razão do JET: o número e a frase têm de
+    concordar sempre, e uma frase gerada por modelo de linguagem pode discordar
+    do número que está logo acima dela.
+    """
+    linhas: list[dict] = []
+    modelos = p.get("modelos") or {}
+    vendas, receita = modelos.get("fec"), modelos.get("rec")
+    atual = p.get("investimento_atual") or 0.0
+    faixa = p.get("faixa_observada") or {}
+    regra = p.get("metodo") == "regra_de_tres"
+    n_meses, n_analises = p.get("n_meses") or 0, p.get("n_analises") or 0
+
+    if p.get("metodo") == "insuficiente":
+        return []
+
+    # ---- 1. O anúncio se paga na margem? ----
+    if receita and receita["por_mil"] > 0:
+        por_real = receita["por_mil"] / 1000
+        # Na regra de três o número é a MÉDIA, não o efeito de um real a mais:
+        # dizer "a mais" ali seria atribuir à proporção uma leitura marginal
+        # que só a reta sustenta.
+        abertura = "No ritmo médio dos meses, cada R$ 1,00 investido veio acompanhado de" if regra \
+            else "Cada R$ 1,00 a mais em anúncio veio junto com"
+        if por_real >= 1:
+            linhas.append({
+                "nivel": "ok",
+                "texto": (
+                    f"{abertura} {_brl(por_real)} de receita fechada. É receita, não lucro: "
+                    f"desconte o custo de entregar o serviço antes de decidir se vale subir."
+                ),
+            })
+        else:
+            linhas.append({
+                "nivel": "critico",
+                "texto": (
+                    f"{abertura} só {_brl(por_real)} de receita. O anúncio não está se pagando: "
+                    f"antes de aumentar a verba, o que precisa melhorar é a conversão, não o "
+                    f"alcance."
+                ),
+            })
+
+    # ---- 2. O próximo cliente custa mais ou menos que os de hoje? ----
+    if vendas and vendas["por_mil"] > 0:
+        cac_marginal = 1000 / vendas["por_mil"]
+        previsto_hoje = vendas["intercepto"] + vendas["inclinacao"] * atual
+        cac_medio = atual / previsto_hoje if previsto_hoje > 0 else 0.0
+        if cac_medio > 0 and not regra:
+            if cac_marginal > cac_medio * 1.15:
+                linhas.append({
+                    "nivel": "atencao",
+                    "texto": (
+                        f"O próximo cliente custa {_brl(cac_marginal)}, acima do CAC médio de "
+                        f"{_brl(cac_medio)}. Parte das vendas acontece sem depender do anúncio, "
+                        f"então subir a verba rende menos do que a média faz parecer."
+                    ),
+                })
+            elif cac_marginal < cac_medio * 0.85:
+                linhas.append({
+                    "nivel": "ok",
+                    "texto": (
+                        f"O próximo cliente custa {_brl(cac_marginal)}, abaixo do CAC médio de "
+                        f"{_brl(cac_medio)}. A operação ainda ganha com escala: cada real a mais "
+                        f"rende melhor que os anteriores."
+                    ),
+                })
+            else:
+                linhas.append({
+                    "nivel": "info",
+                    "texto": (
+                        f"O próximo cliente custa {_brl(cac_marginal)}, na mesma faixa do CAC "
+                        f"médio de {_brl(cac_medio)}. O resultado cresce junto com a verba, sem "
+                        f"ganho nem perda de eficiência no caminho medido."
+                    ),
+                })
+        teto = float(metas.get("cac_max") or 0)
+        if teto > 0 and not regra:
+            if cac_marginal <= teto:
+                sobra = (teto - cac_marginal) / teto
+                linhas.append({
+                    "nivel": "ok",
+                    "texto": (
+                        f"Esse custo cabe no seu teto de {_brl(teto)} por cliente, com "
+                        f"{sobra:.0%} de folga. Enquanto couber, aumentar a verba é a alavanca "
+                        f"mais direta que você tem."
+                    ),
+                })
+            else:
+                linhas.append({
+                    "nivel": "critico",
+                    "texto": (
+                        f"Esse custo já passa do seu teto de {_brl(teto)} por cliente. Cada "
+                        f"cliente a mais entra fora da meta: o caminho aqui é melhorar a "
+                        f"conversão antes de aumentar a verba."
+                    ),
+                })
+
+    # ---- 3. Até onde dá para subir sem apostar? ----
+    maximo = float(faixa.get("max") or 0)
+    if maximo > 0 and atual > 0:
+        if maximo > atual * 1.02:
+            margem = maximo / atual - 1
+            linhas.append({
+                "nivel": "info",
+                "texto": (
+                    f"Você já operou com até {_brl(maximo)} num mês, que é {margem:.0%} acima de "
+                    f"hoje. Até esse valor a conta se apoia no que aconteceu; acima dele, ela é "
+                    f"extrapolação."
+                ),
+            })
+        else:
+            linhas.append({
+                "nivel": "atencao",
+                "texto": (
+                    f"Hoje é o seu maior investimento já analisado ({_brl(atual)}). Qualquer "
+                    f"cenário de aumento aqui é território novo: suba em degraus de 10% a 20% e "
+                    f"meça cada um antes do próximo."
+                ),
+            })
+
+    # ---- 4. O quanto dessa conta é firme? ----
+    if regra:
+        falta = max(0, (p.get("minimo_meses") or MINIMO_MESES) - n_meses)
+        extra = ""
+        if n_analises > n_meses:
+            extra = (
+                f" Você tem {n_analises} análises, mas elas cobrem {n_meses} mês(es): a conta usa "
+                f"a última versão de cada mês, então reprocessar o mesmo mês não conta como mês novo."
+            )
+        linhas.append({
+            "nivel": "atencao",
+            "texto": (
+                f"Isto ainda é proporção, não tendência medida: ela supõe que cada real novo rende "
+                f"igual ao primeiro.{extra} Com mais {falta} mês(es) de investimento diferente o "
+                f"sistema passa a medir a tendência de verdade."
+            ),
+        })
+    elif vendas and vendas["inclinacao"] == 0:
+        linhas.append({
+            "nivel": "info",
+            "texto": (
+                f"O número de clientes fechados foi o mesmo em todos os {n_meses} meses, mesmo "
+                f"com o investimento variando. Isso não quer dizer que mudar a verba não adianta: "
+                f"quer dizer que, nessa faixa, o gargalo não é o anúncio."
+            ),
+        })
+    elif vendas:
+        r2 = vendas.get("r2") or 0.0
+        if r2 >= 0.7:
+            linhas.append({
+                "nivel": "ok",
+                "texto": (
+                    f"O investimento explica {r2:.0%} da variação das vendas nos {n_meses} meses "
+                    f"medidos: a relação é forte o suficiente para planejar com ela, lembrando que "
+                    f"ela descreve o passado."
+                ),
+            })
+        else:
+            linhas.append({
+                "nivel": "atencao",
+                "texto": (
+                    f"O investimento explica só {r2:.0%} da variação das vendas. O que mais mexeu "
+                    f"no resultado foi outra coisa (oferta, equipe, época do ano), então trate "
+                    f"estes números como ordem de grandeza."
+                ),
+            })
+
+    return linhas
 
 
 def _regra_de_tres(pontos: list[dict], atual: float, n: int) -> dict:

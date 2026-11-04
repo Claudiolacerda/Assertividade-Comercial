@@ -2064,6 +2064,21 @@ td.texto { white-space: normal; min-width: 260px; }
   border-left: 3px solid var(--verde);
   font-size: 14.5px; font-weight: 600; color: var(--ink); line-height: 1.5;
 }
+/* A leitura dos numeros. Nivel marcado por icone E por cor da marca, nunca so
+   pela cor: quem nao distingue verde de vermelho continua lendo a prioridade. */
+.projecao .leitura { list-style: none; margin: 0 0 18px; padding: 0; }
+.projecao .leitura li {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 9px 0; border-bottom: 1px solid var(--grid);
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.55;
+}
+.projecao .leitura li:last-child { border-bottom: none; }
+.projecao .leitura .marca { flex: none; margin-top: 2px; }
+.projecao .leitura li.ok .marca { color: var(--bom); }
+.projecao .leitura li.atencao .marca { color: var(--atencao-texto); }
+.projecao .leitura li.critico .marca { color: var(--critico); }
+.projecao .leitura li.info .marca { color: var(--ink-muted); }
+
 .projecao table.cenarios { width: 100%; }
 .projecao table.cenarios .num { text-align: right; font-variant-numeric: tabular-nums; }
 .projecao table.cenarios .valor { font-weight: 620; }

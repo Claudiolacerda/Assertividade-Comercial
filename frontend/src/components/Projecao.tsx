@@ -10,7 +10,7 @@
 import { useState } from "react";
 
 import { GraficoProjecao, formatar, inteiro, reais } from "./Charts";
-import { IconeAtencao } from "./Icones";
+import { ICONES_NIVEL, IconeAtencao } from "./Icones";
 
 const PCT = (v: number) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}%`;
 
@@ -51,7 +51,7 @@ export default function Projecao({ dados }) {
   const [simulado, setSimulado] = useState("");
   if (!dados) return null;
 
-  const { metodo, n_meses, minimo_meses, investimento_atual, faixa_observada, alvos = [] } = dados;
+  const { metodo, n_meses, minimo_meses, investimento_atual, faixa_observada } = dados;
 
   if (metodo === "insuficiente") {
     return (
@@ -67,6 +67,10 @@ export default function Projecao({ dados }) {
 
   const regra = metodo === "regra_de_tres";
   const modelos = dados.modelos || {};
+  /* Coluna sem modelo seria uma fileira de travessões: acontece de verdade
+     quando a planilha de um dos meses não tem coluna de valor e a receita fica
+     sem pontos suficientes. */
+  const alvos = (dados.alvos || []).filter((a) => modelos[a.chave]);
   const vendas = modelos.fec;
   const receita = modelos.rec;
 
@@ -124,6 +128,25 @@ export default function Projecao({ dados }) {
       </div>
 
       {manchete && <p className="manchete">{manchete}</p>}
+
+      {/* A leitura: a tabela diz O QUE, isto diz E DAÍ. Vem do backend pronta e
+          determinística, pela mesma razão do JET: o número e a frase têm de
+          concordar sempre. */}
+      {!!(dados.leitura || []).length && (
+        <ul className="leitura">
+          {dados.leitura.map((l, i: number) => {
+            const Icone = ICONES_NIVEL[l.nivel] || ICONES_NIVEL.info;
+            return (
+              <li key={i} className={l.nivel}>
+                <span className="marca" aria-hidden="true">
+                  <Icone tamanho={14} />
+                </span>
+                <span>{l.texto}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {regra && (
         <div className="aviso" style={{ marginBottom: 14 }}>

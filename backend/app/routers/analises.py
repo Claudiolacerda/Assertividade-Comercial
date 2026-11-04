@@ -342,7 +342,11 @@ def projecao(atual: Atual = Depends(usuario_atual)):
                 "mes_referencia": a.mes_referencia,
                 **(a.kpis_resumo or {}),
             }
-    return projetar(list(por_mes.values()))
+        total = len(analises)
+    # O teto de CAC do cliente entra na leitura: "o próximo cliente custa R$ X"
+    # só vira decisão quando comparado com o que ele aceita pagar.
+    cfg = ConfigAnalise.from_dict(atual.empresa.config_analise)
+    return projetar(list(por_mes.values()), metas=cfg.metas, total_analises=total)
 
 
 @router.get("/{analise_id}", response_model=AnaliseDetalhe)
