@@ -161,6 +161,10 @@ export const api = {
    *  três ou nenhum, e por quê. */
   projecao: () => requisitar<any>("/analises/projecao"),
 
+  /** O mesmo cálculo em PDF, para levar à reunião: os meses que entraram na
+   *  conta, o método, o resultado e os limites. */
+  baixarProjecaoPdf: () => baixar("/analises/projecao.pdf", "Projecao_Investimento_Neriah.pdf"),
+
   /** Roda a análise de novo sobre os mesmos arquivos e devolve a versão nova.
    *  É o caminho para informar leads e MQL de um mês já analisado: o resultado
    *  fica gravado como JSON, então uma análise antiga continua mostrando o que

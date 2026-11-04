@@ -76,3 +76,14 @@ def test_a_tela_mostra_a_leitura_com_icone_por_nivel():
 def test_coluna_sem_modelo_nao_vira_fileira_de_travessoes():
     """Acontece de verdade: um mês sem coluna de valor deixa a receita sem reta."""
     assert "dados.alvos || []).filter" in PROJECAO
+
+
+def test_a_tela_oferece_o_pdf():
+    """A tela convence quem já confia no sistema; o PDF, quem vai perguntar."""
+    assert "api.baixarProjecaoPdf" in PROJECAO
+    assert "Baixar PDF" in PROJECAO
+    assert 'baixar("/analises/projecao.pdf"' in API
+
+
+def test_a_falha_do_pdf_nao_derruba_o_cartao():
+    assert "erroPdf" in PROJECAO

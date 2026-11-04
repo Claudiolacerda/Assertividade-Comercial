@@ -9,6 +9,8 @@
 
 import { useState } from "react";
 
+import { api } from "../api";
+
 import { GraficoProjecao, formatar, inteiro, reais } from "./Charts";
 import { ICONES_NIVEL, IconeAtencao } from "./Icones";
 
@@ -49,6 +51,20 @@ function Previsto({ dado, formato }) {
 
 export default function Projecao({ dados }) {
   const [simulado, setSimulado] = useState("");
+  const [baixando, setBaixando] = useState(false);
+  const [erroPdf, setErroPdf] = useState("");
+
+  async function baixarPdf() {
+    setBaixando(true);
+    setErroPdf("");
+    try {
+      await api.baixarProjecaoPdf();
+    } catch {
+      setErroPdf("Não consegui gerar o PDF agora. Tente de novo em instantes.");
+    } finally {
+      setBaixando(false);
+    }
+  }
   if (!dados) return null;
 
   const { metodo, n_meses, minimo_meses, investimento_atual, faixa_observada } = dados;
@@ -118,6 +134,13 @@ export default function Projecao({ dados }) {
             )}
           </p>
         </div>
+        {/* O PDF existe para a reunião: a tela convence quem já confia no
+            sistema, o documento convence quem vai perguntar de onde saiu. */}
+        <div className="acoes-projecao">
+          <button className="discreto" onClick={baixarPdf} disabled={baixando}>
+            {baixando ? "Gerando…" : "Baixar PDF"}
+          </button>
+        </div>
         {!regra && vendas?.r2 != null && (
           <div className="confianca">
             <span className="rotulo">o investimento explica</span>
@@ -126,6 +149,8 @@ export default function Projecao({ dados }) {
           </div>
         )}
       </div>
+
+      {erroPdf && <p className="erro-inline">{erroPdf}</p>}
 
       {manchete && <p className="manchete">{manchete}</p>}
 

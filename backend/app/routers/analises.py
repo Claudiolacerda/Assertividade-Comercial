@@ -17,6 +17,7 @@ from ..config import settings
 from ..core import ConfigAnalise, analisar, gerar_excel
 from ..core.jev import avaliar as avaliar_jev
 from ..core.pipeline import ErroDeAnalise
+from ..core.pdf_projecao import gerar_pdf as gerar_pdf_projecao
 from ..core.projecao import projetar
 from ..db import get_db, sessao_tenant
 from ..deps import Atual, admin_atual, usuario_atual
@@ -347,6 +348,28 @@ def projecao(atual: Atual = Depends(usuario_atual)):
     # só vira decisão quando comparado com o que ele aceita pagar.
     cfg = ConfigAnalise.from_dict(atual.empresa.config_analise)
     return projetar(list(por_mes.values()), metas=cfg.metas, total_analises=total)
+
+
+@router.get("/projecao.pdf")
+def projecao_pdf(atual: Atual = Depends(usuario_atual)):
+    """O mesmo cálculo da home, em PDF, para levar à reunião.
+
+    O número sozinho não se defende: quem leva "aumentar 20% traz 2 clientes a
+    mais" ouve "de onde você tirou isso". O PDF traz os meses que entraram na
+    conta, o método, o resultado e os limites, nessa ordem.
+    """
+    dados = projecao(atual)
+    conteudo = gerar_pdf_projecao(
+        dados,
+        empresa=atual.empresa.nome,
+        organizacao=atual.organizacao.nome,
+    )
+    nome = f"Projecao_Investimento_{atual.empresa.slug}_{datetime.now(timezone.utc):%Y-%m}.pdf"
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )
 
 
 @router.get("/{analise_id}", response_model=AnaliseDetalhe)

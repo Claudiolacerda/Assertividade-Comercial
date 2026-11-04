@@ -2058,6 +2058,7 @@ td.texto { white-space: normal; min-width: 260px; }
   font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
 }
 .projecao .confianca .rotulo { font-size: 11.5px; color: var(--ink-muted); }
+.projecao .acoes-projecao { flex: none; order: 3; }
 .projecao .manchete {
   margin: 16px 0 14px; padding: 12px 14px;
   background: var(--surface-2); border-radius: 9px;

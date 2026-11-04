@@ -789,3 +789,24 @@ def test_a_projecao_usa_a_ultima_versao_de_cada_mes(client, org):
     client.post(f"/api/analises/{primeira['id']}/reprocessar", headers=cab(dados), json={})
     corpo = client.get("/api/analises/projecao", headers=cab(dados)).json()
     assert corpo["n_meses"] == 1, "duas versões do mesmo mês viraram dois pontos"
+
+
+def test_o_pdf_da_projecao_sai_pela_rota(client, org):
+    """A rota precisa vir ANTES de /{analise_id}, senão "projecao.pdf" vira id."""
+    dados = org("PDF Ltda")
+    assert subir(client, dados).status_code == 201
+    resp = client.get("/api/analises/projecao.pdf", headers=cab(dados))
+    assert resp.status_code == 200, resp.text
+    assert resp.content[:5] == b"%PDF-"
+    assert "attachment" in resp.headers["content-disposition"]
+    assert ".pdf" in resp.headers["content-disposition"]
+
+
+def test_o_pdf_nao_vaza_os_meses_de_outra_organizacao(client, org):
+    uma = org("Dona do PDF")
+    outra = org("Curiosa do PDF")
+    assert subir(client, uma).status_code == 201
+    resp = client.get("/api/analises/projecao.pdf", headers=cab(outra))
+    assert resp.status_code == 200
+    # Sem análise nenhuma, o documento é a explicação curta, não um relatório.
+    assert len(resp.content) < 4000
