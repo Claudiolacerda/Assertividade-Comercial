@@ -17,6 +17,7 @@ from ..config import settings
 from ..core import ConfigAnalise, analisar, gerar_excel
 from ..core.jev import avaliar as avaliar_jev
 from ..core.pipeline import ErroDeAnalise
+from ..core.projecao import projetar
 from ..db import get_db, sessao_tenant
 from ..deps import Atual, admin_atual, usuario_atual
 from ..models import Analise, Arquivo, Empresa
@@ -319,6 +320,29 @@ def evolucao(atual: Atual = Depends(usuario_atual)):
                 **(a.kpis_resumo or {}),
             }
         return {"meses": list(por_mes.values()), "kpis": KPIS_EVOLUCAO}
+
+
+@router.get("/projecao")
+def projecao(atual: Atual = Depends(usuario_atual)):
+    """O efeito do investimento sobre o resultado, medido nos meses já analisados.
+
+    Usa a mesma série do gráfico de evolução, uma linha por mês. A conta e,
+    principalmente, a recusa de fazer a conta quando os meses não bastam, ficam
+    em `core.projecao`: é regra de negócio, não de rota.
+    """
+    with sessao_tenant(atual.schema) as st:
+        analises = st.scalars(
+            select(Analise)
+            .where(Analise.status == "concluida")
+            .order_by(Analise.mes_referencia.asc(), Analise.versao.asc())
+        ).all()
+        por_mes: dict[str, dict] = {}
+        for a in analises:  # versão maior sobrescreve a anterior do mesmo mês
+            por_mes[a.mes_referencia] = {
+                "mes_referencia": a.mes_referencia,
+                **(a.kpis_resumo or {}),
+            }
+    return projetar(list(por_mes.values()))
 
 
 @router.get("/{analise_id}", response_model=AnaliseDetalhe)

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../api";
 import { GraficoEvolucao, S1, S2, S3, dataHora, formatar, mesPorExtenso } from "../components/Charts";
+import Projecao from "../components/Projecao";
 import { useAuth } from "../auth";
 import { mensagemDoErro } from "../erros";
 
@@ -19,13 +20,22 @@ export default function Historico() {
   const navegar = useNavigate();
   const [analises, setAnalises] = useState<any>(null);
   const [evolucao, setEvolucao] = useState<any>(null);
+  const [projecao, setProjecao] = useState<any>(null);
   const [erro, setErro] = useState("");
 
   async function carregar() {
     try {
-      const [lista, evo] = await Promise.all([api.analises(), api.evolucao()]);
+      const [lista, evo, proj] = await Promise.all([
+        api.analises(),
+        api.evolucao(),
+        /* A projeção não pode derrubar a home: ela é um extra sobre os meses
+           já analisados, e uma falha ali não vale uma tela de erro no lugar
+           do histórico inteiro. */
+        api.projecao().catch(() => null),
+      ]);
       setAnalises(lista);
       setEvolucao(evo);
+      setProjecao(proj);
     } catch (e) {
       setErro(mensagemDoErro(e));
     }
@@ -95,6 +105,12 @@ export default function Historico() {
             formato="brl"
             cor={S1}
           />
+        </div>
+      )}
+
+      {projecao && (
+        <div style={{ marginBottom: 18 }}>
+          <Projecao dados={projecao} />
         </div>
       )}
 

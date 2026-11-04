@@ -156,6 +156,11 @@ export const api = {
 
   evolucao: () => requisitar<Record<string, unknown>[]>("/analises/evolucao"),
 
+  /** O efeito do investimento sobre o resultado, medido nos meses já
+   *  analisados. Vem com o método que foi possível usar: regressão, regra de
+   *  três ou nenhum, e por quê. */
+  projecao: () => requisitar<any>("/analises/projecao"),
+
   /** Roda a análise de novo sobre os mesmos arquivos e devolve a versão nova.
    *  É o caminho para informar leads e MQL de um mês já analisado: o resultado
    *  fica gravado como JSON, então uma análise antiga continua mostrando o que

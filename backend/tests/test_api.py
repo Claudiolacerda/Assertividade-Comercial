@@ -755,3 +755,37 @@ def test_apagar_a_versao_nova_nao_leva_os_arquivos_da_antiga(client, org):
         f"/api/analises/{antiga['id']}/reprocessar", headers=cab(dados), json={"mql": 100}
     )
     assert de_novo.status_code == 201, de_novo.text
+
+
+# --------------------------------------------------------------------- #
+# Projeção: o efeito do investimento, na home
+# --------------------------------------------------------------------- #
+def test_a_projecao_responde_mesmo_com_uma_analise_so(client, org):
+    """A home chama este endpoint sempre; com um mês ele explica a recusa."""
+    dados = org("Projeta Ltda")
+    assert subir(client, dados).status_code == 201
+    resp = client.get("/api/analises/projecao", headers=cab(dados))
+    assert resp.status_code == 200, resp.text
+    corpo = resp.json()
+    assert corpo["metodo"] in ("regra_de_tres", "insuficiente")
+    assert corpo["n_meses"] == 1
+    assert corpo["motivo"], "a recusa tem de vir com o motivo escrito"
+
+
+def test_a_projecao_nao_alcanca_os_meses_de_outra_organizacao(client, org):
+    """Mesma fronteira do resto do arquivo, no endpoint novo."""
+    uma = org("Dona dos Meses")
+    outra = org("Vizinha Ltda")
+    assert subir(client, uma).status_code == 201
+    corpo = client.get("/api/analises/projecao", headers=cab(outra)).json()
+    assert corpo["n_meses"] == 0
+    assert corpo["metodo"] == "insuficiente"
+
+
+def test_a_projecao_usa_a_ultima_versao_de_cada_mes(client, org):
+    """Reprocessar um mês não pode fazer ele contar duas vezes na reta."""
+    dados = org("Versiona Projecao")
+    primeira = subir(client, dados).json()
+    client.post(f"/api/analises/{primeira['id']}/reprocessar", headers=cab(dados), json={})
+    corpo = client.get("/api/analises/projecao", headers=cab(dados)).json()
+    assert corpo["n_meses"] == 1, "duas versões do mesmo mês viraram dois pontos"

@@ -11,10 +11,12 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Line,
   LineChart,
   ReferenceLine,
   ResponsiveContainer,
+  Scatter,
   Tooltip,
   XAxis,
   YAxis,
@@ -30,7 +32,11 @@ export const S3 = "var(--series-3)";
 const EIXO = { fontSize: 11.5, fill: "var(--ink-muted)" };
 const MARGEM = { top: 8, right: 16, bottom: 4, left: 4 };
 
-export const inteiro = (v) => (v == null ? "—" : Number(v).toLocaleString("pt-BR"));
+/* Arredonda antes de formatar: `toLocaleString` sozinho mostra até três casas,
+   e uma previsão de 56,594 leads aparecia como "56,594" numa coluna de
+   contagem — que em português se lê como um número quebrado onde se espera um
+   inteiro. Onde o valor já é inteiro, arredondar não muda nada. */
+export const inteiro = (v) => (v == null ? "—" : Math.round(Number(v)).toLocaleString("pt-BR"));
 export const porcento = (v, casas = 1) =>
   v == null ? "—" : `${(Number(v) * 100).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas })}%`;
 /** "2026-09" -> "setembro/2026". Quatro formatos para o mesmo conceito viraram um. */
@@ -242,6 +248,67 @@ export function GraficoFunil({ funil }) {
           }}
         />
       </BarChart>
+    </Quadro>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Investimento x resultado: os meses como pontos, a reta ajustada  */
+/* por cima. O gráfico existe para que a reta possa ser contestada  */
+/* com os olhos: três pontos espalhados e uma reta no meio deles    */
+/* dizem "não confie" melhor que qualquer R² escrito por extenso.   */
+export function GraficoProjecao({ pontos, modelo, alvo, titulo, formato }) {
+  if (!pontos?.length || !modelo) return null;
+  const dados = pontos
+    .filter((p) => p[alvo] != null)
+    .map((p) => ({
+      inv: p.inv,
+      real: p[alvo],
+      /* A reta é avaliada nos mesmos x dos pontos: duas séries no mesmo
+         conjunto de dados, uma como bolinha e outra como linha. */
+      reta: modelo.intercepto + modelo.inclinacao * p.inv,
+      mes: p.mes_referencia,
+    }))
+    .sort((a, b) => a.inv - b.inv);
+  if (dados.length < 2) return null;
+  return (
+    <Quadro
+      titulo={titulo}
+      subtitulo="Cada bolinha é um mês já analisado. A linha é a tendência que eles desenham."
+      altura={240}
+      legenda={[
+        { nome: "meses medidos", cor: S1 },
+        { nome: "tendência", cor: S2 },
+      ]}
+      tabela={{
+        colunas: [
+          { chave: "mes", titulo: "Mês" },
+          { chave: "inv", titulo: "Investimento", num: true, formato: "brl" },
+          { chave: "real", titulo: titulo, num: true, formato },
+          { chave: "reta", titulo: "Tendência", num: true, formato },
+        ],
+        linhas: dados,
+      }}
+    >
+      <ComposedChart data={dados} margin={{ ...MARGEM, left: 8 }}>
+        <CartesianGrid stroke="var(--grid)" vertical={false} />
+        <XAxis
+          dataKey="inv"
+          type="number"
+          domain={["dataMin", "dataMax"]}
+          tick={EIXO}
+          tickFormatter={(v) => `R$ ${Math.round(Number(v) / 100) / 10}k`}
+          axisLine={{ stroke: "var(--axis)" }}
+          tickLine={false}
+        />
+        <YAxis tick={EIXO} axisLine={false} tickLine={false} width={44} />
+        <Tooltip
+          content={<Dica formatos={{ real: formato, reta: formato, inv: "brl" }} />}
+          cursor={{ stroke: "var(--axis)" }}
+        />
+        <Line type="linear" dataKey="reta" name="tendência" stroke={S2} dot={false} strokeWidth={2} />
+        <Scatter dataKey="real" name="meses medidos" fill={S1} />
+      </ComposedChart>
     </Quadro>
   );
 }
