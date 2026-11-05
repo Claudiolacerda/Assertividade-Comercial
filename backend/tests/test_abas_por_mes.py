@@ -208,3 +208,31 @@ def test_linha_de_titulo_nao_vira_cliente(tmp_path):
     assert "Semana 3" not in clientes
     assert len(res.tabelas["base_reunioes"]) == 4
     assert any("título da planilha" in a for a in res.avisos)
+
+
+def test_o_resultado_de_uma_planilha_com_abas_por_mes_e_gravavel(planilha_por_mes):
+    """A conta rodava e a GRAVAÇÃO quebrava: Period não vira JSON.
+
+    O erro aparecia no fim, depois de o usuário esperar a análise inteira, e
+    vinha como um SQL gigante na tela. Qualquer coluna de trabalho que não seja
+    serializável derruba a análise toda, então o tratamento é na saída, não no
+    nome da coluna.
+    """
+    import json
+
+    payload = analisar([META], [planilha_por_mes]).to_payload()
+    texto = json.dumps(payload, ensure_ascii=False)
+    assert len(texto) > 1000
+    assert "mes_aba" not in payload["tabelas"]["base_reunioes"][0], "coluna de trabalho não sai na base"
+
+
+def test_period_em_qualquer_tabela_vira_texto():
+    """A defesa que vale para a próxima coluna que alguém acrescentar."""
+    import json
+
+    import pandas as pd
+
+    from app.core.pipeline import _tabela_json
+
+    df = pd.DataFrame({"mes": pd.Series([pd.Period("2026-10", "M")], dtype="period[M]")})
+    json.dumps(_tabela_json(df))

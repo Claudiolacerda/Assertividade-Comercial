@@ -118,6 +118,11 @@ def _tabela_json(df: pd.DataFrame | None) -> list[dict[str, Any]]:
     for c in saida.columns:
         if pd.api.types.is_datetime64_any_dtype(saida[c]):
             saida[c] = saida[c].dt.strftime("%Y-%m-%d")
+        # Period não é serializável em JSON, e um só derruba a GRAVAÇÃO da
+        # análise inteira: a conta roda, o usuário espera, e o erro aparece no
+        # fim, no banco. Aqui ele vira "2026-10" antes de chegar lá.
+        elif isinstance(saida[c].dtype, pd.PeriodDtype):
+            saida[c] = saida[c].astype("string")
     saida = saida.astype(object).where(pd.notna(saida), None)
     registros = saida.to_dict(orient="records")
     for reg in registros:
@@ -130,6 +135,8 @@ def _tabela_json(df: pd.DataFrame | None) -> list[dict[str, Any]]:
                 reg[k] = bool(v)
             elif isinstance(v, list):
                 reg[k] = ", ".join(str(x) for x in v)
+            elif isinstance(v, (pd.Period, pd.Timestamp)):
+                reg[k] = str(v)
     return registros
 
 
@@ -1007,7 +1014,11 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
     )
     if not tv:
         base = base.drop(columns=["valor (R$)"], errors="ignore")
-    res.tabelas["base_reunioes"] = base.dropna(axis=1, how="all")
+    # `mes_aba` é coluna de trabalho (serve para separar os meses na leitura) e
+    # não tem o que dizer a quem lê a base.
+    res.tabelas["base_reunioes"] = base.drop(columns=["mes_aba"], errors="ignore").dropna(
+        axis=1, how="all"
+    )
 
 
 # ---------------------------------------------------------------------- #
