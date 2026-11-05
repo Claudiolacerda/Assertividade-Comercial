@@ -403,3 +403,67 @@ def test_a_leitura_nao_repete_a_manchete():
     p = projetar(baguncado, metas={})
     assert "hipótese, não previsão" not in _textos(p)
     assert "é aí que está a alavanca deste mês" in _textos(p).lower()
+
+
+# --------------------------------------------------------------------- #
+# O ritmo do período: soma contra soma, sem modelo no meio
+# --------------------------------------------------------------------- #
+# "Cada R$ 1.000 investidos vieram acompanhados de 2,3 clientes" é um fato
+# sobre o período. "Cada R$ 1.000 A MAIS trazem 0,7 cliente" é uma previsão.
+# As duas frases se parecem e dizem coisas diferentes: a primeira continua
+# valendo quando a reta não se sustenta, e é a que se diz numa reunião.
+def test_o_ritmo_e_aritmetica_sobre_os_meses():
+    p = projetar(meses([("2026-08", 2000.0, 4), ("2026-09", 3000.0, 6)]), metas={})
+    ritmo = p["ritmo"]
+    assert ritmo["investimento_total"] == 5000.0
+    assert ritmo["clientes"] == 10
+    assert ritmo["cac_medio"] == pytest.approx(500.0)
+    assert ritmo["clientes_por_mil"] == pytest.approx(2.0)
+
+
+def test_o_resumo_descreve_o_periodo_sem_prometer_o_futuro():
+    p = projetar(TRES_MESES, metas={})
+    texto = p["resumo"]["texto"]
+    assert "cada R$ 1.000 investidos" in texto
+    assert "acompanhados" in texto, "é associação, não causa"
+    assert "por cliente" in texto
+    assert "Não é o efeito de investir mais" in p["resumo"]["rodape"]
+
+
+def test_o_resumo_existe_mesmo_com_a_reta_fraca():
+    """É justamente quando ele importa: a tendência cai, o fato permanece."""
+    baguncado = meses([("2026-08", 4238.44, 11), ("2026-09", 4900.0, 7), ("2026-10", 5715.88, 12)])
+    p = projetar(baguncado, metas={})
+    assert p["manchete"]["nivel"] == "atencao"
+    assert p["resumo"] is not None
+    assert "2,0 clientes fechados" in p["resumo"]["texto"]
+
+
+def test_o_cac_medio_da_leitura_e_o_medido_e_nao_o_previsto():
+    """Com ajuste fraco os dois divergem, e o rótulo "médio" é do medido.
+
+    Apresentar o valor que saiu do modelo como se fosse a média medida é
+    apresentar previsão como fato, justamente no caso em que o modelo não
+    merece confiança.
+    """
+    baguncado = meses([("2026-08", 4238.44, 11), ("2026-09", 4900.0, 7), ("2026-10", 5715.88, 12)])
+    p = projetar(baguncado, metas={})
+    medido = p["ritmo"]["cac_medio"]
+    vendas = p["modelos"]["fec"]
+    previsto = vendas["intercepto"] + vendas["inclinacao"] * p["investimento_atual"]
+    assert abs(medido - p["investimento_atual"] / previsto) > 1, "o teste precisa de um caso em que divergem"
+    assert _brl_no_texto(_textos(p), medido)
+
+
+def _brl_no_texto(texto: str, valor: float) -> bool:
+    formatado = f"{valor:,.2f}".translate(str.maketrans(",.", ".,"))
+    return formatado in texto
+
+
+def test_sem_cliente_fechado_nao_ha_resumo():
+    """Dividir por zero cliente não vira "R$ 0,00 por cliente"."""
+    sem_venda = [
+        {"mes_referencia": "2026-08", "inv": 3000.0, "fec": 0, "rec": 0.0, "leads": 60},
+        {"mes_referencia": "2026-09", "inv": 4000.0, "fec": 0, "rec": 0.0, "leads": 80},
+    ]
+    assert projetar(sem_venda, metas={})["resumo"] is None

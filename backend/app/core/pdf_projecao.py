@@ -322,6 +322,15 @@ def gerar_pdf(
     if manchete:
         estilo = est["manchete"] if manchete.get("nivel") == "ok" else est["manchete_fraca"]
         corpo.append(Paragraph(manchete["texto"], estilo))
+
+    # O resumo do período é soma contra soma, sem modelo no meio: é a frase que
+    # continua de pé quando a tendência não se sustenta, e a que o cliente lê
+    # em voz alta na reunião.
+    resumo = projecao.get("resumo")
+    if resumo:
+        corpo.append(Paragraph(f"<b>{resumo['texto']}</b>", est["corpo"]))
+        corpo.append(Paragraph(resumo["rodape"], est["nota"]))
+        corpo.append(Spacer(1, 6))
     coef = [["Resultado", "Efeito por R$ 1.000", "Base (a)", "R²"]]
     for alvo in projecao.get("alvos", []):
         m = modelos.get(alvo["chave"])

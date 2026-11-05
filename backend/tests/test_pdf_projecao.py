@@ -145,3 +145,11 @@ def test_o_pdf_marca_a_manchete_fraca_com_outro_estilo():
     from app.core.pdf_projecao import _estilos
 
     assert "manchete_fraca" in _estilos()
+
+
+def test_o_pdf_traz_o_resumo_do_periodo():
+    from pathlib import Path as _P
+
+    fonte = _P("app/core/pdf_projecao.py").read_text(encoding="utf-8")
+    assert 'projecao.get("resumo")' in fonte
+    assert 'resumo["rodape"]' in fonte, "a ressalva não pode ficar só na tela"

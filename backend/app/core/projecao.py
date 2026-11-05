@@ -172,6 +172,7 @@ def projetar(
         "n_meses": n,
         "n_analises": total_analises if total_analises is not None else n,
         "meses_sem_investimento": sorted(ignorados),
+        "ritmo": _ritmo(pontos),
         "minimo_meses": MINIMO_MESES,
         "investimento_atual": atual,
         "faixa_observada": (
@@ -200,7 +201,12 @@ def projetar(
 
     if not retas:
         parcial = {**base, **_regra_de_tres(pontos, atual, n)}
-        return {**parcial, "manchete": _manchete(parcial), "leitura": _ler(parcial, metas or {})}
+        return {
+            **parcial,
+            "manchete": _manchete(parcial),
+            "resumo": _resumo(parcial),
+            "leitura": _ler(parcial, metas or {}),
+        }
 
     modelos, avisos = {}, []
     for chave, rotulo, _f in ALVOS:
@@ -277,7 +283,12 @@ def projetar(
         "cenarios": cenarios,
         "avisos": avisos,
     }
-    return {**completo, "manchete": _manchete(completo), "leitura": _ler(completo, metas or {})}
+    return {
+        **completo,
+        "manchete": _manchete(completo),
+        "resumo": _resumo(completo),
+        "leitura": _ler(completo, metas or {}),
+    }
 
 
 def _brl(v: float, casas: int = 2) -> str:
@@ -287,6 +298,66 @@ def _brl(v: float, casas: int = 2) -> str:
 
 def _num(v: float, casas: int = 1) -> str:
     return f"{v:,.{casas}f}".translate(str.maketrans(",.", ".,"))
+
+
+def _ritmo(pontos: list[dict]) -> dict | None:
+    """O ritmo médio dos meses: soma contra soma, sem reta no meio.
+
+    É a única afirmação sobre investimento e resultado que não depende de
+    modelo nenhum — e por isso é a que sobra quando a regressão não se sustenta.
+    "Cada R$ 1.000 investidos vieram acompanhados de 2,3 clientes" é um fato
+    sobre o período; "cada R$ 1.000 A MAIS trazem 0,7 cliente" é uma previsão,
+    que pode ou não estar de pé. As duas frases se parecem e dizem coisas
+    diferentes, então o sistema publica as duas separadas e nomeadas.
+    """
+    inv = sum(float(x["inv"]) for x in pontos if x.get("inv"))
+    if inv <= 0:
+        return None
+    soma = lambda chave: sum(  # noqa: E731
+        float(x[chave]) for x in pontos if x.get("inv") and x.get(chave) is not None
+    )
+    fec, rec, leads = soma("fec"), soma("rec"), soma("leads")
+    ritmo = {
+        "meses": len([x for x in pontos if x.get("inv")]),
+        "investimento_total": inv,
+        "clientes": fec,
+        "receita": rec,
+        "leads": leads,
+        "cac_medio": inv / fec if fec else None,
+        "clientes_por_mil": fec / inv * 1000 if fec else None,
+        "leads_por_mil": leads / inv * 1000 if leads else None,
+        "receita_por_real": rec / inv if rec else None,
+    }
+    return ritmo
+
+
+def _resumo(p: dict) -> dict | None:
+    """A frase de uma linha que descreve o período, sem prometer o futuro."""
+    ritmo = p.get("ritmo") or {}
+    por_mil, cac = ritmo.get("clientes_por_mil"), ritmo.get("cac_medio")
+    if not por_mil or not cac:
+        return None
+    # Plural escrito à mão: é uma frase para ser lida em voz alta numa reunião,
+    # e "2,0 cliente(s) fechado(s)" trava a leitura.
+    mes = "mês" if ritmo["meses"] == 1 else "meses"
+    cliente = "cliente fechado" if 0.95 <= por_mil < 1.95 else "clientes fechados"
+    partes = [
+        f"Nos {ritmo['meses']} {mes} analisados, cada R$ 1.000 investidos em tráfego vieram "
+        f"acompanhados de {_num(por_mil)} {cliente}"
+    ]
+    if ritmo.get("leads_por_mil"):
+        partes.append(f"e {_num(ritmo['leads_por_mil'], 0)} leads")
+    texto = " ".join(partes) + f", ou seja, {_brl(cac)} por cliente."
+    if ritmo.get("receita_por_real"):
+        texto += f" Cada R$ 1,00 investido andou junto com {_brl(ritmo['receita_por_real'])} de receita fechada."
+    return {
+        "nivel": "info",
+        "texto": texto,
+        "rodape": (
+            "Isto descreve o que aconteceu no período, somando tudo. Não é o efeito de investir "
+            "mais: para isso serve a tendência acima, que depende de a reta se sustentar."
+        ),
+    }
 
 
 def _manchete(p: dict) -> dict | None:
@@ -398,8 +469,11 @@ def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
     # ---- 2. O próximo cliente custa mais ou menos que os de hoje? ----
     if vendas and vendas["por_mil"] > 0:
         cac_marginal = 1000 / vendas["por_mil"]
-        previsto_hoje = vendas["intercepto"] + vendas["inclinacao"] * atual
-        cac_medio = atual / previsto_hoje if previsto_hoje > 0 else 0.0
+        # O CAC médio é o MEDIDO (investimento somado ÷ clientes somados), não
+        # o que a reta estima para hoje. Com um ajuste fraco os dois divergem, e
+        # chamar de "médio" um valor que saiu do modelo é apresentar previsão
+        # como fato — justamente no caso em que o modelo não merece confiança.
+        cac_medio = (p.get("ritmo") or {}).get("cac_medio") or 0.0
         if cac_medio > 0 and not regra:
             if cac_marginal > cac_medio * 1.15:
                 linhas.append({

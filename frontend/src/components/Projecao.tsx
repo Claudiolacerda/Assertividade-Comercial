@@ -156,6 +156,19 @@ export default function Projecao({ dados }) {
         <p className={`manchete${manchete.nivel === "ok" ? "" : " fraca"}`}>{manchete.texto}</p>
       )}
 
+      {/* O resumo do período vem DEPOIS da manchete e com cara de fato, não de
+          previsão: ele é a soma dos meses, não um modelo. É a frase que sobra
+          de pé quando a tendência não se sustenta, e a que se diz em reunião. */}
+      {dados.resumo && (
+        <div className="resumo-periodo">
+          <p>{dados.resumo.texto}</p>
+          {/* `ressalva`, e não `rodape`: `.rodape` é a classe do rodapé do
+              site, com padding de 34px e cor clara. Reusar o nome colava o
+              estilo do rodapé dentro do cartão. */}
+          <p className="ressalva">{dados.resumo.rodape}</p>
+        </div>
+      )}
+
       {/* A leitura: a tabela diz O QUE, isto diz E DAÍ. Vem do backend pronta e
           determinística, pela mesma razão do JET: o número e a frase têm de
           concordar sempre. */}

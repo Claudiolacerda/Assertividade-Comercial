@@ -99,3 +99,19 @@ def test_a_manchete_vem_do_motor_e_nao_da_tela():
     assert "dados.manchete" in PROJECAO
     assert "A cada R$ 1.000" not in PROJECAO, "a frase não pode ser remontada aqui"
     assert 'manchete.nivel === "ok"' in PROJECAO, "a reta fraca precisa mudar de estilo"
+
+
+def test_a_tela_mostra_o_resumo_do_periodo_com_a_ressalva():
+    """A frase de reunião, e a linha que impede lê-la como previsão."""
+    assert "dados.resumo" in PROJECAO
+    assert "dados.resumo.rodape" in PROJECAO
+
+
+def test_o_cartao_nao_usa_a_classe_do_rodape_do_site():
+    """`.rodape` é o rodapé do site: padding de 34px e cor clara.
+
+    Usar o nome dentro do cartão colava o estilo do rodapé num parágrafo de
+    ressalva — e foi exatamente isso que aconteceu, com 106px de altura para
+    duas linhas de 12px.
+    """
+    assert 'className="rodape"' not in PROJECAO

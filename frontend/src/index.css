@@ -2087,6 +2087,12 @@ td.texto { white-space: normal; min-width: 260px; }
   background: rgba(250, 178, 25, 0.12);
   color: var(--atencao-texto);
 }
+.projecao .resumo-periodo {
+  border: 1px solid var(--borda); border-radius: 9px;
+  padding: 12px 14px; margin: 0 0 18px; background: var(--surface-2);
+}
+.projecao .resumo-periodo p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+.projecao .resumo-periodo .ressalva { margin-top: 7px; }
 .projecao table.cenarios { width: 100%; }
 .projecao table.cenarios .num { text-align: right; font-variant-numeric: tabular-nums; }
 .projecao table.cenarios .valor { font-weight: 620; }
