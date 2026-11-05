@@ -833,3 +833,20 @@ def test_a_projecao_recupera_o_mes_de_uma_analise_sem_kpis_resumo(client, org):
     assert corpo["n_meses"] == 1, "o mês sumiu junto com o atalho"
     assert corpo["pontos"][0]["inv"] > 0
     assert corpo["meses_sem_investimento"] == []
+
+
+# --------------------------------------------------------------------- #
+# Variação: por que a receita mudou
+# --------------------------------------------------------------------- #
+def test_a_variacao_precisa_de_dois_meses(client, org):
+    dados = org("Varia Ltda")
+    assert subir(client, dados).status_code == 201
+    corpo = client.get("/api/analises/variacao", headers=cab(dados)).json()
+    assert corpo["disponivel"] is False
+    assert "dois meses" in corpo["motivo"]
+
+
+def test_a_variacao_nao_alcanca_outra_organizacao(client, org):
+    uma, outra = org("Dona da Variacao"), org("Vizinha da Variacao")
+    assert subir(client, uma).status_code == 201
+    assert client.get("/api/analises/variacao", headers=cab(outra)).json()["disponivel"] is False

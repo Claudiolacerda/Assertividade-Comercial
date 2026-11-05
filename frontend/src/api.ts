@@ -161,6 +161,10 @@ export const api = {
    *  três ou nenhum, e por quê. */
   projecao: () => requisitar<any>("/analises/projecao"),
 
+  /** Por que a receita mudou do mês passado para este, repartido entre os
+   *  cinco fatores da cadeia. */
+  variacao: () => requisitar<any>("/analises/variacao"),
+
   /** O mesmo cálculo em PDF, para levar à reunião: os meses que entraram na
    *  conta, o método, o resultado e os limites. */
   baixarProjecaoPdf: () => baixar("/analises/projecao.pdf", "Projecao_Investimento_Neriah.pdf"),

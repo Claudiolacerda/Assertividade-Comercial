@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { GraficoEvolucao, S1, S2, S3, dataHora, formatar, mesPorExtenso } from "../components/Charts";
 import Projecao from "../components/Projecao";
+import Variacao from "../components/Variacao";
 import { useAuth } from "../auth";
 import { mensagemDoErro } from "../erros";
 
@@ -21,21 +22,24 @@ export default function Historico() {
   const [analises, setAnalises] = useState<any>(null);
   const [evolucao, setEvolucao] = useState<any>(null);
   const [projecao, setProjecao] = useState<any>(null);
+  const [variacao, setVariacao] = useState<any>(null);
   const [erro, setErro] = useState("");
 
   async function carregar() {
     try {
-      const [lista, evo, proj] = await Promise.all([
+      const [lista, evo, proj, varia] = await Promise.all([
         api.analises(),
         api.evolucao(),
         /* A projeção não pode derrubar a home: ela é um extra sobre os meses
            já analisados, e uma falha ali não vale uma tela de erro no lugar
            do histórico inteiro. */
         api.projecao().catch(() => null),
+        api.variacao().catch(() => null),
       ]);
       setAnalises(lista);
       setEvolucao(evo);
       setProjecao(proj);
+      setVariacao(varia);
     } catch (e) {
       setErro(mensagemDoErro(e));
     }
@@ -105,6 +109,14 @@ export default function Historico() {
             formato="brl"
             cor={S1}
           />
+        </div>
+      )}
+
+      {/* "Por que mudou" vem antes de "e se eu mudar": explicar o passado é o
+          que dá direito de falar do futuro. */}
+      {variacao?.disponivel && (
+        <div style={{ marginBottom: 18 }}>
+          <Variacao dados={variacao} />
         </div>
       )}
 

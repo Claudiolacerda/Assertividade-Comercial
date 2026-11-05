@@ -2048,6 +2048,69 @@ td.texto { white-space: normal; min-width: 260px; }
   list-style: none; margin: 16px 0 0; padding: 0;
   display: flex; flex-direction: column; gap: 8px;
 }
+/* "Por que a receita mudou": a decomposicao entre os cinco fatores. */
+.variacao .topo-variacao {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 18px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.variacao .sub, .variacao .motivo {
+  margin: 5px 0 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; max-width: 70ch;
+}
+.variacao .total-variacao {
+  display: flex; flex-direction: column; align-items: flex-end; flex: none;
+  text-align: right; line-height: 1.2;
+}
+.variacao .total-variacao strong {
+  font-size: 26px; font-weight: 690; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; white-space: nowrap;
+}
+.variacao .total-variacao.subiu strong { color: var(--bom); }
+.variacao .total-variacao.caiu strong { color: var(--critico); }
+.variacao .total-variacao .rotulo { font-size: 11.5px; color: var(--ink-muted); }
+.variacao .leitura-variacao {
+  display: flex; gap: 8px; align-items: flex-start;
+  margin: 0 0 16px; padding: 11px 13px; border-radius: 9px;
+  background: var(--surface-2); font-size: 13.5px; line-height: 1.5; color: var(--ink);
+}
+.variacao .fatores { list-style: none; margin: 0; padding: 0; }
+.variacao .fatores li {
+  display: grid; grid-template-columns: minmax(180px, 1.3fr) minmax(90px, 2fr) auto;
+  gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--grid);
+}
+.variacao .fatores li:last-child { border-bottom: none; }
+.variacao .nome strong { display: block; font-size: 13px; font-weight: 640; color: var(--ink); }
+.variacao .de-para {
+  font-size: 11.5px; color: var(--ink-muted); font-variant-numeric: tabular-nums;
+}
+/* A barra sai do centro para os dois lados nao caberia na largura util; aqui
+   ela mede so o modulo, e a cor diz o sinal. */
+.variacao .barra { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.variacao .barra span { display: block; height: 100%; border-radius: 99px; }
+.variacao .barra .sobe { background: var(--bom); }
+.variacao .barra .desce { background: var(--critico); }
+.variacao .efeito {
+  font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums;
+  white-space: nowrap; text-align: right; min-width: 104px;
+}
+.variacao .efeito.sobe { color: var(--sucesso-texto); }
+.variacao .efeito.desce { color: var(--critico-texto); }
+.variacao .ressalva {
+  margin: 14px 0 0; font-size: 12px; color: var(--ink-muted); line-height: 1.5;
+}
+/* No celular as tres colunas nao cabem: a barra fica sem largura util e a
+   pagina rola de lado. Empilhadas, o numero vai para o lado do nome e a barra
+   ocupa a linha inteira. */
+@media (max-width: 560px) {
+  .variacao .fatores li {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "nome efeito" "barra barra";
+    gap: 6px 12px;
+  }
+  .variacao .nome { grid-area: nome; }
+  .variacao .efeito { grid-area: efeito; min-width: 0; }
+  .variacao .barra { grid-area: barra; }
+}
+
 /* "Se eu mudar o investimento": a projecao na home. */
 .projecao .topo-projecao {
   display: flex; justify-content: space-between; align-items: flex-start;

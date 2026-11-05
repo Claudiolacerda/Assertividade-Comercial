@@ -17,6 +17,7 @@ from ..config import settings
 from ..core import ConfigAnalise, analisar, gerar_excel
 from ..core.jev import avaliar as avaliar_jev
 from ..core.pipeline import ErroDeAnalise
+from ..core.decomposicao import comparar as comparar_meses, montar_mes
 from ..core.pdf_projecao import gerar_pdf as gerar_pdf_projecao
 from ..core.projecao import projetar
 from ..db import get_db, sessao_tenant
@@ -31,6 +32,9 @@ EXT_REUNIOES = {".csv", ".xlsx", ".xlsm", ".xls"}
 # KPIs guardados achatados para o gráfico de evolução entre meses
 KPIS_EVOLUCAO = [
     "inv", "leads", "cpl", "ctr", "ag", "real", "fec", "assert", "cac", "roas", "rec", "cpr", "l2r",
+    # Topo do funil informado: entra na serie para a decomposicao poder usar o
+    # lead de todas as origens, e nao so o que a Meta reportou.
+    "leadsinf", "mql",
 ]
 
 
@@ -368,6 +372,55 @@ def projecao(atual: Atual = Depends(usuario_atual)):
     # só vira decisão quando comparado com o que ele aceita pagar.
     cfg = ConfigAnalise.from_dict(atual.empresa.config_analise)
     return projetar(meses, metas=cfg.metas, total_analises=total)
+
+
+@router.get("/variacao")
+def variacao(atual: Atual = Depends(usuario_atual)):
+    """Por que a receita mudou do mês passado para este.
+
+    Reparte a diferença entre os cinco fatores da cadeia (leads, agendamento,
+    comparecimento, assertividade, ticket). É aritmética exata, não modelo:
+    as contribuições somam exatamente a variação observada.
+    """
+    with sessao_tenant(atual.schema) as st:
+        meses, _total = _serie_mensal(st)
+    if len(meses) < 2:
+        return {
+            "disponivel": False,
+            "motivo": "A comparação precisa de dois meses analisados; há "
+            f"{len(meses)} no sistema.",
+        }
+
+    anterior, atual_mes = meses[-2], meses[-1]
+    # A MESMA origem de lead nos dois meses. Um com total informado e outro sem
+    # viraria uma variação de volume que só existe no critério, e ela apareceria
+    # como a maior causa da mudança.
+    informados = [float(m.get("leadsinf") or 0) for m in (anterior, atual_mes)]
+    usar_informado = all(v > 0 for v in informados)
+    resultado = comparar_meses(
+        montar_mes(
+            anterior,
+            anterior["mes_referencia"],
+            leads=informados[0] if usar_informado else float(anterior.get("leads") or 0),
+        ),
+        montar_mes(
+            atual_mes,
+            atual_mes["mes_referencia"],
+            leads=informados[1] if usar_informado else float(atual_mes.get("leads") or 0),
+        ),
+    )
+    if not resultado:
+        return {
+            "disponivel": False,
+            "motivo": "Um dos dois meses não tem a cadeia inteira (leads, reuniões, realizadas, "
+            "fechados e receita). Sem um dos fatores a conta não fecha, e repartir uma diferença "
+            "que não fecha seria pior que não repartir.",
+        }
+    return {
+        "disponivel": True,
+        "base_leads": "informada" if usar_informado else "paga",
+        **resultado,
+    }
 
 
 @router.get("/projecao.pdf")

@@ -115,3 +115,29 @@ def test_o_cartao_nao_usa_a_classe_do_rodape_do_site():
     duas linhas de 12px.
     """
     assert 'className="rodape"' not in PROJECAO
+
+
+# --------------------------------------------------------------------- #
+# O cartão "Por que a receita mudou"
+# --------------------------------------------------------------------- #
+VARIACAO = (RAIZ / "frontend/src/components/Variacao.tsx").read_text(encoding="utf-8")
+
+
+def test_a_home_busca_e_mostra_a_variacao():
+    assert "api.variacao()" in HISTORICO
+    assert "<Variacao dados={variacao} />" in HISTORICO
+    assert "api.variacao().catch(() => null)" in HISTORICO, "extra nenhum derruba a home"
+
+
+def test_a_variacao_vem_antes_da_projecao_na_home():
+    """Explicar o passado é o que dá direito de falar do futuro."""
+    assert HISTORICO.index("<Variacao") < HISTORICO.index("<Projecao")
+
+
+def test_o_cartao_usa_o_formato_que_vem_do_motor():
+    """A tela não deve adivinhar que "leads" é contagem e "ticket" é dinheiro."""
+    assert "formatar(c.antes, c.formato)" in VARIACAO
+
+
+def test_o_cartao_explica_a_indisponibilidade():
+    assert "dados.disponivel" in VARIACAO and "dados.motivo" in VARIACAO
