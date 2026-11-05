@@ -74,6 +74,48 @@ def _resumir(res) -> dict[str, float]:
     return {k: res.kpi(k) for k in KPIS_EVOLUCAO if k in res.kpis}
 
 
+def _kpis_da_analise(a: Analise) -> dict[str, float]:
+    """Os KPIs achatados de uma análise, caindo no resultado quando preciso.
+
+    `kpis_resumo` é um atalho gravado na hora da análise. Análise antiga, ou
+    gravada por uma versão que ainda não guardava esse campo, tem o resultado
+    completo e o atalho vazio — e aí o mês entrava na série sem investimento e
+    era descartado em silêncio. O usuário via "2 meses" tendo 3 análises, sem
+    nenhuma pista do motivo.
+    """
+    dados = dict(a.kpis_resumo or {})
+    faltando = [k for k in KPIS_EVOLUCAO if k not in dados]
+    if faltando and a.resultado:
+        kpis = (a.resultado or {}).get("kpis") or {}
+        for chave in faltando:
+            valor = (kpis.get(chave) or {}).get("valor")
+            if valor is not None:
+                dados[chave] = valor
+    return dados
+
+
+def _serie_mensal(st) -> tuple[list[dict], int]:
+    """Um ponto por mês (última versão de cada um) e quantas análises existem.
+
+    A série é a mesma do gráfico de evolução e da projeção: as duas leem o que
+    está gravado, sem recalcular nada. É o que faz a projeção ser automática —
+    subiu análise, o mês entra na conta sozinho na próxima abertura da home.
+    """
+    analises = st.scalars(
+        select(Analise)
+        .where(Analise.status == "concluida")
+        .order_by(Analise.mes_referencia.asc(), Analise.versao.asc())
+    ).all()
+    por_mes: dict[str, dict] = {}
+    for a in analises:  # versão maior sobrescreve a anterior do mesmo mês
+        por_mes[a.mes_referencia] = {
+            "mes_referencia": a.mes_referencia,
+            "analise_id": a.id,
+            **_kpis_da_analise(a),
+        }
+    return list(por_mes.values()), len(analises)
+
+
 @router.post("", response_model=AnaliseDetalhe, status_code=status.HTTP_201_CREATED)
 def criar_analise(
     arquivos_meta: list[UploadFile] = File(..., description="CSV/XLSX exportado do Gerenciador de Anúncios"),
@@ -308,19 +350,8 @@ def listar(atual: Atual = Depends(usuario_atual)):
 def evolucao(atual: Atual = Depends(usuario_atual)):
     """Série mês a mês (última versão de cada mês) — é o gráfico de tendência do painel."""
     with sessao_tenant(atual.schema) as st:
-        analises = st.scalars(
-            select(Analise)
-            .where(Analise.status == "concluida")
-            .order_by(Analise.mes_referencia.asc(), Analise.versao.asc())
-        ).all()
-        por_mes: dict[str, dict] = {}
-        for a in analises:  # versão maior sobrescreve a anterior do mesmo mês
-            por_mes[a.mes_referencia] = {
-                "mes_referencia": a.mes_referencia,
-                "analise_id": a.id,
-                **(a.kpis_resumo or {}),
-            }
-        return {"meses": list(por_mes.values()), "kpis": KPIS_EVOLUCAO}
+        meses, _total = _serie_mensal(st)
+        return {"meses": meses, "kpis": KPIS_EVOLUCAO}
 
 
 @router.get("/projecao")
@@ -332,22 +363,11 @@ def projecao(atual: Atual = Depends(usuario_atual)):
     em `core.projecao`: é regra de negócio, não de rota.
     """
     with sessao_tenant(atual.schema) as st:
-        analises = st.scalars(
-            select(Analise)
-            .where(Analise.status == "concluida")
-            .order_by(Analise.mes_referencia.asc(), Analise.versao.asc())
-        ).all()
-        por_mes: dict[str, dict] = {}
-        for a in analises:  # versão maior sobrescreve a anterior do mesmo mês
-            por_mes[a.mes_referencia] = {
-                "mes_referencia": a.mes_referencia,
-                **(a.kpis_resumo or {}),
-            }
-        total = len(analises)
+        meses, total = _serie_mensal(st)
     # O teto de CAC do cliente entra na leitura: "o próximo cliente custa R$ X"
     # só vira decisão quando comparado com o que ele aceita pagar.
     cfg = ConfigAnalise.from_dict(atual.empresa.config_analise)
-    return projetar(list(por_mes.values()), metas=cfg.metas, total_analises=total)
+    return projetar(meses, metas=cfg.metas, total_analises=total)
 
 
 @router.get("/projecao.pdf")

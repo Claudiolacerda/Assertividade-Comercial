@@ -155,6 +155,13 @@ def projetar(
     meses, a tela precisa explicar a diferença, porque "tenho 3 análises" e "a
     conta usa 2 meses" parece erro do sistema e não é.
     """
+    # Mês analisado sem investimento registrado não entra na conta: não há
+    # eixo x. Mas ele também não pode sumir em silêncio, senão o usuário conta
+    # as análises dele, conta os meses da tela e encontra uma diferença sem
+    # explicação. A lista volta no payload e vira frase na leitura.
+    ignorados = [
+        p.get("mes_referencia") for p in pontos if not p.get("inv") and p.get("mes_referencia")
+    ]
     pontos = [p for p in pontos if p.get("inv")]
     pontos = sorted(pontos, key=lambda p: p.get("mes_referencia") or "")
     n = len(pontos)
@@ -164,6 +171,7 @@ def projetar(
     base = {
         "n_meses": n,
         "n_analises": total_analises if total_analises is not None else n,
+        "meses_sem_investimento": sorted(ignorados),
         "minimo_meses": MINIMO_MESES,
         "investimento_atual": atual,
         "faixa_observada": (
@@ -403,6 +411,19 @@ def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
                     f"meça cada um antes do próximo."
                 ),
             })
+
+    # ---- 3b. Algum mês ficou de fora? ----
+    sem_inv = p.get("meses_sem_investimento") or []
+    if sem_inv:
+        lista = ", ".join(sem_inv)
+        linhas.append({
+            "nivel": "atencao",
+            "texto": (
+                f"{len(sem_inv)} mês(es) analisado(s) ficaram fora da conta por não terem "
+                f"investimento registrado ({lista}). Sem o valor gasto não há como medir o efeito "
+                f"de mudá-lo: confira se o relatório da Meta daquele mês foi enviado junto."
+            ),
+        })
 
     # ---- 4. O quanto dessa conta é firme? ----
     if regra:

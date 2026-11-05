@@ -329,3 +329,27 @@ def test_o_mesmo_aviso_nao_aparece_duas_vezes():
     """Ele nasce uma vez por alvo, e três alvos repetiam a mesma frase."""
     avisos = projetar(TRES_MESES, metas={})["avisos"]
     assert len(avisos) == len(set(avisos))
+
+
+# --------------------------------------------------------------------- #
+# Nenhum mês sai da conta em silêncio
+# --------------------------------------------------------------------- #
+def test_mes_sem_investimento_e_nomeado_em_vez_de_sumir():
+    """O usuário conta as análises dele e confere com o que a tela diz.
+
+    Um mês descartado sem explicação vira "o sistema perdeu minha análise", e é
+    o tipo de desconfiança que não se recupera com uma frase depois.
+    """
+    com_buraco = meses([("2026-07", 2000.0, 4), ("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)])
+    com_buraco.append({"mes_referencia": "2026-06", "fec": 3, "rec": 7000.0, "leads": 40})
+    p = projetar(com_buraco, metas={}, total_analises=4)
+    assert p["n_meses"] == 3
+    assert p["meses_sem_investimento"] == ["2026-06"]
+    assert "2026-06" in _textos(p)
+    assert "investimento registrado" in _textos(p)
+
+
+def test_sem_buraco_nenhum_a_lista_fica_vazia():
+    p = projetar(meses([("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)]), metas={})
+    assert p["meses_sem_investimento"] == []
+    assert "ficaram fora da conta" not in _textos(p)

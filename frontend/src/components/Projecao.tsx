@@ -11,7 +11,7 @@ import { useState } from "react";
 
 import { api } from "../api";
 
-import { GraficoProjecao, formatar, inteiro, reais } from "./Charts";
+import { GraficoProjecao, formatar, inteiro, mesPorExtenso, reais } from "./Charts";
 import { ICONES_NIVEL, IconeAtencao } from "./Icones";
 
 const PCT = (v: number) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}%`;
@@ -123,9 +123,16 @@ export default function Projecao({ dados }) {
         <div>
           <h2>Se eu mudar o investimento</h2>
           <p className="sub">
+            {/* Os meses vêm nomeados porque o cartão aparece sozinho na home:
+                sem a lista, "3 meses" é uma afirmação que o usuário não tem
+                como conferir sem ir atrás no histórico. */}
             {regra
-              ? `Ritmo médio de ${n_meses} mês(es) analisado(s).`
-              : `Tendência medida em ${n_meses} meses analisados.`}{" "}
+              ? `Ritmo médio de ${n_meses} mês(es) analisado(s)`
+              : `Tendência medida em ${n_meses} meses analisados`}
+            {!!(dados.pontos || []).length && (
+              <> ({dados.pontos.map((p) => mesPorExtenso(p.mes_referencia)).join(", ")})</>
+            )}
+            .{" "}
             {faixa_observada && (
               <>
                 O investimento já praticado vai de {reais(faixa_observada.min)} a{" "}

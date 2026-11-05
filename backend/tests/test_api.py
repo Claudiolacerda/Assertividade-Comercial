@@ -810,3 +810,26 @@ def test_o_pdf_nao_vaza_os_meses_de_outra_organizacao(client, org):
     assert resp.status_code == 200
     # Sem análise nenhuma, o documento é a explicação curta, não um relatório.
     assert len(resp.content) < 4000
+
+
+def test_a_projecao_recupera_o_mes_de_uma_analise_sem_kpis_resumo(client, org):
+    """`kpis_resumo` é um atalho; análise antiga pode não ter.
+
+    Sem o resgate pelo resultado completo, esse mês entrava na série sem
+    investimento e era descartado em silêncio: o usuário via menos meses do que
+    tem análises, sem nenhuma pista do motivo.
+    """
+    from app.db import sessao_tenant
+    from app.models import Analise, Empresa
+
+    dados = org("Resgata Ltda")
+    criada = subir(client, dados).json()
+    with sessao_publica() as db:
+        schema = db.get(Empresa, empresa_id(dados)).schema_banco
+    with sessao_tenant(schema) as st:
+        st.get(Analise, criada["id"]).kpis_resumo = None
+
+    corpo = client.get("/api/analises/projecao", headers=cab(dados)).json()
+    assert corpo["n_meses"] == 1, "o mês sumiu junto com o atalho"
+    assert corpo["pontos"][0]["inv"] > 0
+    assert corpo["meses_sem_investimento"] == []

@@ -87,3 +87,8 @@ def test_a_tela_oferece_o_pdf():
 
 def test_a_falha_do_pdf_nao_derruba_o_cartao():
     assert "erroPdf" in PROJECAO
+
+
+def test_a_tela_nomeia_os_meses_que_entraram_na_conta():
+    """"3 meses" sem a lista é uma afirmação que o usuário não consegue conferir."""
+    assert "mesPorExtenso(p.mes_referencia)" in PROJECAO
