@@ -9,11 +9,82 @@ from __future__ import annotations
 
 import hashlib
 import re
+import warnings
 from pathlib import Path
 
 import pandas as pd
 
 from .texto import normalizar
+
+
+# Uma aba por mês é como a planilha de controle comercial costuma nascer:
+# "Agosto", "Setembro", "Outubro". O nome da aba é a intenção do usuário dita
+# em voz alta, e vale mais que a data linha a linha — que nessas planilhas vive
+# incompleta, principalmente nas linhas fechadas, onde o vendedor preenche o
+# status e não a data.
+_MESES_ABA = {
+    "janeiro": 1, "jan": 1, "fevereiro": 2, "fev": 2, "marco": 3, "mar": 3,
+    "abril": 4, "abr": 4, "maio": 5, "mai": 5, "junho": 6, "jun": 6,
+    "julho": 7, "jul": 7, "agosto": 8, "ago": 8, "setembro": 9, "set": 9,
+    "outubro": 10, "out": 10, "novembro": 11, "nov": 11, "dezembro": 12, "dez": 12,
+}
+
+
+def mes_da_aba(nome: str | None) -> tuple[int, int | None] | None:
+    """(mês, ano) a partir do nome da aba, ou None quando ele não é um mês.
+
+    Aceita "Outubro", "Outubro 2026", "out/26" e "2026-10". O ano é opcional:
+    quem escreve "Outubro" numa planilha do ano corrente está sendo claro o
+    bastante, e quem lê decide o ano pelas datas que a aba contém.
+    """
+    if not nome:
+        return None
+    texto = normalizar(nome)
+    ano = None
+    for pedaco in re.findall(r"\d{2,4}", texto):
+        valor = int(pedaco)
+        if 1000 <= valor <= 2999:
+            ano = valor
+        elif 0 <= valor <= 99 and len(pedaco) == 2:
+            ano = 2000 + valor
+    # "2026-10": mês em número, no formato ISO
+    iso = re.fullmatch(r"(\d{4})[-/](\d{1,2})", texto.strip())
+    if iso:
+        return int(iso.group(2)), int(iso.group(1))
+    for palavra, numero in _MESES_ABA.items():
+        if re.search(rf"\b{palavra}", texto):
+            return numero, ano
+    return None
+
+
+def _juntar(partes: list[pd.DataFrame]) -> pd.DataFrame:
+    """Empilha os pedaços lidos, sem o alarme de depreciação do pandas.
+
+    Uma coluna pode estar inteira vazia num bloco e preenchida em outro — é o
+    normal numa planilha por semanas. O pandas avisa que vai mudar como decide
+    o tipo nesse caso, e o comportamento FUTURO é justamente o que se quer
+    aqui: manter a coluna. O aviso não tem o que ensinar a quem usa o sistema,
+    e aparecia na janela da API a cada análise.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", FutureWarning)
+        return pd.concat(partes, ignore_index=True)
+
+
+def ler_abas(caminho: str | Path) -> list[tuple[str | None, pd.DataFrame]]:
+    """Todas as abas do arquivo, cruas. CSV tem uma só, sem nome.
+
+    Ler só a primeira aba era um erro caro e silencioso: a planilha de controle
+    comercial costuma ter uma aba POR MÊS (Agosto, Setembro, Outubro), e o
+    sistema enxergava apenas a primeira. Pedindo outubro, ele analisava agosto
+    e carimbava o resultado como outubro — os números batiam com alguma coisa,
+    só não com o mês certo.
+    """
+    caminho = Path(caminho)
+    if caminho.suffix.lower() in (".xlsx", ".xlsm", ".xls"):
+        abas = pd.read_excel(caminho, sheet_name=None, header=None, dtype=object)
+        return list(abas.items())
+    return [(None, ler_bruto(caminho))]
 
 
 def ler_bruto(caminho: str | Path) -> pd.DataFrame:
@@ -82,7 +153,14 @@ def montar_tabela(bruto: pd.DataFrame, apelidos_obrigatorios) -> tuple[pd.DataFr
         bloco["semana_planilha"] = semana
         partes.append(bloco)
     em_blocos = len(cabecalhos) > 1 or cabecalhos[0] > 0
-    return pd.concat(partes, ignore_index=True), em_blocos
+    # Bloco vazio entra como DataFrame sem linhas e o pandas avisa que vai
+    # mudar a inferência de tipo ao concatenar com ele. Aqui a aba sem linha
+    # nenhuma é um caso normal (a aba Reuniões em branco da planilha-modelo),
+    # então ela volta vazia e quem decide o que fazer é `ler_arquivos`.
+    partes = [p for p in partes if len(p)]
+    if not partes:
+        return pd.DataFrame(columns=list(bruto.columns)), em_blocos
+    return _juntar(partes), em_blocos
 
 
 def ler_arquivos(
@@ -112,18 +190,36 @@ def ler_arquivos(
             )
             continue
         vistos[h] = arq.name
-        df, blocos = montar_tabela(ler_bruto(arq), apelidos_obrigatorios)
-        if df is None:
+        aproveitadas: list[str] = []
+        for nome_aba, bruto in ler_abas(arq):
+            df, blocos = montar_tabela(bruto, apelidos_obrigatorios)
+            if df is None:
+                continue
+            em_blocos |= blocos
+            df["arquivo_origem"] = arq.name
+            if nome_aba:
+                # Fica na base tratada: quando duas abas trazem o mesmo cliente,
+                # é o que mostra de qual mês veio cada linha.
+                df["aba_origem"] = nome_aba
+                aproveitadas.append(str(nome_aba))
+            partes.append(df)
+        if not aproveitadas and not any(p["arquivo_origem"].iloc[0] == arq.name for p in partes if len(p)):
             avisos.append(f"Arquivo '{arq.name}' ignorado: nenhum cabeçalho reconhecido.")
-            continue
-        em_blocos |= blocos
-        df["arquivo_origem"] = arq.name
-        partes.append(df)
+        elif len(aproveitadas) > 1:
+            avisos.append(
+                f"'{arq.name}' tem {len(aproveitadas)} abas com dados: {', '.join(aproveitadas)}."
+            )
     if not partes:
         raise ValueError(
             "Nenhum arquivo válido: não encontrei as colunas obrigatórias em nenhum dos arquivos enviados."
         )
-    return pd.concat(partes, ignore_index=True), em_blocos
+    # Aba vazia entra como DataFrame sem linhas e o pandas avisa que vai mudar
+    # a inferência de tipo quando concatenar com ela. Tirar antes é mais
+    # honesto que silenciar o aviso.
+    partes = [p for p in partes if len(p)]
+    if not partes:
+        raise ValueError("Os arquivos enviados têm cabeçalho reconhecido, mas nenhuma linha de dados.")
+    return _juntar(partes), em_blocos
 
 
 def encontrar_coluna(df: pd.DataFrame, apelidos: list[str]) -> str | None:
@@ -154,10 +250,15 @@ def padronizar(df: pd.DataFrame, mapa: dict[str, list[str]], nome_base: str) -> 
                 "Coluna encontrada no arquivo": col if col else "— NÃO ENCONTRADA —",
             }
         )
-    extras = [c for c in df.columns if c not in usadas and c not in ("arquivo_origem", "semana_planilha")]
+    extras = [
+        c for c in df.columns
+        if c not in usadas and c not in ("arquivo_origem", "aba_origem", "semana_planilha")
+    ]
     for c in extras:
         log.append({"Base": nome_base, "Campo do sistema": "(não usada)", "Coluna encontrada no arquivo": c})
-    for c in ["arquivo_origem", "semana_planilha"]:
+    # `aba_origem` entra junto: é por ele que o motor descobre que a planilha
+    # tem uma aba por mês, e sem ele o filtro por aba nunca acontece.
+    for c in ["arquivo_origem", "aba_origem", "semana_planilha"]:
         if c in df:
             novo[c] = df[c]
     return novo, pd.DataFrame(log)

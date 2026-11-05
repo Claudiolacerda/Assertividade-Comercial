@@ -20,7 +20,13 @@ from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDE
 from .estatistica import frase_do_veredito, veredito, wilson
 from .sobrevivencia import Caso, estimar, resumir
 from .jet import avaliar as avaliar_jet
-from .leitura import ler_arquivos, ler_funil_da_planilha, ler_metas_da_planilha, padronizar
+from .leitura import (
+    ler_arquivos,
+    ler_funil_da_planilha,
+    ler_metas_da_planilha,
+    mes_da_aba,
+    padronizar,
+)
 from .metricas import (
     TAXAS_COMERCIAIS,
     TAXAS_CRUZADAS,
@@ -347,6 +353,7 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
     # e, só se nenhuma das duas existir na planilha, a de fechamento ou a de
     # entrada do lead.
     reun["data_referencia"] = reun["data_reuniao"].fillna(reun["data_agendamento"])
+    reun["mes_aba"] = _mes_das_abas(reun)
     if not reun["data_referencia"].notna().any():
         # Escolhe a coluna MAIS PREENCHIDA, não a primeira que tenha algo. A
         # data de fechamento só existe no negócio ganho: no Pipedrive ela tinha
@@ -466,25 +473,82 @@ def _classificar_status(txt, cfg: ConfigAnalise) -> str:
 # ---------------------------------------------------------------------- #
 # 2. Período
 # ---------------------------------------------------------------------- #
+def _mes_das_abas(reun: pd.DataFrame) -> pd.Series:
+    """O mês que o NOME de cada aba declara, quando ele declara um.
+
+    A planilha de controle comercial costuma ter uma aba por mês, e o nome dela
+    é a intenção do usuário dita em voz alta. Isso vale mais que a data linha a
+    linha, que nessas planilhas vive incompleta — e falta justamente nas linhas
+    fechadas, onde o vendedor preenche o status e não a data.
+
+    O ano sai do próprio nome ("Outubro 2026") ou, quando ele não traz,
+    das datas que existem dentro daquela aba. Sem nenhuma pista, a aba não
+    vira mês nenhum: chutar o ano seria pior que não saber.
+    """
+    vazio = pd.Series(pd.NaT, index=reun.index, dtype="period[M]")
+    if "aba_origem" not in reun:
+        return vazio
+    for aba, linhas in reun.groupby("aba_origem", dropna=True):
+        achado = mes_da_aba(str(aba))
+        if not achado:
+            continue
+        mes, ano = achado
+        if ano is None:
+            anos = linhas["data_referencia"].dropna().dt.year
+            if not len(anos):
+                anos = reun["data_referencia"].dropna().dt.year
+            if not len(anos):
+                continue
+            ano = int(anos.mode()[0])
+        vazio.loc[linhas.index] = pd.Period(year=ano, month=mes, freq="M")
+    return vazio
+
+
 def _filtrar_periodo(
     reun: pd.DataFrame, meta: pd.DataFrame, cfg: ConfigAnalise, em_blocos: bool, avisos: list[str]
 ):
+    meses_de_aba = reun["mes_aba"].dropna() if "mes_aba" in reun else pd.Series(dtype="period[M]")
     mes = cfg.mes_referencia
     if mes is None:
-        meses = reun["data_referencia"].dropna().dt.to_period("M")
-        if not len(meses):
-            raise ErroDeAnalise(
-                "Nenhuma data válida na planilha de reuniões — não consigo saber o mês da análise. "
-                "Preencha as datas ou escolha o mês manualmente."
-            )
-        mes = (meses.mode()[0] if em_blocos else meses.max()).strftime("%Y-%m")
+        if len(meses_de_aba):
+            # Abas nomeadas por mês: a análise automática pega a mais recente,
+            # que é o mês que a pessoa acabou de fechar.
+            mes = max(meses_de_aba).strftime("%Y-%m")
+        else:
+            meses = reun["data_referencia"].dropna().dt.to_period("M")
+            if not len(meses):
+                raise ErroDeAnalise(
+                    "Nenhuma data válida na planilha de reuniões — não consigo saber o mês da "
+                    "análise. Preencha as datas ou escolha o mês manualmente."
+                )
+            mes = (meses.mode()[0] if em_blocos else meses.max()).strftime("%Y-%m")
     periodo = pd.Period(mes, "M")
     ini_mes, fim_mes = periodo.start_time.normalize(), periodo.end_time.normalize()
     nome_mes = f"{MESES_PT[periodo.month - 1]}/{periodo.year}"
 
-    filtrar = (not em_blocos) if cfg.filtrar_reunioes_por_data == "auto" else bool(cfg.filtrar_reunioes_por_data)
     dref = reun["data_referencia"]
     no_periodo = dref.notna() & (dref.dt.to_period("M") == periodo)
+
+    # ---- Filtro pela ABA, quando ela diz o mês ----
+    # É o caminho certo para a planilha com uma aba por mês: lá a data da linha
+    # falta justamente nos fechamentos, e filtrar por data descartaria metade
+    # deles. O nome da aba não falta nunca.
+    if len(meses_de_aba) and (reun["mes_aba"] == periodo).any():
+        r = reun[reun["mes_aba"] == periodo].copy()
+        outras = sorted({str(a) for a in reun.loc[reun["mes_aba"] != periodo, "aba_origem"].dropna()})
+        if outras:
+            avisos.append(
+                f"A planilha tem uma aba por mês. Analisei a aba de {nome_mes} e deixei de fora "
+                f"{', '.join(outras)}."
+            )
+        return mes, periodo, nome_mes, r, _meta_do_periodo(meta, periodo, ini_mes, fim_mes, avisos), True
+
+    # O painel por semanas continua sem filtro de data, e isso é deliberado:
+    # nessas planilhas a data falta justamente nas linhas fechadas, onde o
+    # vendedor preenche o status e não a data, e filtrar por data descartaria
+    # metade dos fechamentos. Quem separa os meses nesse formato é o nome da
+    # aba, logo acima — não a data da linha.
+    filtrar = (not em_blocos) if cfg.filtrar_reunioes_por_data == "auto" else bool(cfg.filtrar_reunioes_por_data)
     r = reun[no_periodo].copy() if filtrar else reun.copy()
     if r.empty:
         raise ErroDeAnalise(
@@ -498,8 +562,11 @@ def _filtrar_periodo(
             f"{nome_mes}. Todas as linhas foram analisadas como {nome_mes} — confirme se o mês está certo."
         )
 
-    # Meta: se a exportação é diária, filtra; se é relatório de período, confere a cobertura
-    aviso_meta = ""
+    return mes, periodo, nome_mes, r, _meta_do_periodo(meta, periodo, ini_mes, fim_mes, avisos), filtrar
+
+
+def _meta_do_periodo(meta: pd.DataFrame, periodo, ini_mes, fim_mes, avisos: list[str]) -> pd.DataFrame:
+    """Recorta o relatório da Meta no mês, ou confere a cobertura dele."""
     m = meta.copy()
     if "data_inicio" in m and m["data_inicio"].notna().any():
         diario = "data_fim" not in m or (m["data_inicio"] == m.get("data_fim", m["data_inicio"])).all()
@@ -508,13 +575,11 @@ def _filtrar_periodo(
         else:
             ini_rel, fim_rel = m["data_inicio"].min(), m["data_fim"].max()
             if ini_rel > ini_mes or fim_rel < fim_mes or ini_rel.to_period("M") != periodo:
-                aviso_meta = (
+                avisos.append(
                     f"O relatório da Meta cobre {ini_rel:%d/%m/%Y} a {fim_rel:%d/%m/%Y}, "
                     f"diferente do mês analisado ({ini_mes:%d/%m/%Y} a {fim_mes:%d/%m/%Y})."
                 )
-    if aviso_meta:
-        avisos.append(aviso_meta)
-    return mes, periodo, nome_mes, r, m, filtrar
+    return m
 
 
 # ---------------------------------------------------------------------- #
