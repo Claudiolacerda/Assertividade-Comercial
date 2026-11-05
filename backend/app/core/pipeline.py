@@ -619,6 +619,46 @@ def _metricas_comerciais(ctx: _Contexto) -> None:
 # ---------------------------------------------------------------------- #
 # 5. Ciclo de venda, perdas e pipeline
 # ---------------------------------------------------------------------- #
+def _lista_de_fechamentos(ctx: _Contexto, fech: pd.DataFrame) -> None:
+    """A lista nominal de tudo que foi contado como Fechado.
+
+    Ela existia só dentro do bloco do ciclo de venda, que depende da coluna
+    "Data de fechamento" — justamente a que falta na maioria das planilhas. O
+    resultado é que a pergunta mais comum do mundo ("o sistema diz 14 e eu
+    contei 12; quais são os 14?") não tinha onde ser respondida.
+
+    O texto original do status vai junto de propósito: ver "Pago" ou "Contrato
+    enviado" na coluna ao lado do nome responde a pergunta na hora, sem
+    precisar entender como a classificação funciona.
+    """
+    res, tv = ctx.res, ctx.res.tem_valor
+    if not len(fech):
+        return
+    colunas = {
+        "cliente": "Cliente",
+        "status_original": "Status na planilha",
+        "data_reuniao": "Data da reunião",
+        "responsavel": "Responsável",
+        "origem": "Origem",
+    }
+    if tv:
+        colunas["valor"] = "Valor (R$)"
+    if "data_fechamento" in fech and fech["data_fechamento"].notna().any():
+        colunas["data_fechamento"] = "Data de fechamento"
+    if "Dias até fechar" in fech:
+        colunas["Dias até fechar"] = "Dias até fechar"
+    # Com mais de um arquivo enviado, saber de qual veio cada linha é o que
+    # separa "duas vendas" de "a mesma venda em duas planilhas".
+    if "arquivo_origem" in fech and fech["arquivo_origem"].nunique() > 1:
+        colunas["arquivo_origem"] = "Arquivo"
+    if "semana_planilha" in fech and fech["semana_planilha"].notna().any():
+        colunas["semana_planilha"] = "Semana na planilha"
+
+    tabela = fech[[c for c in colunas if c in fech]].rename(columns=colunas)
+    ordenar = "Dias até fechar" if "Dias até fechar" in tabela else "Cliente"
+    res.tabelas["fechamentos"] = tabela.sort_values(ordenar, kind="stable")
+
+
 def _curva_de_fechamento(ctx: _Contexto, fech: pd.DataFrame) -> None:
     """Kaplan-Meier do tempo até fechar, usando também quem ainda não fechou.
 
@@ -704,19 +744,7 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
                 }
             )
         )
-        cols = ["cliente", "responsavel", "origem", "data_reuniao", "data_fechamento", "Dias até fechar"]
-        cols += ["valor"] if tv else []
-        res.tabelas["fechamentos"] = (
-            fech[cols]
-            .rename(
-                columns={
-                    "cliente": "Cliente", "responsavel": "Responsável", "origem": "Origem",
-                    "data_reuniao": "Data da reunião", "data_fechamento": "Data de fechamento",
-                    "valor": "Valor (R$)",
-                }
-            )
-            .sort_values("Dias até fechar")
-        )
+    _lista_de_fechamentos(ctx, fech)
     _curva_de_fechamento(ctx, fech)
     ctx.fech = fech
 

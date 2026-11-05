@@ -312,3 +312,47 @@ def test_sem_repeticao_o_sistema_nao_inventa_ressalva(tmp_path):
     res = analisar([META], [arq])
     assert "linhas de" not in res.kpis["fec"]["explicacao"]
     assert "clientes distintos" not in " ".join(res.diagnostico["Diagnóstico"])
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_a_lista_de_fechamentos_existe_mesmo_sem_data_de_fechamento(tmp_path):
+    """"O sistema diz 14 e eu contei 12; quais são os 14?"
+
+    A lista vivia dentro do bloco do ciclo de venda, que depende da coluna
+    "Data de fechamento" — justamente a que falta na maioria das planilhas. A
+    pergunta mais comum do mundo não tinha onde ser respondida.
+    """
+    res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
+    lista = res.tabelas["fechamentos"]
+    assert len(lista) == int(res.kpi("fec")), "uma linha por fechamento contado"
+    assert "Cliente" in lista.columns
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_a_lista_mostra_o_texto_original_do_status(tmp_path):
+    """Ver "Pago" ao lado do nome responde a pergunta sem explicar a classificação."""
+    import csv
+
+    arq = tmp_path / "variados.csv"
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Cliente", "Etapa do Funil", "Data da Reunião Realizada", "Valor", "Origem"])
+        w.writerows([
+            ("Padaria", "Pago", "05/09/2026", "2500", "Facebook Ads"),
+            ("Mercado", "Venda realizada", "06/09/2026", "1800", "Facebook Ads"),
+        ])
+    lista = analisar([META], [arq]).tabelas["fechamentos"]
+    textos = set(lista["Status na planilha"])
+    assert textos == {"Pago", "Venda realizada"}
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_mes_sem_fechamento_nao_gera_lista_vazia(tmp_path):
+    import csv
+
+    arq = tmp_path / "sem.csv"
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Cliente", "Etapa do Funil", "Data da Reunião Realizada", "Valor", "Origem"])
+        w.writerows([("Padaria", "Reunião Feita", "05/09/2026", "0", "Facebook Ads")])
+    assert "fechamentos" not in analisar([META], [arq]).tabelas

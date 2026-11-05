@@ -338,6 +338,15 @@ export default function Analise() {
             subtitulo="Transparência da classificação: nada é caixa-preta."
             linhas={tabela("mapa_status")}
           />
+          {/* A lista nominal do que foi contado como fechado. Ela vivia só
+              dentro do Excel, e só quando a planilha tinha data de
+              fechamento — então a pergunta mais comum ("o sistema diz 14, eu
+              contei 12, quais são os 14?") não tinha onde ser respondida. */}
+          <TabelaDados
+            titulo={`Todos os fechamentos do mês (${tabela("fechamentos").length})`}
+            subtitulo="Cada linha contada como venda, com o texto que estava na sua planilha. Se um nome repetir, o total está contando a mesma venda duas vezes."
+            linhas={tabela("fechamentos")}
+          />
           {/* A curva vem ANTES da tabela do ciclo: ela é a medida sem viés, e
               a média simples passa a ser a nota de rodapé que ela é. */}
           <CicloFechamento km={r.ciclo_km} />
