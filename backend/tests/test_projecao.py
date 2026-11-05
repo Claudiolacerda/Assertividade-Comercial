@@ -524,3 +524,20 @@ def test_a_influencia_viaja_no_resultado():
     p = projetar(TRES_TORTOS, metas={})
     assert len(p["influencia"]) == 3
     assert {"mes_referencia", "por_mil_sem_ele", "fator"} <= set(p["influencia"][0])
+
+
+def test_os_avisos_nao_repetem_a_mesma_ideia_por_indicador():
+    """Três frases dizendo "o investimento explica pouco", uma por indicador,
+    gastam a atenção que a próxima linha precisa.
+
+    O aviso de qualidade sai só para clientes fechados (o alvo principal); os
+    outros guardam o deles no próprio modelo. O de margem larga sai uma vez,
+    listando os indicadores afetados.
+    """
+    baguncado = meses([("2026-08", 4238.44, 11), ("2026-09", 4900.0, 7), ("2026-10", 5715.88, 12)])
+    p = projetar(baguncado, metas={})
+    avisos = p["avisos"]
+    assert len([a for a in avisos if "explica só" in a]) == 1
+    assert len([a for a in avisos if "margem de erro" in a]) == 1
+    assert "clientes fechados e receita fechada" in " ".join(avisos)
+    assert p["modelos"]["rec"]["aviso"], "o aviso do outro alvo continua no modelo dele"

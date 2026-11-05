@@ -222,7 +222,11 @@ def projetar(
             "confiavel": confiavel,
             "aviso": aviso,
         }
-        if aviso and aviso not in avisos:
+        # Só o alvo principal (clientes fechados) manda aviso para a lista
+        # geral. Os outros guardam o deles em `modelos[x]["aviso"]`: três
+        # frases dizendo "o investimento explica pouco", uma por indicador,
+        # gastam a atenção que a próxima linha precisa.
+        if aviso and chave == "fec" and aviso not in avisos:
             avisos.append(aviso)
 
     faixa = base["faixa_observada"]
@@ -257,6 +261,7 @@ def projetar(
     # leitura vira ruído. Melhor dizer uma vez que a margem não cabe na tela do
     # que repeti-la em cada linha.
     hoje = next((c for c in cenarios if c["variacao"] == 0), None)
+    sem_faixa: list[str] = []
     for chave, rotulo, _f in ALVOS:
         dado = (hoje or {}).get(chave)
         if not dado or dado.get("min") is None:
@@ -267,14 +272,18 @@ def projetar(
         for c in cenarios:
             if chave in c:
                 c[chave]["min"] = c[chave]["max"] = None
-        avisos.append(
-            f"Com {n} meses, a margem de erro de {rotulo.lower()} fica maior que a própria "
-            "previsão, então ela não é mostrada: leia os números como ordem de grandeza. Cada "
-            "mês novo analisado estreita essa margem rápido."
-        )
-        # O genérico "são N meses, a margem é larga" passa a sobrar: esta frase
-        # diz a mesma coisa com o tamanho junto.
+        sem_faixa.append(rotulo.lower())
+        # O genérico "são N meses, a margem é larga" passa a sobrar: a frase
+        # montada no fim diz a mesma coisa com o tamanho junto.
         avisos[:] = [a for a in avisos if not a.startswith(f"São {n} meses")]
+
+    if sem_faixa:
+        quais = ", ".join(sem_faixa[:-1]) + " e " + sem_faixa[-1] if len(sem_faixa) > 1 else sem_faixa[0]
+        avisos.append(
+            f"Com {n} meses, a margem de erro de {quais} fica maior que a própria previsão, então "
+            "ela não é mostrada: leia os números como ordem de grandeza. Cada mês novo analisado "
+            "estreita essa margem rápido."
+        )
 
     completo = {
         **base,
