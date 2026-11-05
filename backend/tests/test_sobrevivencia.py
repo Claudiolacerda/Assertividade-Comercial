@@ -153,3 +153,23 @@ def test_a_tela_desenha_a_escada_sem_depender_da_biblioteca():
     assert 'type="linear"' in fonte
     assert "dados.push({ dias: ponto.dias, acumulado: anterior })" in fonte
     assert "ReferenceLine" in fonte, "o fim do acompanhamento tem de ficar visível"
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_a_curva_entra_na_planilha_entregue():
+    """O Excel é o que o cliente arquiva: a medida sem viés tem de estar nele."""
+    import io
+
+    import openpyxl
+
+    from app.core.excel import gerar_excel
+
+    arq = FIXTURES / "pipedrive_deals_export.csv"
+    if not arq.exists():
+        pytest.skip("fixture indisponível")
+    wb = openpyxl.load_workbook(io.BytesIO(gerar_excel(analisar([META], [arq]))))
+    ws = wb["Ciclo de Venda"]
+    texto = " ".join(str(c.value) for linha in ws.iter_rows() for c in linha if c.value)
+    assert "Quando o negócio fecha" in texto
+    assert "até 30 dias" in texto
+    assert "média simples, só quem fechou" in texto, "a conta antiga precisa ficar rotulada"

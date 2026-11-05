@@ -19,6 +19,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from .metricas import TAXAS_COMERCIAIS, TAXAS_CRUZADAS, TAXAS_META
+from .texto import br
 from .pipeline import Resultado
 
 AZUL, AZUL_CLARO, CINZA = "1F3864", "D9E2F3", "F2F2F2"
@@ -32,6 +33,9 @@ FILL_TOT = PatternFill("solid", fgColor=AZUL_CLARO)
 FILL_BLOCO = PatternFill("solid", fgColor=CINZA)
 FILL_OK = PatternFill("solid", fgColor="E2EFDA")
 FILL_RUIM = PatternFill("solid", fgColor="FCE4D6")
+# Terceiro estado: a diferenca para a meta cabe no sorteio da amostra.
+# Nem verde nem vermelho, porque nao houve nem aprovacao nem reprovacao.
+FILL_INCERTO = PatternFill("solid", fgColor="F2F2F2")
 BORDA = Border(*(Side(style="thin", color="BFBFBF"),) * 4)
 FMT = {
     "brl": '"R$" #,##0.00;-"R$" #,##0.00;"-"',
@@ -207,20 +211,48 @@ def gerar_excel(res: Resultado, destino: str | Path | None = None) -> bytes:
             cel = ws.cell(lin, 2, valor_excel(v))
             cel.number_format = FMT[dados["formato"]]
             cel.font = Font(name="Arial", size=10, bold=True)
-            ws.cell(lin, 3, dados["explicacao"]).font = F_SUB
+            faixa = dados.get("faixa")
+            explicacao = dados["explicacao"]
+            if faixa:
+                # br(): sem ele sai "38.7%" numa planilha em português.
+                explicacao += br(
+                    f" — faixa provável de {faixa['min']:.1%} a {faixa['max']:.1%}, "
+                    f"com {faixa['n']} casos"
+                )
+            ws.cell(lin, 3, explicacao).font = F_SUB
             if dados["meta_tipo"]:
                 cm = ws.cell(lin, 4, dados["meta_valor"])
                 cm.number_format = FMT[dados["formato"]]
                 cm.font = Font(name="Arial", size=10, color="0000FF")
                 cond = f"B{lin}>=D{lin}" if dados["meta_tipo"] == "min" else f"AND(B{lin}<=D{lin},B{lin}>0)"
-                ws.cell(lin, 5, f'=IF({cond},"✅ Dentro da meta","⚠️ Fora da meta")').font = F_TXT
+                veredito = (faixa or {}).get("veredito")
+                if faixa and veredito in ("indistinguivel", "amostra_pequena"):
+                    # A meta continua editável e a coluna continua recalculando:
+                    # os limites da faixa são números fixos (dependem só dos
+                    # dados), então a fórmula sabe dizer quando a meta nova cai
+                    # dentro dela. É o mesmo "ainda não dá para dizer" da tela,
+                    # e sem ele a planilha contradiz o painel.
+                    formula = (
+                        f'=IF(AND(D{lin}>={faixa["min"]:.6f},D{lin}<={faixa["max"]:.6f}),'
+                        f'"~ Ainda não dá para dizer",IF({cond},"✅ Dentro da meta","⚠️ Fora da meta"))'
+                    )
+                    cor = FILL_INCERTO
+                else:
+                    formula = f'=IF({cond},"✅ Dentro da meta","⚠️ Fora da meta")'
+                    cor = FILL_OK if dados["dentro_da_meta"] else FILL_RUIM
+                ws.cell(lin, 5, formula).font = F_TXT
                 for i in (1, 2, 5):
-                    ws.cell(lin, i).fill = FILL_OK if dados["dentro_da_meta"] else FILL_RUIM
+                    ws.cell(lin, i).fill = cor
             for i in range(1, 6):
                 ws.cell(lin, i).border = BORDA
             lin += 1
         lin += 1
-    ws.cell(lin, 1, "Metas em azul são editáveis — a coluna Situação recalcula sozinha.").font = F_SUB
+    ws.cell(
+        lin, 1,
+        "Metas em azul são editáveis — a coluna Situação recalcula sozinha. "
+        "\"Ainda não dá para dizer\" significa que a meta cabe dentro da faixa provável do "
+        "indicador: com essa quantidade de casos, a diferença pode ser sorteio.",
+    ).font = F_SUB
     for letra, w in zip("ABCDE", [44, 18, 62, 14, 20]):
         ws.column_dimensions[letra].width = w
     ws.freeze_panes = "A5"
@@ -367,9 +399,21 @@ def gerar_excel(res: Resultado, destino: str | Path | None = None) -> bytes:
 
     ws = wb.create_sheet("Ciclo de Venda")
     lin = _cabecalho(ws, "Ciclo de venda — quanto tempo leva para fechar", nome_mes)
+    # A curva vem primeiro porque é a medida sem viés: a média simples abaixo
+    # só olha para quem fechou, e como os ciclos longos são os que ainda não
+    # terminaram, ela sempre sai mais curta que a realidade.
+    km = res.ciclo_km or {}
+    if km.get("marcos"):
+        lin = _escrever_tabela(
+            ws, t.get("ciclo_marcos"), lin,
+            "Quando o negócio fecha (inclui os que ainda não fecharam)", total=False,
+        )
+        ws.cell(lin, 1, km.get("leitura", "")).font = F_SUB
+        lin += 2
     lin = _escrever_tabela(ws, t.get("tempo_agendamento"), lin, "Tempo entre o agendamento e a reunião", total=False)
     lin = _escrever_tabela(
-        ws, t.get("ciclo"), lin, "Reunião → fechamento (precisa da coluna 'Data de fechamento')", total=False
+        ws, t.get("ciclo"), lin,
+        "Reunião → fechamento (média simples, só quem fechou)", total=False
     )
     lin = _escrever_tabela(ws, t.get("ciclo_por_responsavel"), lin, "Reunião → fechamento por responsável",
                            total=False)

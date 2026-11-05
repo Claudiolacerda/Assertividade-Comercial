@@ -145,3 +145,37 @@ def test_o_whatsapp_nao_marca_o_que_nao_da_para_afirmar():
         if "Assertividade" in l
     ]
     assert linha and "⚠️" not in linha[0] and "✅" not in linha[0]
+
+
+@pytest.mark.skipif(not (META.exists() and REUNIOES.exists()), reason="exemplos indisponíveis")
+def test_a_planilha_entregue_nao_contradiz_a_tela():
+    """Se o painel diz "não dá para dizer", o Excel não pode dizer "fora".
+
+    A planilha é o que o cliente arquiva e relê depois, então ela é a versão
+    que sobrevive. A meta continua editável: os limites da faixa são números
+    fixos, porque dependem só dos dados, e a fórmula sabe comparar a meta nova
+    com eles.
+    """
+    import io
+
+    import openpyxl
+
+    from app.core.excel import gerar_excel
+
+    wb = openpyxl.load_workbook(io.BytesIO(gerar_excel(analisar([META], [REUNIOES]))))
+    ws = wb["Resumo Executivo"]
+    # O título da aba também contém "Assertividade"; a linha do indicador é a
+    # que tem explicação preenchida.
+    linhas = [
+        [c.value for c in linha[:5]]
+        for linha in ws.iter_rows()
+        if linha[0].value
+        and "ASSERTIVIDADE" in str(linha[0].value).upper()
+        and linha[2].value
+    ]
+    assert linhas, "a assertividade tem de estar na planilha"
+    rotulo, _valor, explicacao, _meta, situacao = linhas[0]
+    assert "faixa provável" in explicacao and "casos" in explicacao
+    assert "14,2%" in explicacao, "a planilha é em português"
+    assert "Ainda não dá para dizer" in situacao
+    assert "IF(AND(D" in situacao, "a fórmula tem de continuar viva quando a meta mudar"
