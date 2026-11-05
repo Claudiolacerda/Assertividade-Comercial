@@ -353,3 +353,53 @@ def test_sem_buraco_nenhum_a_lista_fica_vazia():
     p = projetar(meses([("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)]), metas={})
     assert p["meses_sem_investimento"] == []
     assert "ficaram fora da conta" not in _textos(p)
+
+
+# --------------------------------------------------------------------- #
+# A manchete não pode contradizer a leitura embaixo dela
+# --------------------------------------------------------------------- #
+# Aconteceu com dados reais: o cartão exibia "+0,7 cliente por R$ 1.000" em
+# verde, grande, e logo abaixo "o investimento explica 5% da variação". Quem lê
+# acredita no de cima, porque é maior, vem primeiro e tem cara de conclusão.
+def test_reta_boa_tem_manchete_de_efeito():
+    p = projetar(
+        meses([("2026-07", 2000.0, 4), ("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)]), metas={}
+    )
+    assert p["manchete"]["nivel"] == "ok"
+    assert "A cada R$ 1.000 a mais" in p["manchete"]["texto"]
+
+
+def test_reta_fraca_troca_a_manchete_em_vez_de_so_mudar_de_cor():
+    baguncado = meses(
+        [
+            ("2026-08", 4238.44, 11),
+            ("2026-09", 4900.00, 7),
+            ("2026-10", 5715.88, 12),
+        ]
+    )
+    p = projetar(baguncado, metas={})
+    assert p["modelos"]["fec"]["confiavel"] is False
+    assert p["manchete"]["nivel"] == "atencao"
+    assert "A cada R$ 1.000 a mais" not in p["manchete"]["texto"]
+    assert "hipótese, não previsão" in p["manchete"]["texto"]
+
+
+def test_reta_que_desce_tambem_troca_a_manchete():
+    caindo = meses([("2026-07", 2000.0, 9), ("2026-08", 3000.0, 7), ("2026-09", 4000.0, 4)])
+    p = projetar(caindo, metas={})
+    assert p["manchete"]["nivel"] == "atencao"
+    assert "não veio junto com mais vendas" in p["manchete"]["texto"]
+
+
+def test_a_manchete_da_regra_de_tres_nao_promete_efeito_marginal():
+    p = projetar(meses([("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)]), metas={})
+    assert p["manchete"]["nivel"] == "info"
+    assert "ritmo médio" in p["manchete"]["texto"]
+
+
+def test_a_leitura_nao_repete_a_manchete():
+    """Dizer "explica 6%" duas vezes gasta a atenção que a próxima linha precisa."""
+    baguncado = meses([("2026-08", 4238.44, 11), ("2026-09", 4900.0, 7), ("2026-10", 5715.88, 12)])
+    p = projetar(baguncado, metas={})
+    assert "hipótese, não previsão" not in _textos(p)
+    assert "é aí que está a alavanca deste mês" in _textos(p).lower()

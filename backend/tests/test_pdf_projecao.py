@@ -124,3 +124,24 @@ def test_a_data_de_emissao_entra_no_documento(projecao):
     dados = gerar_pdf(projecao, empresa="X", emitido_em=date(2026, 11, 4))
     # O texto do PDF não comprimido guarda a data legível no fluxo de conteúdo.
     assert b"04/11/2026" in dados or b"2026" in dados
+
+
+def test_o_pdf_usa_a_manchete_do_motor(projecao):
+    """Tela e documento têm de afirmar a mesma coisa, na mesma força.
+
+    O PDF tinha a frase do efeito escrita nele mesmo, então ele continuaria
+    dizendo "+0,9 cliente por R$ 1.000" em destaque num mês em que a tela já
+    avisava que a reta não sustenta projeção.
+    """
+    import re
+    from pathlib import Path as _P
+
+    fonte = _P("app/core/pdf_projecao.py").read_text(encoding="utf-8")
+    assert 'projecao.get("manchete")' in fonte
+    assert not re.search(r'f"A cada R\$ 1\.000', fonte), "a frase não pode nascer no PDF"
+
+
+def test_o_pdf_marca_a_manchete_fraca_com_outro_estilo():
+    from app.core.pdf_projecao import _estilos
+
+    assert "manchete_fraca" in _estilos()

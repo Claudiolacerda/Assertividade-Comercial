@@ -88,19 +88,12 @@ export default function Projecao({ dados }) {
      sem pontos suficientes. */
   const alvos = (dados.alvos || []).filter((a) => modelos[a.chave]);
   const vendas = modelos.fec;
-  const receita = modelos.rec;
 
-  /* O número do meio da tela: o que cada R$ 1.000 a mais vieram junto com.
-     "Vieram junto com" e não "produzem": os meses mostram associação, e
-     chamar isso de causa é o erro que faz o cliente dobrar a verba por nada. */
-  const manchete =
-    vendas && vendas.por_mil > 0
-      ? `A cada R$ 1.000 a mais no anúncio, ${
-          regra ? "o ritmo médio dos meses dá" : "os meses medidos trazem"
-        } mais ${umaCasa(vendas.por_mil)} cliente${vendas.por_mil >= 2 ? "s" : ""}${
-          receita && receita.por_mil > 0 ? ` e ${previsto(receita.por_mil, "brl")} de receita` : ""
-        }.`
-      : null;
+  /* A manchete vem pronta do motor, com o nível junto: ela é a afirmação mais
+     lida do cartão e tem de ser idêntica à do PDF. Quando a reta é fraca ela
+     MUDA de conteúdo, não só de cor — um número grande e verde acima de uma
+     linha dizendo "explica 5% da variação" faz o leitor acreditar no de cima. */
+  const manchete = dados.manchete;
 
   const n = (texto: string) => {
     const v = Number(String(texto).replace(/[^\d]/g, ""));
@@ -159,7 +152,9 @@ export default function Projecao({ dados }) {
 
       {erroPdf && <p className="erro-inline">{erroPdf}</p>}
 
-      {manchete && <p className="manchete">{manchete}</p>}
+      {manchete && (
+        <p className={`manchete${manchete.nivel === "ok" ? "" : " fraca"}`}>{manchete.texto}</p>
+      )}
 
       {/* A leitura: a tabela diz O QUE, isto diz E DAÍ. Vem do backend pronta e
           determinística, pela mesma razão do JET: o número e a frase têm de

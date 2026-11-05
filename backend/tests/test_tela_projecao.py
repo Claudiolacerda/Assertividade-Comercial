@@ -92,3 +92,10 @@ def test_a_falha_do_pdf_nao_derruba_o_cartao():
 def test_a_tela_nomeia_os_meses_que_entraram_na_conta():
     """"3 meses" sem a lista é uma afirmação que o usuário não consegue conferir."""
     assert "mesPorExtenso(p.mes_referencia)" in PROJECAO
+
+
+def test_a_manchete_vem_do_motor_e_nao_da_tela():
+    """A mesma afirmação, com a mesma força, na tela e no PDF."""
+    assert "dados.manchete" in PROJECAO
+    assert "A cada R$ 1.000" not in PROJECAO, "a frase não pode ser remontada aqui"
+    assert 'manchete.nivel === "ok"' in PROJECAO, "a reta fraca precisa mudar de estilo"

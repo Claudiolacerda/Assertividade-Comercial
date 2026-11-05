@@ -96,6 +96,12 @@ def _estilos() -> dict:
             borderPadding=(8, 8, 8, 8), backColor=colors.HexColor("#f2f7f3"),
             leftIndent=0, spaceAfter=12,
         ),
+        "manchete_fraca": ParagraphStyle(
+            "manchete_fraca", parent=base["Normal"], fontName="Helvetica-Bold",
+            fontSize=11, leading=15, textColor=ALERTA,
+            borderPadding=(8, 8, 8, 8), backColor=colors.HexColor("#fdf6e3"),
+            leftIndent=0, spaceAfter=12,
+        ),
         "leitura": ParagraphStyle(
             "leitura", parent=base["Normal"], fontName="Helvetica",
             fontSize=9.5, leading=13.5, textColor=TINTA_2, leftIndent=14,
@@ -309,12 +315,13 @@ def gerar_pdf(
 
     # ---- 3. O que a conta deu ----
     corpo.append(Paragraph("3. O que a conta deu", est["secao"]))
-    if vendas and vendas.get("por_mil"):
-        corpo.append(Paragraph(
-            f"A cada R$ 1.000,00 a mais em anúncio, os meses medidos trazem mais "
-            f"{_num(vendas['por_mil'])} cliente(s).",
-            est["manchete"],
-        ))
+    # A manchete vem do motor, com o nível junto, exatamente como na tela: o
+    # documento não pode afirmar em letra grande o que a tela já qualificou.
+    # Quando a reta é fraca, ela muda de texto E de cor de fundo.
+    manchete = projecao.get("manchete")
+    if manchete:
+        estilo = est["manchete"] if manchete.get("nivel") == "ok" else est["manchete_fraca"]
+        corpo.append(Paragraph(manchete["texto"], estilo))
     coef = [["Resultado", "Efeito por R$ 1.000", "Base (a)", "R²"]]
     for alvo in projecao.get("alvos", []):
         m = modelos.get(alvo["chave"])

@@ -200,7 +200,7 @@ def projetar(
 
     if not retas:
         parcial = {**base, **_regra_de_tres(pontos, atual, n)}
-        return {**parcial, "leitura": _ler(parcial, metas or {})}
+        return {**parcial, "manchete": _manchete(parcial), "leitura": _ler(parcial, metas or {})}
 
     modelos, avisos = {}, []
     for chave, rotulo, _f in ALVOS:
@@ -277,12 +277,73 @@ def projetar(
         "cenarios": cenarios,
         "avisos": avisos,
     }
-    return {**completo, "leitura": _ler(completo, metas or {})}
+    return {**completo, "manchete": _manchete(completo), "leitura": _ler(completo, metas or {})}
 
 
-def _brl(v: float) -> str:
+def _brl(v: float, casas: int = 2) -> str:
     """R$ 1.234,56 com a pontuação brasileira, sem depender do locale do servidor."""
-    return "R$ " + f"{v:,.2f}".translate(str.maketrans(",.", ".,"))
+    return "R$ " + f"{v:,.{casas}f}".translate(str.maketrans(",.", ".,"))
+
+
+def _num(v: float, casas: int = 1) -> str:
+    return f"{v:,.{casas}f}".translate(str.maketrans(",.", ".,"))
+
+
+def _manchete(p: dict) -> dict | None:
+    """A frase grande do topo, decidida junto com os números que ela resume.
+
+    Ela nasce aqui, e não na tela, porque é a afirmação mais lida do cartão e
+    precisa ser a mesma no PDF. E muda de conteúdo, não só de cor, quando a
+    reta é fraca: um número grande e verde dizendo "+0,7 cliente por R$ 1.000"
+    acima de uma linha dizendo "o investimento explica 5% da variação" faz o
+    leitor acreditar no de cima, porque ele é maior, vem primeiro e tem cara de
+    conclusão. Quem manda aqui é o número menor.
+    """
+    modelos = p.get("modelos") or {}
+    vendas, receita = modelos.get("fec"), modelos.get("rec")
+    if not vendas or vendas.get("por_mil", 0) <= 0:
+        if vendas and vendas.get("inclinacao", 0) <= 0 and p.get("metodo") == "regressao":
+            return {
+                "nivel": "atencao",
+                "texto": (
+                    f"Nos {p.get('n_meses')} meses medidos, investir mais não veio junto com mais "
+                    "vendas. A tendência não sustenta uma projeção de aumento: os cenários abaixo "
+                    "são hipótese, não previsão."
+                ),
+            }
+        return None
+
+    por_mil = vendas["por_mil"]
+    plural = "s" if por_mil >= 2 else ""
+    extra = (
+        f" e {_brl(receita['por_mil'], 0)} de receita"
+        if receita and receita.get("por_mil", 0) > 0
+        else ""
+    )
+    if p.get("metodo") == "regra_de_tres":
+        return {
+            "nivel": "info",
+            "texto": (
+                f"A cada R$ 1.000 a mais no anúncio, o ritmo médio dos meses dá mais "
+                f"{_num(por_mil)} cliente{plural}{extra}."
+            ),
+        }
+    if vendas.get("confiavel"):
+        return {
+            "nivel": "ok",
+            "texto": (
+                f"A cada R$ 1.000 a mais no anúncio, os meses medidos trazem mais "
+                f"{_num(por_mil)} cliente{plural}{extra}."
+            ),
+        }
+    return {
+        "nivel": "atencao",
+        "texto": (
+            f"Nos {p.get('n_meses')} meses medidos, o investimento explica só "
+            f"{(vendas.get('r2') or 0) * 100:.0f}% da variação das vendas. O que mexeu no "
+            "resultado foi outra coisa, então os cenários abaixo são hipótese, não previsão."
+        ),
+    }
 
 
 def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
@@ -463,12 +524,14 @@ def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
                 ),
             })
         else:
+            # A manchete já diz o número; aqui entra só o que ela não diz: onde
+            # procurar a explicação que falta.
             linhas.append({
                 "nivel": "atencao",
                 "texto": (
-                    f"O investimento explica só {r2:.0%} da variação das vendas. O que mais mexeu "
-                    f"no resultado foi outra coisa (oferta, equipe, época do ano), então trate "
-                    f"estes números como ordem de grandeza."
+                    f"Com o investimento explicando {r2:.0%} da variação, o que mais mexeu no "
+                    f"resultado foi outra coisa: oferta, equipe, qualidade do lead ou época do "
+                    f"ano. É aí que está a alavanca deste mês, não na verba."
                 ),
             })
 

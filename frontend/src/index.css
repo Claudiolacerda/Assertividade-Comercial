@@ -2080,6 +2080,13 @@ td.texto { white-space: normal; min-width: 260px; }
 .projecao .leitura li.critico .marca { color: var(--critico); }
 .projecao .leitura li.info .marca { color: var(--ink-muted); }
 
+/* A mesma tinta de atencao do resto do painel, com opacidade baixa para o
+   fundo funcionar nos dois temas sem token novo. */
+.projecao .manchete.fraca {
+  border-left-color: var(--atencao);
+  background: rgba(250, 178, 25, 0.12);
+  color: var(--atencao-texto);
+}
 .projecao table.cenarios { width: 100%; }
 .projecao table.cenarios .num { text-align: right; font-variant-numeric: tabular-nums; }
 .projecao table.cenarios .valor { font-weight: 620; }
