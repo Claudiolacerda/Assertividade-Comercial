@@ -140,3 +140,71 @@ def test_a_planilha_modelo_nao_e_confundida_com_abas_por_mes(tmp_path):
     gerar_planilha_modelo(arq)
     nomes = openpyxl.load_workbook(arq).sheetnames
     assert all(mes_da_aba(n) is None for n in nomes), nomes
+
+
+# --------------------------------------------------------------------- #
+# O que mais a aba por mês conserta
+# --------------------------------------------------------------------- #
+def _planilha_dia_solto(tmp_path: Path) -> Path:
+    """Aba "Agosto" com a data escrita só com o dia, como na planilha real.
+
+    Quem mantém uma aba por mês escreve "12" na coluna de data: o mês já está
+    no nome da aba, e repeti-lo em toda linha é trabalho à toa.
+    """
+    arq = tmp_path / "dia_solto.xlsx"
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    ws = wb.create_sheet("Agosto")
+    ws["A1"] = "Painel Comercial"
+    ws["A3"] = "Semana 1"
+    for i, titulo in enumerate(["Cliente", "Data da Reunião Realizada", "Etapa do Funil", "Origem"], 1):
+        ws.cell(4, i, titulo)
+    linhas = [
+        ("Cliente A", 12, "Fechado", "Facebook Ads"),
+        ("Cliente B", 14, "Reunião Feita", "Facebook Ads"),
+        ("Cliente C", "20/08/2026", "Reunião Feita", "Facebook Ads"),
+        ("Semana 3", None, None, None),  # título que escapou do leitor de blocos
+        ("Cliente D", 21, "Perdido", "Facebook Ads"),
+    ]
+    for j, linha in enumerate(linhas):
+        for i, valor in enumerate(linha, 1):
+            if valor is not None:
+                ws.cell(5 + j, i, valor)
+    wb.save(arq)
+    return arq
+
+
+def test_data_escrita_so_com_o_dia_usa_o_mes_da_aba(tmp_path):
+    """Sem isso, 40 das 46 linhas de agosto ficavam sem data na planilha real.
+
+    E linha sem data some da semana, do ciclo e do tempo em aberto.
+    """
+    res = analisar([META], [_planilha_dia_solto(tmp_path)])
+    b = res.tabelas["base_reunioes"]
+    assert b["data_reuniao"].notna().sum() == 4, "as três com dia solto mais a que já era data"
+    assert str(b["data_reuniao"].min())[:7] == "2026-08"
+    assert any("só com o dia" in a for a in res.avisos)
+
+
+def test_dia_impossivel_no_mes_nao_vira_data(tmp_path):
+    """31 numa aba de abril é erro de digitação, não dia 31 de abril."""
+    arq = tmp_path / "abril.xlsx"
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    ws = wb.create_sheet("Abril 2026")
+    for i, titulo in enumerate(["Cliente", "Data da Reunião Realizada", "Etapa do Funil"], 1):
+        ws.cell(1, i, titulo)
+    ws.cell(2, 1, "Cliente A"); ws.cell(2, 2, 31); ws.cell(2, 3, "Fechado")
+    ws.cell(3, 1, "Cliente B"); ws.cell(3, 2, 15); ws.cell(3, 3, "Fechado")
+    wb.save(arq)
+    b = analisar([META], [arq]).tabelas["base_reunioes"]
+    assert b["data_reuniao"].notna().sum() == 1
+
+
+def test_linha_de_titulo_nao_vira_cliente(tmp_path):
+    """"Semana 3" virava um cliente, contava como reunião e entrava nas taxas."""
+    res = analisar([META], [_planilha_dia_solto(tmp_path)])
+    clientes = set(res.tabelas["base_reunioes"]["cliente"])
+    assert "Semana 3" not in clientes
+    assert len(res.tabelas["base_reunioes"]) == 4
+    assert any("título da planilha" in a for a in res.avisos)

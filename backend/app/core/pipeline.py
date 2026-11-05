@@ -308,9 +308,24 @@ def _tratar_meta(meta: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]) -> p
     return meta
 
 
+# Títulos de bloco que às vezes escapam do leitor e caem na coluna de cliente.
+# Acontece quando o título fica longe do cabeçalho que vem depois dele: a linha
+# "Semana 3" vira um cliente chamado "Semana 3", conta como reunião e entra nas
+# taxas. Uma linha a mais num mês de 35 muda a conversão em quase 1 ponto.
+TITULOS_DE_BLOCO = re.compile(r"(?i)^\s*(semana|week|m[eê]s|total|totais|resumo)\b[\s\d/.-]*$")
+
+
 def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
-    reun = reun[reun["cliente"].notna() & (reun["cliente"].astype(str).str.strip() != "")].reset_index(drop=True) \
-        if "cliente" in reun else reun
+    if "cliente" in reun:
+        nomes = reun["cliente"].astype(str).str.strip()
+        titulos = reun["cliente"].notna() & nomes.str.match(TITULOS_DE_BLOCO)
+        if titulos.any():
+            avisos.append(
+                f"{int(titulos.sum())} linha(s) de título da planilha "
+                f"({', '.join(sorted(set(nomes[titulos])))}) foram descartadas: elas não são "
+                "clientes."
+            )
+        reun = reun[reun["cliente"].notna() & (nomes != "") & ~titulos].reset_index(drop=True)
 
     if "status" not in reun:
         raise ErroDeAnalise(
@@ -342,6 +357,10 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
         ano_padrao = int(anos.mode()[0]) if len(anos) else datetime.now().year
 
     reun["data_reuniao_texto"] = reun["data_reuniao"].astype("string") if "data_reuniao" in reun else pd.NA
+    # Guardado só para completar o dia solto logo abaixo; sai da base no fim.
+    reun["_data_agendamento_texto"] = (
+        reun["data_agendamento"].astype("string") if "data_agendamento" in reun else pd.NA
+    )
     for c in ["data_reuniao", "data_agendamento", "data_fechamento", "data_lead"]:
         if c in reun:
             reun[c] = para_data(reun[c], ano_padrao)
@@ -352,8 +371,10 @@ def _tratar_reunioes(reun: pd.DataFrame, cfg: ConfigAnalise, avisos: list[str]):
     # Data usada no filtro e na semana: a da reunião; se vazia, a do agendamento;
     # e, só se nenhuma das duas existir na planilha, a de fechamento ou a de
     # entrada do lead.
-    reun["data_referencia"] = reun["data_reuniao"].fillna(reun["data_agendamento"])
     reun["mes_aba"] = _mes_das_abas(reun)
+    _completar_dia_solto(reun, avisos)
+    reun.drop(columns=["_data_agendamento_texto"], inplace=True, errors="ignore")
+    reun["data_referencia"] = reun["data_reuniao"].fillna(reun["data_agendamento"])
     if not reun["data_referencia"].notna().any():
         # Escolhe a coluna MAIS PREENCHIDA, não a primeira que tenha algo. A
         # data de fechamento só existe no negócio ganho: no Pipedrive ela tinha
@@ -473,6 +494,47 @@ def _classificar_status(txt, cfg: ConfigAnalise) -> str:
 # ---------------------------------------------------------------------- #
 # 2. Período
 # ---------------------------------------------------------------------- #
+def _completar_dia_solto(reun: pd.DataFrame, avisos: list[str]) -> None:
+    """"12" numa aba chamada Agosto é 12/08. Sem o mês da aba, não é nada.
+
+    Quem preenche uma planilha com uma aba por mês escreve só o dia: o mês já
+    está no nome da aba, e repeti-lo em toda linha é trabalho à toa. O sistema
+    lia "12" como texto que não é data e descartava a linha do cálculo de
+    semana, de ciclo e de tempo em aberto — em agosto, 40 das 46 linhas.
+
+    Só acontece quando a aba declara o mês. Adivinhar o mês de um "12" solto em
+    arquivo sem essa pista seria inventar.
+    """
+    if "mes_aba" not in reun or not reun["mes_aba"].notna().any():
+        return
+    completadas = 0
+    for coluna in ("data_reuniao", "data_agendamento"):
+        if coluna not in reun:
+            continue
+        bruto = reun.get("data_reuniao_texto" if coluna == "data_reuniao" else "_data_agendamento_texto")
+        if bruto is None:
+            continue
+        faltando = reun[coluna].isna() & bruto.notna() & reun["mes_aba"].notna()
+        if not faltando.any():
+            continue
+        dias = pd.to_numeric(bruto[faltando], errors="coerce")
+        validos = dias.notna() & (dias >= 1) & (dias <= 31) & (dias % 1 == 0)
+        for i in dias[validos].index:
+            periodo = reun.at[i, "mes_aba"]
+            try:
+                reun.at[i, coluna] = pd.Timestamp(
+                    year=periodo.year, month=periodo.month, day=int(dias[i])
+                )
+                completadas += 1
+            except ValueError:  # 31 num mês de 30: a planilha é que está errada
+                continue
+    if completadas:
+        avisos.append(
+            f"{completadas} data(s) do arquivo estavam escritas só com o dia (\"12\"). Usei o mês "
+            "do nome da aba para completá-las."
+        )
+
+
 def _mes_das_abas(reun: pd.DataFrame) -> pd.Series:
     """O mês que o NOME de cada aba declara, quando ele declara um.
 
@@ -488,15 +550,22 @@ def _mes_das_abas(reun: pd.DataFrame) -> pd.Series:
     vazio = pd.Series(pd.NaT, index=reun.index, dtype="period[M]")
     if "aba_origem" not in reun:
         return vazio
+    # As datas já convertidas, para descobrir o ano quando o nome da aba não
+    # traz. Roda ANTES de `data_referencia` existir, porque é dela que o dia
+    # solto depende para virar data.
+    datas = pd.Series(pd.NaT, index=reun.index, dtype="datetime64[ns]")
+    for coluna in ("data_reuniao", "data_agendamento", "data_fechamento", "data_lead"):
+        if coluna in reun:
+            datas = datas.fillna(reun[coluna])
     for aba, linhas in reun.groupby("aba_origem", dropna=True):
         achado = mes_da_aba(str(aba))
         if not achado:
             continue
         mes, ano = achado
         if ano is None:
-            anos = linhas["data_referencia"].dropna().dt.year
+            anos = datas.loc[linhas.index].dropna().dt.year
             if not len(anos):
-                anos = reun["data_referencia"].dropna().dt.year
+                anos = datas.dropna().dt.year
             if not len(anos):
                 continue
             ano = int(anos.mode()[0])
@@ -1636,22 +1705,31 @@ def _qualidade(ctx: _Contexto, log_meta: pd.DataFrame, log_reun: pd.DataFrame) -
         fechados["_chave"] = fechados["cliente"].map(normalizar)
         repetidos = fechados[fechados.duplicated("_chave", keep=False)]
         prob(
-            "Mesmo cliente fechado em mais de uma linha",
+            "Nome repetido entre os fechamentos",
             repetidos,
-            "Conta como duas vendas no total; confirme se é uma venda só",
+            "Pode ser a mesma venda em duas linhas, ou dois clientes de mesmo nome",
         )
         distintos = int(fechados["_chave"].nunique())
         if distintos != len(fechados):
-            nomes = sorted(set(repetidos["cliente"].astype(str)))
+            # Planilha de reuniões costuma usar só o primeiro nome, e dois
+            # Carlos diferentes no mesmo mês são comuns. O sistema NÃO sabe
+            # qual é o caso: ele aponta e mostra as datas, que é o que
+            # distingue, e deixa a conclusão com quem conhece os clientes.
+            detalhes = []
+            for nome, linhas_do_nome in repetidos.groupby("cliente", dropna=True):
+                datas = [
+                    d.strftime("%d/%m") if pd.notna(d) else "sem data"
+                    for d in linhas_do_nome["data_referencia"]
+                ]
+                detalhes.append(f"{nome} ({', '.join(datas)})")
             ctx.add(
                 "Dados", "⚠️ Confirmar",
-                f"Os {len(fechados)} fechamentos do mês são de {distintos} "
-                f"{'cliente distinto' if distintos == 1 else 'clientes distintos'}: "
-                f"{', '.join(nomes)} {'aparece' if len(nomes) == 1 else 'aparecem'} em mais de "
-                f"uma linha marcada como Fechado. Se "
-                f"cada cliente é uma venda, o número de vendas é {distintos}, e a assertividade "
-                f"cai de {div(len(fechados), ctx.geral['Reuniões realizadas']):.1%} para "
-                f"{div(distintos, ctx.geral['Reuniões realizadas']):.1%}.",
+                f"{', '.join(detalhes)}: o mesmo nome aparece em mais de uma linha fechada. "
+                f"Se forem clientes diferentes, os {len(fechados)} fechamentos estão certos. Se "
+                f"for a mesma venda lançada duas vezes, são {distintos} e a assertividade vai de "
+                f"{div(len(fechados), ctx.geral['Reuniões realizadas']):.1%} para "
+                f"{div(distintos, ctx.geral['Reuniões realizadas']):.1%}. A lista completa está "
+                f"em 'Todos os fechamentos do mês'.",
             )
     if "data_fechamento" in r:
         prob("Fechado sem data de fechamento", r[(r["status_padrao"] == "Fechado") & r["data_fechamento"].isna()],

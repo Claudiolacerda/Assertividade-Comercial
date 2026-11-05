@@ -280,13 +280,19 @@ def test_o_total_de_fechados_diz_quantos_clientes_distintos_ha(tmp_path):
 
 
 @pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
-def test_o_cliente_repetido_e_nomeado_no_diagnostico(tmp_path):
-    """Com o nome na frente, a conferência leva segundos em vez de uma tarde."""
+def test_o_nome_repetido_e_apontado_como_pergunta_e_nao_como_erro(tmp_path):
+    """Dois clientes de mesmo nome existem, e a planilha usa só o primeiro nome.
+
+    O sistema não sabe qual é o caso: ele aponta, mostra as datas (que é o que
+    distingue) e deixa a conclusão com quem conhece os clientes. Afirmar que a
+    assertividade "cai" seria decidir no lugar do usuário.
+    """
     res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
     texto = " ".join(res.diagnostico["Diagnóstico"])
-    assert "2 clientes distintos" in texto
     assert "Padaria do Z" in texto
-    assert "a assertividade cai" in texto
+    assert "Se forem clientes diferentes" in texto
+    assert "05/09" in texto and "18/09" in texto, "as datas são o que distingue"
+    assert "a assertividade cai" not in texto
 
 
 @pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
@@ -294,7 +300,7 @@ def test_acento_diferente_no_mesmo_nome_nao_escapa(tmp_path):
     """"Padaria do Ze" e "Padaria do Zé" são o mesmo cliente para quem digitou."""
     res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
     problemas = res.qualidade["Problema"].tolist()
-    assert problemas.count("Mesmo cliente fechado em mais de uma linha") == 2
+    assert problemas.count("Nome repetido entre os fechamentos") == 2
 
 
 @pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
