@@ -245,3 +245,70 @@ def test_mes_inteiro_em_negociacao_tambem_passa(tmp_path):
     res = analisar([META], [arq])
     assert int(res.kpi("neg")) == 5 and int(res.kpi("fec")) == 0
     assert len(res.tabelas["pipeline"]) == 5
+
+
+# --------------------------------------------------------------------- #
+# "Foram 12 fechamentos, por que o sistema leu 14?"
+# --------------------------------------------------------------------- #
+# A contagem é de LINHAS, e uma planilha de reuniões costuma ter mais de uma
+# linha pelo mesmo cliente: duas conversas, as duas atualizadas para "Fechado"
+# quando a venda saiu. O total fica maior que o número de vendas e ninguém
+# descobre por quê — a checagem de duplicidade que existia exigia a MESMA data,
+# e é justamente em datas diferentes que o caso acontece.
+def _planilha_com_cliente_repetido(tmp_path):
+    import csv
+
+    arq = tmp_path / "reunioes.csv"
+    linhas = [
+        ("Padaria do Ze", "Fechado", "05/09/2026", "2500", "Facebook Ads"),
+        ("Padaria do Zé", "Fechado", "18/09/2026", "2500", "Facebook Ads"),
+        ("Mercado Sul", "Fechado", "06/09/2026", "1800", "Facebook Ads"),
+        ("Bar do João", "Reunião Feita", "07/09/2026", "0", "Facebook Ads"),
+    ]
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Cliente", "Etapa do Funil", "Data da Reunião Realizada", "Valor", "Origem"])
+        w.writerows(linhas)
+    return arq
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_o_total_de_fechados_diz_quantos_clientes_distintos_ha(tmp_path):
+    res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
+    assert int(res.kpi("fec")) == 3, "a contagem de linhas não muda sozinha"
+    assert "3 linhas de 2 clientes distintos" in res.kpis["fec"]["explicacao"]
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_o_cliente_repetido_e_nomeado_no_diagnostico(tmp_path):
+    """Com o nome na frente, a conferência leva segundos em vez de uma tarde."""
+    res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
+    texto = " ".join(res.diagnostico["Diagnóstico"])
+    assert "2 clientes distintos" in texto
+    assert "Padaria do Z" in texto
+    assert "a assertividade cai" in texto
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_acento_diferente_no_mesmo_nome_nao_escapa(tmp_path):
+    """"Padaria do Ze" e "Padaria do Zé" são o mesmo cliente para quem digitou."""
+    res = analisar([META], [_planilha_com_cliente_repetido(tmp_path)])
+    problemas = res.qualidade["Problema"].tolist()
+    assert problemas.count("Mesmo cliente fechado em mais de uma linha") == 2
+
+
+@pytest.mark.skipif(not META.exists(), reason="exemplo da Meta indisponível")
+def test_sem_repeticao_o_sistema_nao_inventa_ressalva(tmp_path):
+    import csv
+
+    arq = tmp_path / "limpa.csv"
+    with arq.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["Cliente", "Etapa do Funil", "Data da Reunião Realizada", "Valor", "Origem"])
+        w.writerows([
+            ("Padaria do Zé", "Fechado", "05/09/2026", "2500", "Facebook Ads"),
+            ("Mercado Sul", "Fechado", "06/09/2026", "1800", "Facebook Ads"),
+        ])
+    res = analisar([META], [arq])
+    assert "linhas de" not in res.kpis["fec"]["explicacao"]
+    assert "clientes distintos" not in " ".join(res.diagnostico["Diagnóstico"])

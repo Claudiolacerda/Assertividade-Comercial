@@ -967,6 +967,14 @@ def _kpis(ctx: _Contexto) -> None:
     tipos = ", ".join(res.tipos_resultado)
     prob = cfg.prob_fechamento_negociacao
 
+    # Quantos clientes distintos existem nas linhas marcadas como Fechado. A
+    # comparação com a contagem de linhas é o que explica um total que não bate
+    # com o que a pessoa contou na mão.
+    fechados = ctx.r[ctx.r["status_padrao"] == "Fechado"]
+    clientes_fechados = (
+        int(fechados["cliente"].map(normalizar).nunique()) if "cliente" in fechados else 0
+    )
+
     # chave: (rótulo, valor ou fórmula, formato, explicação, meta)
     K: dict[str, tuple] = {
         "inv": ("Investimento em tráfego pago", ctx.inv, "brl", "Soma de 'Valor usado' da Meta no período", None),
@@ -994,7 +1002,24 @@ def _kpis(ctx: _Contexto) -> None:
                 "Não aconteceram no dia marcado", None),
         "fut": ("Ainda vão acontecer", geral["Ainda vão acontecer"], "int",
                 "Status 'Agendado' — ficam fora das taxas", None),
-        "fec": ("Fechados (total)", geral["Fechados"], "int", "Status padronizado = Fechado", None),
+        "fec": (
+            "Fechados (total)", geral["Fechados"], "int",
+            # A contagem é de LINHAS, e uma planilha de reuniões costuma ter
+            # mais de uma linha pelo mesmo cliente (duas conversas, as duas
+            # atualizadas para "Fechado" quando a venda saiu). Dizer quantos
+            # clientes distintos existem ali é a diferença entre "14 vendas" e
+            # "14 linhas de 12 vendas", e é a pergunta que o usuário faz quando
+            # o número não bate com o que ele contou na mão.
+            "Status padronizado = Fechado"
+            + (
+                f" — são {int(geral['Fechados'])} linhas de {clientes_fechados} "
+                f"{'cliente distinto' if clientes_fechados == 1 else 'clientes distintos'}; "
+                f"se cada cliente é uma venda, o número de vendas é {clientes_fechados}"
+                if clientes_fechados and clientes_fechados != int(geral["Fechados"])
+                else ""
+            ),
+            None,
+        ),
         "per": ("Perdidos (total)", geral["Perdidos"], "int", "Status padronizado = Perdido", None),
         "neg": ("Em negociação / follow-up (total)", geral["Em negociação"], "int",
                 "Follow-up, proposta, aguardando retorno", None),
@@ -1507,6 +1532,34 @@ def _qualidade(ctx: _Contexto, log_meta: pd.DataFrame, log_reun: pd.DataFrame) -
     )
     dup = r[r["cliente"].notna() & r.duplicated(["cliente", "data_reuniao"], keep=False)]
     prob("Possível duplicidade", dup, "Mesmo cliente e mesma data")
+
+    # Mesmo cliente fechado em mais de uma LINHA, em datas diferentes. A
+    # checagem acima não pega: ela exige a mesma data. E é justamente este o
+    # caso comum — duas conversas com o mesmo cliente, as duas atualizadas para
+    # "Fechado" quando a venda saiu. O total de fechados fica maior que o
+    # número de vendas, e ninguém descobre por quê.
+    fechados = r[(r["status_padrao"] == "Fechado") & r["cliente"].notna()].copy()
+    if len(fechados):
+        fechados["_chave"] = fechados["cliente"].map(normalizar)
+        repetidos = fechados[fechados.duplicated("_chave", keep=False)]
+        prob(
+            "Mesmo cliente fechado em mais de uma linha",
+            repetidos,
+            "Conta como duas vendas no total; confirme se é uma venda só",
+        )
+        distintos = int(fechados["_chave"].nunique())
+        if distintos != len(fechados):
+            nomes = sorted(set(repetidos["cliente"].astype(str)))
+            ctx.add(
+                "Dados", "⚠️ Confirmar",
+                f"Os {len(fechados)} fechamentos do mês são de {distintos} "
+                f"{'cliente distinto' if distintos == 1 else 'clientes distintos'}: "
+                f"{', '.join(nomes)} {'aparece' if len(nomes) == 1 else 'aparecem'} em mais de "
+                f"uma linha marcada como Fechado. Se "
+                f"cada cliente é uma venda, o número de vendas é {distintos}, e a assertividade "
+                f"cai de {div(len(fechados), ctx.geral['Reuniões realizadas']):.1%} para "
+                f"{div(distintos, ctx.geral['Reuniões realizadas']):.1%}.",
+            )
     if "data_fechamento" in r:
         prob("Fechado sem data de fechamento", r[(r["status_padrao"] == "Fechado") & r["data_fechamento"].isna()],
              "Ciclo de venda não calculado para esta linha")
