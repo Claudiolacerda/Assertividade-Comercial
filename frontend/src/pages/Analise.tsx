@@ -12,6 +12,7 @@ import {
   GraficoSemanas,
   GraficoStatus,
 } from "../components/Charts";
+import CicloFechamento from "../components/CicloFechamento";
 import InformarFunil from "../components/InformarFunil";
 import Jet from "../components/Jet";
 import NotaPlanilha from "../components/NotaPlanilha";
@@ -337,7 +338,10 @@ export default function Analise() {
             subtitulo="Transparência da classificação: nada é caixa-preta."
             linhas={tabela("mapa_status")}
           />
-          <TabelaDados titulo="Ciclo de venda" linhas={tabela("ciclo")} />
+          {/* A curva vem ANTES da tabela do ciclo: ela é a medida sem viés, e
+              a média simples passa a ser a nota de rodapé que ela é. */}
+          <CicloFechamento km={r.ciclo_km} />
+          <TabelaDados titulo="Ciclo de venda (média simples, só quem fechou)" linhas={tabela("ciclo")} />
           <TabelaDados titulo="Tempo entre agendamento e reunião" linhas={tabela("tempo_agendamento")} />
         </div>
       )}

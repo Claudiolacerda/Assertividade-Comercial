@@ -2048,6 +2048,29 @@ td.texto { white-space: normal; min-width: 260px; }
   list-style: none; margin: 16px 0 0; padding: 0;
   display: flex; flex-direction: column; gap: 8px;
 }
+/* "Quando o negocio fecha": a curva de Kaplan-Meier. */
+.ciclo-km .sub {
+  margin: 5px 0 12px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; max-width: 70ch;
+}
+.ciclo-km .leitura-ciclo {
+  margin: 0 0 14px; padding: 11px 13px; border-radius: 9px;
+  background: var(--surface-2); font-size: 13.5px; line-height: 1.5; color: var(--ink);
+}
+.ciclo-km .marcos {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.ciclo-km .marco {
+  flex: 1 1 96px; border: 1px solid var(--borda); border-radius: 9px;
+  padding: 9px 11px; display: flex; flex-direction: column; gap: 2px;
+}
+.ciclo-km .marco .prazo { font-size: 11.5px; color: var(--ink-muted); }
+.ciclo-km .marco strong {
+  font-size: 20px; font-weight: 670; color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.ciclo-km .ressalva {
+  margin: 12px 0 0; font-size: 12px; color: var(--ink-muted); line-height: 1.55;
+}
+
 /* "Por que a receita mudou": a decomposicao entre os cinco fatores. */
 .variacao .topo-variacao {
   display: flex; justify-content: space-between; align-items: flex-start;

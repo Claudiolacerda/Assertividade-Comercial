@@ -66,7 +66,7 @@ COLUNAS_META: dict[str, list[str]] = {
 COLUNAS_REUNIOES: dict[str, list[str]] = {
     "data_reuniao": [
         "Data da reunião", "Data da Reunião Realizada", "Data reuniao", "Data", "Dia",
-        "Última interação", "Ultima interacao", "Close Date", "Activity date",
+        "Última interação", "Ultima interacao", "Activity date",
         # "Deal - Won time" e "Data da conversão" ficam FORA daqui de propósito:
         # só vêm preenchidas no negócio ganho. Lidas como data da reunião, as
         # linhas perdidas e em aberto ficavam sem data e sumiam da análise —
@@ -129,7 +129,12 @@ COLUNAS_REUNIOES: dict[str, list[str]] = {
     "data_fechamento": [
         "Data de fechamento", "Data fechamento", "Data do fechamento", "Fechado em",
         "Data de conclusão", "Data de conclusao", "Won date", "Closed date",
-        "Deal - Won time", "Data da conversão", "Data da conversao",
+        # "Close Date" é a data de FECHAMENTO do HubSpot, e vivia aqui como
+        # apelido de data da reunião — o que deixava todo export de CRM sem
+        # ciclo de venda, porque o sistema nunca via uma data de fechamento.
+        # Quem usa CRM costuma não ter data de reunião, e para isso já existe o
+        # recuo que situa o mês pela data de entrada do lead, avisando.
+        "Close Date", "Deal - Won time", "Data da conversão", "Data da conversao",
     ],
     "data_lead": [
         "Data do lead", "Data de entrada", "Data do primeiro contato", "Entrada",

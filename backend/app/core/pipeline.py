@@ -18,6 +18,7 @@ import pandas as pd
 
 from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
 from .estatistica import frase_do_veredito, veredito, wilson
+from .sobrevivencia import Caso, estimar, resumir
 from .jet import avaliar as avaliar_jet
 from .leitura import ler_arquivos, ler_funil_da_planilha, ler_metas_da_planilha, padronizar
 from .metricas import (
@@ -69,6 +70,10 @@ class Resultado:
     # contra o que veio do tráfego pago). A tela precisa saber: nos dois casos
     # o número é correto, mas só na base paga ele multiplica pelo CPL.
     base_esforco: str = ""
+    # Curva de fechamento (Kaplan-Meier). Vazio quando a planilha não tem data
+    # de fechamento, que é o único dado que a conta exige e o sistema não
+    # consegue inventar.
+    ciclo_km: dict[str, Any] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ #
     def kpi(self, chave: str) -> float:
@@ -88,6 +93,7 @@ class Resultado:
             "jev": self.jev,
             "funil_informado": self.funil_informado,
             "base_esforco": self.base_esforco,
+            "ciclo_km": self.ciclo_km,
             "blocos": [{"titulo": t, "chaves": ks} for t, ks in self.blocos],
             "kpis": self.kpis,
             "diagnostico": _tabela_json(self.diagnostico),
@@ -613,6 +619,54 @@ def _metricas_comerciais(ctx: _Contexto) -> None:
 # ---------------------------------------------------------------------- #
 # 5. Ciclo de venda, perdas e pipeline
 # ---------------------------------------------------------------------- #
+def _curva_de_fechamento(ctx: _Contexto, fech: pd.DataFrame) -> None:
+    """Kaplan-Meier do tempo até fechar, usando também quem ainda não fechou.
+
+    A média do ciclo olha só para quem fechou, e como os ciclos longos ainda
+    não terminaram, ela enxerga só os curtos: o viés é sistemático e sempre
+    otimista. Aqui o negócio em aberto entra como informação parcial ("já
+    passou de 45 dias sem fechar"), que é exatamente o que a censura à direita
+    trata.
+    """
+    r, res = ctx.r, ctx.res
+    if "data_fechamento" not in r or not r["data_fechamento"].notna().any():
+        return
+    inicio = (
+        r["data_lead"]
+        if "data_lead" in r and r["data_lead"].notna().any()
+        else r["data_reuniao"]
+    )
+    # Até quando se observou. Quem não fechou até aqui é censurado nesta data;
+    # quem tem data de desfecho (o perdido, em geral) é censurado nela, que é
+    # mais cedo e mais correto: depois dela ele não estava mais em risco.
+    fim = pd.Timestamp(ctx.periodo.end_time.date()) if ctx.periodo is not None else r["data_reuniao"].max()
+    casos: list[Caso] = []
+    for i, comeco in inicio.items():
+        if pd.isna(comeco):
+            continue
+        fechou = r.at[i, "status_padrao"] == "Fechado" and pd.notna(r.at[i, "data_fechamento"])
+        termino = r.at[i, "data_fechamento"] if pd.notna(r.at[i, "data_fechamento"]) else fim
+        dias = (termino - comeco).days
+        if dias < 0:
+            continue
+        casos.append(Caso(dias=float(dias), fechou=bool(fechou)))
+
+    media_ingenua = None
+    if "Dias até fechar" in fech and fech["Dias até fechar"].notna().any():
+        media_ingenua = float(fech["Dias até fechar"].dropna().mean())
+    resumo = resumir(estimar(casos), media_ingenua)
+    if not resumo:
+        return
+    res.ciclo_km = resumo
+    res.tabelas["ciclo_curva"] = pd.DataFrame(
+        [{"Dias": p["dias"], "Fechado até aqui (%)": p["acumulado"], "Em risco": p["em_risco"]}
+         for p in resumo["curva"]]
+    )
+    res.tabelas["ciclo_marcos"] = pd.DataFrame(
+        [{"Prazo": f"até {m['dias']} dias", "Fechado (%)": m["fechado"]} for m in resumo["marcos"]]
+    )
+
+
 def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
     r, res, cfg, tv = ctx.r, ctx.res, ctx.cfg, ctx.res.tem_valor
 
@@ -663,6 +717,7 @@ def _ciclo_perdas_pipeline(ctx: _Contexto) -> None:
             )
             .sort_values("Dias até fechar")
         )
+    _curva_de_fechamento(ctx, fech)
     ctx.fech = fech
 
     # ---- Tempo entre o agendamento e a reunião
