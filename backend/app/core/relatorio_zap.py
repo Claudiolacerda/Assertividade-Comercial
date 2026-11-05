@@ -54,7 +54,14 @@ def _linha_kpi(resultado: dict, chave: str, rotulo: str | None = None) -> str | 
     nome = rotulo or k["rotulo"]
     marca = ""
     if k.get("meta_tipo"):
-        marca = "  ✅" if k.get("dentro_da_meta") else "  ⚠️"
+        # Quando a diferença para a meta cabe no sorteio da amostra, nem ✅ nem
+        # ⚠️: as duas marcas afirmam um desempenho que o número não prova, e no
+        # WhatsApp o emoji é lido antes do valor.
+        veredito = (k.get("faixa") or {}).get("veredito")
+        if veredito in ("indistinguivel", "amostra_pequena"):
+            marca = ""
+        else:
+            marca = "  ✅" if k.get("dentro_da_meta") else "  ⚠️"
     return f"• {nome}: *{k['texto']}*{marca}"
 
 

@@ -5,23 +5,52 @@ import { useState } from "react";
 import { formatar } from "./Charts";
 import { IconeAtencao, IconeOk, IconeQueda, ICONES_NIVEL } from "./Icones";
 
+const porcento1 = (v: number) => `${(v * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+
+/* O selo depende do VEREDITO, não de comparar o número com a meta.
+ *
+ * Uma taxa de 25,7% sobre 35 reuniões tem faixa provável de 14% a 42%: a meta
+ * de 30% cai dentro dela, e chamar isso de "fora da meta" é afirmar uma
+ * reprovação que o dado não sustenta. A terceira resposta — "ainda não dá para
+ * dizer" — é a que faltava, e é a que impede o cliente de trocar vendedor por
+ * causa de uma oscilação que é sorteio. */
+const SELOS = {
+  dentro: { classe: "ok", texto: "dentro da meta" },
+  fora: { classe: "fora", texto: "fora da meta" },
+  indistinguivel: { classe: "incerto", texto: "ainda não dá para dizer" },
+  amostra_pequena: { classe: "incerto", texto: "poucos casos para comparar" },
+};
+
 /** Número em destaque. Quando há meta, o selo traz ícone + texto (nunca só cor). */
 export function Tile({ kpi, destaque = false }) {
   if (!kpi) return null;
   const temMeta = kpi.meta_tipo != null;
+  const faixa = kpi.faixa;
+  /* Sem faixa calculada (indicador que não é proporção, como CAC ou receita),
+     o selo continua sendo a comparação direta: ali não há amostra para medir. */
+  const selo = temMeta
+    ? SELOS[faixa?.veredito] || (kpi.dentro_da_meta ? SELOS.dentro : SELOS.fora)
+    : null;
+  const incerto = selo?.classe === "incerto";
   return (
     <div className={`tile${destaque ? " destaque" : ""}`}>
       <span className="rotulo">{kpi.rotulo}</span>
       <div className="numero">{kpi.texto}</div>
-      {temMeta ? (
-        <span className={`selo ${kpi.dentro_da_meta ? "ok" : "fora"}`}>
-          {kpi.dentro_da_meta ? <IconeOk tamanho={12} /> : <IconeAtencao tamanho={12} />}{" "}
-          {kpi.dentro_da_meta ? "dentro da meta" : "fora da meta"} (
-          {kpi.meta_tipo === "min" ? "mín." : "máx."} {formatar(kpi.meta_valor, kpi.formato)})
+      {faixa && faixa.n > 0 && (
+        <div className="faixa-amostral" title={`Faixa provável da taxa real, com ${faixa.n} casos`}>
+          {porcento1(faixa.min)} a {porcento1(faixa.max)} · {faixa.n} casos
+        </div>
+      )}
+      {selo ? (
+        <span className={`selo ${selo.classe}`}>
+          {selo.classe === "ok" ? <IconeOk tamanho={12} /> : <IconeAtencao tamanho={12} />}{" "}
+          {selo.texto} ({kpi.meta_tipo === "min" ? "mín." : "máx."}{" "}
+          {formatar(kpi.meta_valor, kpi.formato)})
         </span>
       ) : (
         <div className="nota">{kpi.explicacao}</div>
       )}
+      {incerto && faixa?.nota && <div className="nota">{faixa.nota}</div>}
     </div>
   );
 }

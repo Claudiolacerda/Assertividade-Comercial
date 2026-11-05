@@ -497,6 +497,13 @@ label {
 }
 .selo.ok { color: var(--sucesso-texto); }
 .selo.fora { color: var(--critico-texto); }
+/* Terceiro estado: a diferenca para a meta cabe no sorteio. Nem verde nem
+   vermelho, porque nao houve nem aprovacao nem reprovacao. */
+.selo.incerto { color: var(--ink-muted); }
+.tile .faixa-amostral {
+  margin-top: 2px; font-size: 11.5px; color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
 
 /* =================== gráficos =================== */
 .grafico {

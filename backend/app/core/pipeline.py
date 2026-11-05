@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from .config_analise import CAMPOS_REUNIOES_INFO, DIAS_PT, MESES_PT, STATUS_ORDEM, ConfigAnalise
+from .estatistica import frase_do_veredito, veredito, wilson
 from .jet import avaliar as avaliar_jet
 from .leitura import ler_arquivos, ler_funil_da_planilha, ler_metas_da_planilha, padronizar
 from .metricas import (
@@ -1134,6 +1135,49 @@ def _kpis(ctx: _Contexto) -> None:
     for k in K:
         avaliar(k)
 
+    # ---- De quantos casos cada taxa saiu ----
+    # Uma taxa é uma estimativa, não um fato: 25,7% sobre 35 reuniões e 25,7%
+    # sobre 350 são números diferentes, e o sistema tratava os dois igual. O
+    # mapa abaixo diz, para cada taxa, qual é o numerador e qual é o
+    # denominador em CASOS — é o que permite calcular a faixa provável e, com
+    # ela, parar de reprovar meta por diferença que cabe no sorteio.
+    AMOSTRAS = {
+        "ctr": ("clq", "{imp}"),
+        "agr": ("real", "{real}+{ns}+{rem}"),
+        "comp": ("real", "{real}+{ns}"),
+        "assert": ("fec", "{real}"),
+        "win": ("fec", "{fec}+{per}"),
+        "fag": ("fec", "{ag}"),
+        "l2r": ("agp", "{leads}"),
+        "l2c": ("fecp", "{leads}"),
+        "txag": ("ag", "{leadsinf}"),
+        "mql2ag": ("ag", "{mql}"),
+        "l2mql": ("mql", "{leadsinf}"),
+    }
+
+    def contar(expressao: str) -> float:
+        """Avalia o denominador em casos, com os valores já calculados."""
+        try:
+            pronta = re.sub(r"\{(\w+)\}", lambda mm: f"({valores.get(mm.group(1), 0)})", expressao)
+            return float(eval(pronta))  # noqa: S307 - expressão vem só do mapa acima
+        except (ZeroDivisionError, ValueError, TypeError, SyntaxError):
+            return 0.0
+
+    faixas: dict[str, dict] = {}
+    for chave, (num, den) in AMOSTRAS.items():
+        if chave not in K or num not in valores:
+            continue
+        faixa = wilson(valores[num], contar(den))
+        if faixa is None:
+            continue
+        meta = K[chave][4]
+        v = veredito(faixa, meta[1] if meta else None, meta[0] if meta else None)
+        faixas[chave] = {
+            **faixa.para_json(),
+            "veredito": v,
+            "nota": frase_do_veredito(v, faixa, K[chave][0]),
+        }
+
     res.blocos = blocos
     res.kpis = {
         k: {
@@ -1150,6 +1194,11 @@ def _kpis(ctx: _Contexto) -> None:
                 if not K[k][4]
                 else (valores[k] >= K[k][4][1] if K[k][4][0] == "min" else 0 < valores[k] <= K[k][4][1])
             ),
+            # A faixa provável e o veredito honesto. `dentro_da_meta` continua
+            # existindo (planilha, relatório e histórico leem ele), mas quem
+            # mostra selo na tela passa a olhar o veredito: ele tem a terceira
+            # resposta, "ainda não dá para dizer".
+            "faixa": faixas.get(k),
         }
         for k in K
     }
