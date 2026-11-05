@@ -467,3 +467,60 @@ def test_sem_cliente_fechado_nao_ha_resumo():
         {"mes_referencia": "2026-09", "inv": 4000.0, "fec": 0, "rec": 0.0, "leads": 80},
     ]
     assert projetar(sem_venda, metas={})["resumo"] is None
+
+
+# --------------------------------------------------------------------- #
+# Quanto a conclusão depende de um mês só
+# --------------------------------------------------------------------- #
+# Com três meses, cada um carrega um terço da reta — e às vezes bem mais. Um
+# mês atípico no meio derruba o R² e achata a inclinação, e o painel mostrava
+# uma tendência fraca sem dizer que ela era fraca POR CAUSA de um ponto.
+from app.core.projecao import influencia  # noqa: E402
+
+TRES_TORTOS = meses([("2026-08", 4238.44, 11), ("2026-09", 4900.0, 7), ("2026-10", 5715.88, 12)])
+
+
+def test_deixar_um_mes_de_fora_mostra_o_quanto_ele_manda():
+    fora = influencia(TRES_TORTOS)
+    assert len(fora) == 3, "um resultado por mês removido"
+    assert all(f["pontos_restantes"] == 2 for f in fora)
+    fatores = [f["fator"] for f in fora]
+    assert max(abs(f - 1) for f in fatores) > 1, "nestes dados um mês domina a reta"
+
+
+def test_com_dois_pontos_o_r2_volta_vazio_e_nao_cheio():
+    """Com dois pontos o R² é 1 por construção.
+
+    Mostrar "100%" ali seria lido como confiança máxima, que é o oposto do que
+    o número significa.
+    """
+    assert all(f["r2_sem_ele"] is None for f in influencia(TRES_TORTOS))
+
+
+def test_serie_firme_nao_tem_mes_dominante():
+    firme = meses([("2026-05", 2000.0, 5), ("2026-06", 2500.0, 6),
+                   ("2026-07", 3000.0, 7), ("2026-08", 3500.0, 8)])
+    p = projetar(firme, metas={})
+    assert "Nenhum mês sozinho manda na conta" in _textos(p)
+
+
+def test_a_leitura_nomeia_o_mes_dominante_por_extenso():
+    """"sem 2026-10" não se lê numa frase."""
+    p = projetar(TRES_TORTOS, metas={})
+    assert "sem outubro/2026" in _textos(p)
+    assert "2026-10" not in _textos(p)
+
+
+def test_a_inversao_de_sinal_e_dita_com_todas_as_letras():
+    p = projetar(TRES_TORTOS, metas={})
+    assert "inverteria de sinal" in _textos(p)
+
+
+def test_com_menos_de_tres_meses_nao_ha_o_que_deixar_de_fora():
+    assert influencia(meses([("2026-08", 3000.0, 6), ("2026-09", 4000.0, 8)])) == []
+
+
+def test_a_influencia_viaja_no_resultado():
+    p = projetar(TRES_TORTOS, metas={})
+    assert len(p["influencia"]) == 3
+    assert {"mes_referencia", "por_mil_sem_ele", "fator"} <= set(p["influencia"][0])

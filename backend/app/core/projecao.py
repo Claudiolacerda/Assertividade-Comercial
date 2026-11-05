@@ -282,6 +282,7 @@ def projetar(
         "modelos": modelos,
         "cenarios": cenarios,
         "avisos": avisos,
+        "influencia": influencia(pontos),
     }
     return {
         **completo,
@@ -298,6 +299,92 @@ def _brl(v: float, casas: int = 2) -> str:
 
 def _num(v: float, casas: int = 1) -> str:
     return f"{v:,.{casas}f}".translate(str.maketrans(",.", ".,"))
+
+
+_MESES = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+
+def _mes(iso: str | None) -> str:
+    """"2026-10" -> "outubro/2026". Numa frase, o código não se lê."""
+    if not iso or len(iso) != 7 or "-" not in iso:
+        return iso or "esse mês"
+    ano, mes = iso.split("-")
+    try:
+        return f"{_MESES[int(mes) - 1]}/{ano}"
+    except (ValueError, IndexError):
+        return iso
+
+
+def _clientes(v: float) -> str:
+    """"1,0 cliente" / "2,5 clientes": a frase é lida em voz alta em reunião."""
+    return f"{_num(v)} cliente" + ("" if 0.95 <= abs(v) < 1.95 else "s")
+
+
+def influencia(pontos: list[dict], alvo: str = "fec") -> list[dict]:
+    """Refaz a reta sem cada mês, para ver o quanto ela depende de um ponto só.
+
+    Com três meses, cada um carrega um terço da conclusão — e às vezes bem
+    mais que isso. Um mês atípico no meio derruba o R² e achata a inclinação, e
+    o painel mostra uma tendência fraca sem dizer que ela é fraca POR CAUSA de
+    um ponto. Tirar um de cada vez e recalcular responde isso em uma linha:
+    "sem setembro, cada R$ 1.000 a mais viria com 2,1 clientes em vez de 0,7".
+
+    Deixar de fora é diagnóstico, não projeção: a reta sem o mês removido pode
+    passar por apenas dois pontos, e aí o R² dela é 1 por construção e não quer
+    dizer nada. Por isso a função devolve inclinação e nada mais — quem mostra
+    isso na tela tem de dizer que é um "e se", não uma previsão alternativa.
+    """
+    x = [float(p["inv"]) for p in pontos if p.get("inv") and p.get(alvo) is not None]
+    y = [float(p[alvo]) for p in pontos if p.get("inv") and p.get(alvo) is not None]
+    nomes = [p.get("mes_referencia") for p in pontos if p.get("inv") and p.get(alvo) is not None]
+    if len(x) < 3:
+        return []
+
+    cheia = ajustar(x, y)
+    if not cheia:
+        return []
+
+    fora = []
+    for i, nome in enumerate(nomes):
+        sobra_x = x[:i] + x[i + 1 :]
+        sobra_y = y[:i] + y[i + 1 :]
+        reta = _reta_de_diagnostico(sobra_x, sobra_y)
+        if reta is None:
+            continue
+        inclinacao, r2 = reta
+        fora.append({
+            "mes_referencia": nome,
+            "por_mil_sem_ele": inclinacao * 1000,
+            "por_mil_com_todos": cheia.b * 1000,
+            # Quantas vezes a inclinação muda ao tirar este mês. É a medida de
+            # influência que importa aqui: 1,0 é "não muda nada".
+            "fator": (inclinacao / cheia.b) if cheia.b else 0.0,
+            "r2_sem_ele": r2,
+            "pontos_restantes": len(sobra_x),
+        })
+    return fora
+
+
+def _reta_de_diagnostico(x: list[float], y: list[float]) -> tuple[float, float | None] | None:
+    """Inclinação (e R², quando ele significa algo) de um ajuste de diagnóstico.
+
+    Aceita dois pontos de propósito, porque é exatamente com três meses que a
+    pergunta "quanto depende de um mês?" mais importa. Com dois pontos o R² é 1
+    por construção, então ele volta como None em vez de voltar como 1: um "100%"
+    aqui seria lido como confiança máxima, que é o oposto do que o número diz.
+    """
+    import numpy as _np
+
+    if len(x) < 2 or len(set(x)) < 2:
+        return None
+    if len(x) == 2:
+        inclinacao = (y[1] - y[0]) / (x[1] - x[0])
+        return inclinacao, None
+    reta = ajustar(x, y)
+    return (reta.b, reta.r2) if reta else None
 
 
 def _ritmo(pontos: list[dict]) -> dict | None:
@@ -360,6 +447,21 @@ def _resumo(p: dict) -> dict | None:
     }
 
 
+def _mes_dominante(influencias: list[dict]) -> dict | None:
+    """O mês cuja remoção mais mexe na inclinação, se ele mexer demais.
+
+    "Demais" é mudar de sinal ou dobrar/halvar o efeito. Abaixo disso a
+    remoção muda o número sem mudar a história, e apontar o mês ali seria
+    transformar ruído em suspeita.
+    """
+    if not influencias:
+        return None
+    pior = max(influencias, key=lambda i: abs(i["fator"] - 1))
+    if pior["fator"] < 0 or abs(pior["fator"] - 1) >= 1.0 or pior["fator"] < 0.5:
+        return pior
+    return None
+
+
 def _manchete(p: dict) -> dict | None:
     """A frase grande do topo, decidida junto com os números que ela resume.
 
@@ -385,7 +487,6 @@ def _manchete(p: dict) -> dict | None:
         return None
 
     por_mil = vendas["por_mil"]
-    plural = "s" if por_mil >= 2 else ""
     extra = (
         f" e {_brl(receita['por_mil'], 0)} de receita"
         if receita and receita.get("por_mil", 0) > 0
@@ -396,7 +497,7 @@ def _manchete(p: dict) -> dict | None:
             "nivel": "info",
             "texto": (
                 f"A cada R$ 1.000 a mais no anúncio, o ritmo médio dos meses dá mais "
-                f"{_num(por_mil)} cliente{plural}{extra}."
+                f"{_clientes(por_mil)}{extra}."
             ),
         }
     if vendas.get("confiavel"):
@@ -404,7 +505,7 @@ def _manchete(p: dict) -> dict | None:
             "nivel": "ok",
             "texto": (
                 f"A cada R$ 1.000 a mais no anúncio, os meses medidos trazem mais "
-                f"{_num(por_mil)} cliente{plural}{extra}."
+                f"{_clientes(por_mil)}{extra}."
             ),
         }
     return {
@@ -557,6 +658,37 @@ def _ler(p: dict, metas: dict[str, float]) -> list[dict]:
                 f"{len(sem_inv)} mês(es) analisado(s) ficaram fora da conta por não terem "
                 f"investimento registrado ({lista}). Sem o valor gasto não há como medir o efeito "
                 f"de mudá-lo: confira se o relatório da Meta daquele mês foi enviado junto."
+            ),
+        })
+
+    # ---- 3c. A conclusão depende de um mês só? ----
+    dominante = _mes_dominante(p.get("influencia") or [])
+    if dominante:
+        fator, sem_ele, com_todos = dominante["fator"], dominante["por_mil_sem_ele"], dominante["por_mil_com_todos"]
+        if fator < 0:
+            efeito = (
+                f"a tendência inverteria de sinal, passando a indicar {_clientes(abs(sem_ele))} "
+                f"a MENOS por R$ 1.000 investidos"
+            )
+        else:
+            efeito = (
+                f"cada R$ 1.000 a mais viria com {_clientes(sem_ele)} em vez de "
+                f"{_clientes(com_todos)}"
+            )
+        linhas.append({
+            "nivel": "atencao",
+            "texto": (
+                f"A conclusão depende muito de um mês só: sem {_mes(dominante['mes_referencia'])}, "
+                f"{efeito}. Com {n_meses} meses, um mês atípico domina a reta — vale olhar o que "
+                f"houve nele antes de decidir pela tendência."
+            ),
+        })
+    elif p.get("influencia"):
+        linhas.append({
+            "nivel": "ok",
+            "texto": (
+                "Nenhum mês sozinho manda na conta: tirando qualquer um deles, a tendência fica "
+                "parecida. É o que dá firmeza a uma série curta."
             ),
         })
 
