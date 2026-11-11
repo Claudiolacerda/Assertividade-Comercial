@@ -329,6 +329,38 @@ def test_download_do_excel(client, org):
     assert resp.status_code == 200 and resp.content[:2] == b"PK"
 
 
+def test_download_do_pdf_do_mes(client, org):
+    """O relatório do mês que o cliente recebe sem abrir a planilha."""
+    dados = org()
+    a = subir(client, dados).json()
+    resp = client.get(f"/api/analises/{a['id']}/pdf", headers=cab(dados))
+    assert resp.status_code == 200, resp.text
+    assert resp.content[:5] == b"%PDF-"
+    assert "attachment" in resp.headers["content-disposition"]
+    assert ".pdf" in resp.headers["content-disposition"]
+
+
+def test_o_pdf_do_mes_sai_do_resultado_gravado(client, org):
+    """Sem o arquivo original no disco o PDF ainda tem de sair.
+
+    Ele mostra o que está na tela, e a tela lê do banco: fazer o PDF rodar a
+    análise de novo faria o documento depender de um .xlsx que pode já ter
+    sido apagado — e poderia trazer números diferentes dos exibidos.
+    """
+    from pathlib import Path as _P
+
+    from app.models import Arquivo
+    from app.db import sessao_tenant
+
+    dados = org()
+    a = subir(client, dados).json()
+    with sessao_tenant(dados["schema"]) as st:
+        for arq in st.query(Arquivo).all():
+            _P(arq.caminho).unlink(missing_ok=True)
+    resp = client.get(f"/api/analises/{a['id']}/pdf", headers=cab(dados))
+    assert resp.status_code == 200 and resp.content[:5] == b"%PDF-"
+
+
 # --------------------------------------------------------------------- #
 # Isolamento entre organizações
 # --------------------------------------------------------------------- #
@@ -339,6 +371,7 @@ def test_agencia_nao_ve_analise_de_outra(client, org):
     assert client.get("/api/analises", headers=cab(b)).json() == []
     assert client.get(f"/api/analises/{analise['id']}", headers=cab(b)).status_code == 404
     assert client.get(f"/api/analises/{analise['id']}/excel", headers=cab(b)).status_code == 404
+    assert client.get(f"/api/analises/{analise['id']}/pdf", headers=cab(b)).status_code == 404
 
 
 def test_cabecalho_com_empresa_de_outra_organizacao_e_recusado(client, org):

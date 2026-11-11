@@ -204,6 +204,8 @@ export const api = {
 
   baixarExcel: (id: number, nome: string) => baixar(`/analises/${id}/excel`, nome),
 
+  baixarAnalisePdf: (id: number, nome: string) => baixar(`/analises/${id}/pdf`, nome),
+
   // ---- relatório de WhatsApp ----
   previaZap: (id: number | string, completo = false) =>
     requisitar<PreviaZap>(`/analises/${id}/whatsapp?completo=${completo}`),

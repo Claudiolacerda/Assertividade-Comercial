@@ -18,6 +18,7 @@ from ..core import ConfigAnalise, analisar, gerar_excel
 from ..core.jev import avaliar as avaliar_jev
 from ..core.pipeline import ErroDeAnalise
 from ..core.decomposicao import comparar as comparar_meses, montar_mes
+from ..core.pdf_analise import gerar_pdf as gerar_pdf_analise
 from ..core.pdf_projecao import gerar_pdf as gerar_pdf_projecao
 from ..core.projecao import projetar
 from ..db import get_db, sessao_tenant
@@ -480,6 +481,37 @@ def baixar_excel(analise_id: int, atual: Atual = Depends(usuario_atual)):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f'attachment; filename="{nome}"'},
         )
+
+
+@router.get("/{analise_id}/pdf")
+def baixar_pdf(analise_id: int, atual: Atual = Depends(usuario_atual)):
+    """O relatório do mês em PDF, para mandar ao cliente sem abrir a planilha.
+
+    Sai do resultado já gravado, e não de uma nova rodada: o PDF tem que
+    mostrar exatamente os números que a pessoa está vendo na tela, inclusive
+    se o arquivo original já saiu do disco.
+    """
+    with sessao_tenant(atual.schema) as st:
+        analise = st.get(Analise, analise_id)
+        if analise is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Análise não encontrada.")
+        if not analise.resultado:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Esta análise não tem resultado gravado. Rode a análise novamente.",
+            )
+        conteudo = gerar_pdf_analise(
+            analise.resultado,
+            empresa=atual.empresa.nome,
+            organizacao=atual.organizacao.nome,
+            versao=analise.versao,
+        )
+        nome = f"Analise_{atual.empresa.slug}_{analise.mes_referencia}_v{analise.versao}.pdf"
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )
 
 
 @router.delete("/{analise_id}", status_code=status.HTTP_204_NO_CONTENT)

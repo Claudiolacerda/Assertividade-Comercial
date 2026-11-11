@@ -415,6 +415,14 @@ label {
   flex-wrap: wrap;
   margin-bottom: 22px;
 }
+/* Os dois downloads andam juntos no canto do cabeçalho; sem o wrap eles
+   saíam um em cima do outro no celular, com o PDF escondido sob o título. */
+.acoes-cabecalho {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .cabecalho-pagina p {
   margin: 6px 0 0;
   color: var(--ink-2);

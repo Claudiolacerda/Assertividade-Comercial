@@ -60,7 +60,7 @@ export default function Analise() {
     // resultado chega: sem isso o efeito roda cedo demais, não acha a aba ativa
     // e o indicador fica invisível até a primeira troca.
   }, [aba, analise]);
-  const [baixando, setBaixando] = useState(false);
+  const [baixando, setBaixando] = useState<"xlsx" | "pdf" | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -91,14 +91,18 @@ export default function Analise() {
   const TOPO = ["leadsinf", "mql", "l2mql", "txag", "mql2ag"];
   const temTopo = TOPO.some((c) => kpis[c]);
 
-  async function baixar() {
-    setBaixando(true);
+  /* Um estado por botão: com um só, clicar no PDF deixava os dois escritos
+     "Gerando…" e a pessoa não sabia qual arquivo estava vindo. */
+  async function baixar(formato: "xlsx" | "pdf") {
+    setBaixando(formato);
     try {
-      await api.baixarExcel(analise.id, `Assertividade_${analise.mes_referencia}_v${analise.versao}.xlsx`);
+      const base = `Assertividade_${analise.mes_referencia}_v${analise.versao}`;
+      if (formato === "pdf") await api.baixarAnalisePdf(analise.id, `${base}.pdf`);
+      else await api.baixarExcel(analise.id, `${base}.xlsx`);
     } catch (e) {
       setErro(mensagemDoErro(e));
     } finally {
-      setBaixando(false);
+      setBaixando(null);
     }
   }
 
@@ -113,9 +117,14 @@ export default function Analise() {
             {tabela("base_reunioes").length} reuniões analisadas
           </p>
         </div>
-        <button className="primario" onClick={baixar} disabled={baixando}>
-          {baixando ? "Gerando…" : "Baixar planilha (.xlsx)"}
-        </button>
+        <div className="acoes-cabecalho">
+          <button onClick={() => baixar("pdf")} disabled={!!baixando}>
+            {baixando === "pdf" ? "Gerando…" : "Baixar PDF do mês"}
+          </button>
+          <button className="primario" onClick={() => baixar("xlsx")} disabled={!!baixando}>
+            {baixando === "xlsx" ? "Gerando…" : "Baixar planilha (.xlsx)"}
+          </button>
+        </div>
       </div>
 
       {r.avisos?.length > 0 && (
@@ -312,6 +321,11 @@ export default function Analise() {
             <Tile kpi={kpis.ag} />
             <Tile kpi={kpis.real} />
             <Tile kpi={kpis.fec} />
+            {/* Fechados por etiqueta no nome: só aparecem quando existem, e aí
+                são a informação mais importante da aba — num mês de 10 vendas,
+                4 virem de parceiro muda a leitura do CAC inteira. */}
+            <Tile kpi={kpis.fecm} />
+            <Tile kpi={kpis.fecsm} />
             <Tile kpi={kpis.neg} />
             <Tile kpi={kpis.sd} />
             <Tile kpi={kpis.assert} destaque />

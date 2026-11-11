@@ -777,6 +777,10 @@ def _lista_de_fechamentos(ctx: _Contexto, fech: pd.DataFrame) -> None:
         return
     colunas = {
         "cliente": "Cliente",
+        # Separar os fechados por etiqueta é o pedido mais direto que existe:
+        # "quais vendas vieram pelo parceiro?". Com a coluna aqui, a resposta
+        # é ordenar a tabela.
+        "marcacao": "Marcação",
         "status_original": "Status na planilha",
         "data_reuniao": "Data da reunião",
         "responsavel": "Responsável",
@@ -795,6 +799,8 @@ def _lista_de_fechamentos(ctx: _Contexto, fech: pd.DataFrame) -> None:
     if "semana_planilha" in fech and fech["semana_planilha"].notna().any():
         colunas["semana_planilha"] = "Semana na planilha"
 
+    if "marcacao" in fech and not (fech["marcacao"] != "(sem marcação)").any():
+        colunas.pop("marcacao")  # sem etiqueta nenhuma, a coluna só ocuparia espaço
     tabela = fech[[c for c in colunas if c in fech]].rename(columns=colunas)
     ordenar = "Dias até fechar" if "Dias até fechar" in tabela else "Cliente"
     res.tabelas["fechamentos"] = tabela.sort_values(ordenar, kind="stable")
@@ -1348,14 +1354,42 @@ def _kpis(ctx: _Contexto) -> None:
     if chaves_esforco:
         res.base_esforco = "informada" if leads_inf > 0 else "paga"
 
+    # ---- Fechados por marcação no nome ----
+    # "Rosana - Tayron" quer dizer que o lead veio por um parceiro, e esses
+    # fechamentos não deveriam entrar na conta do anúncio. O sistema já
+    # separava a marcação numa tabela; o que faltava era o número na cara:
+    # num mês de 10 vendas, 4 virem de parceiro muda a leitura inteira do CAC.
+    marcados = ctx.r[
+        (ctx.r["status_padrao"] == "Fechado") & (ctx.r["marcacao"] != "(sem marcação)")
+    ]
+    chaves_marcacao: list[str] = []
+    if len(marcados):
+        etiquetas = ", ".join(sorted(marcados["marcacao"].unique()))
+        K["fecm"] = (
+            f"Fechados com marcação no nome ({etiquetas})", float(len(marcados)), "int",
+            "Clientes cujo nome traz uma etiqueta depois do hífen — normalmente parceiro, "
+            "indicação ou vendedor externo",
+            None,
+        )
+        K["fecsm"] = (
+            "Fechados sem marcação", float(geral["Fechados"] - len(marcados)), "int",
+            "O que sobra quando se tira os marcados: é a venda que o próprio funil trouxe",
+            None,
+        )
+        K["fecmpct"] = (
+            "Parte dos fechamentos que veio de marcação", "={fecm}/{fec}", "pct",
+            "De cada 100 vendas do mês, quantas têm etiqueta no nome", None,
+        )
+        chaves_marcacao = ["fecm", "fecsm", "fecmpct"]
+
     chaves_topo = [c for c in ("leadsinf", "mql", "l2mql", "txag", "mql2ag") if c in K]
     blocos = [
         *([("TOPO DO FUNIL", chaves_topo)] if chaves_topo else []),
         ("TRÁFEGO PAGO (META)", ["inv", "imp", "alc", "clq", "leads", "ctr", "cpc", "cpm", "cpl"]),
         (
             "COMERCIAL — TODAS AS ORIGENS",
-            ["ag", "real", "ns", "rem", "fut", "fec", "neg", "sd", "per", "agr", "comp", "assert", "win",
-             "fag", "rec", "tm", "vneg", "fcst"],
+            ["ag", "real", "ns", "rem", "fut", "fec", *chaves_marcacao, "neg", "sd", "per", "agr",
+             "comp", "assert", "win", "fag", "rec", "tm", "vneg", "fcst"],
         ),
         (
             "RESULTADO DO TRÁFEGO PAGO (META × REUNIÕES)",

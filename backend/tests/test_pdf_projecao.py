@@ -136,7 +136,11 @@ def test_o_pdf_usa_a_manchete_do_motor(projecao):
     import re
     from pathlib import Path as _P
 
-    fonte = _P("app/core/pdf_projecao.py").read_text(encoding="utf-8")
+    # Pelo __file__, e não pelo diretório de trabalho: rodar o pytest da raiz
+    # do repositório fazia estes dois testes falharem por não achar o arquivo.
+    fonte = (_P(__file__).resolve().parents[1] / "app/core/pdf_projecao.py").read_text(
+        encoding="utf-8"
+    )
     assert 'projecao.get("manchete")' in fonte
     assert not re.search(r'f"A cada R\$ 1\.000', fonte), "a frase não pode nascer no PDF"
 
@@ -150,6 +154,10 @@ def test_o_pdf_marca_a_manchete_fraca_com_outro_estilo():
 def test_o_pdf_traz_o_resumo_do_periodo():
     from pathlib import Path as _P
 
-    fonte = _P("app/core/pdf_projecao.py").read_text(encoding="utf-8")
+    # Pelo __file__, e não pelo diretório de trabalho: rodar o pytest da raiz
+    # do repositório fazia estes dois testes falharem por não achar o arquivo.
+    fonte = (_P(__file__).resolve().parents[1] / "app/core/pdf_projecao.py").read_text(
+        encoding="utf-8"
+    )
     assert 'projecao.get("resumo")' in fonte
     assert 'resumo["rodape"]' in fonte, "a ressalva não pode ficar só na tela"
