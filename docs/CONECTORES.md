@@ -100,6 +100,39 @@ quando faltam as duas.
 
 ---
 
+## Datalitics: o que já se sabe
+
+A API pública documentada em `datalitics.com.br/integracao/api` é **de entrada,
+não de leitura**: tem `POST /lead/add/{id}` para *criar* um lead, e nenhum
+endpoint que liste os negócios. Ela serve para jogar lead de formulário para
+dentro do CRM — o contrário do que o Neriah precisa.
+
+Isso não encerra o assunto; encerra só esse caminho. O que resta, em ordem de
+viabilidade:
+
+1. **A API interna do próprio painel.** A tela web do Datalitics lista negócios
+   de algum lugar. DevTools › Network › Fetch/XHR, recarregar a lista, e a
+   requisição que traz os dados mostra URL, autenticação e o JSON.
+2. **Perguntar ao suporte** se existe endpoint de leitura não documentado, ou
+   webhook de saída.
+3. **Exportação CSV**, que funciona hoje (veja `tests/fixtures_crm/datalitics_leads.csv`).
+
+O vocabulário de campos do Datalitics, retirado da documentação de criação —
+útil porque a leitura provavelmente usa os mesmos nomes:
+
+| Datalitics | Coluna do Neriah |
+|---|---|
+| `name` | Cliente |
+| `company` | Cliente (quando o negócio é PJ) |
+| `utm_source` | Origem |
+| `utm_campaign` | Campanha |
+| `obs` | Observações |
+| `isQualified` (boolean) | — marca o lead qualificado, o MQL |
+
+Note o que **não** existe na criação, e que é justamente o que as taxas exigem:
+situação do negócio, valor, responsável e datas. Eles nascem dentro do CRM, não
+na entrada do lead — então a leitura tem de vir dos três caminhos acima.
+
 ## O que pedir ao suporte do CRM
 
 Copie e cole:
