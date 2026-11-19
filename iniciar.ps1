@@ -90,8 +90,24 @@ if (Test-Path $venvPy) {
     $ErrorActionPreference = "Continue"
     $saida = (& $venvPy "scripts\migrar_ordem_colunas.py" 2>&1 | Out-String)
     $codigo = $LASTEXITCODE
+    # Tabela que o codigo passou a usar e o schema do cliente ainda nao tem.
+    # Roda sempre: so cria o que falta, e sem ela a consulta que cita a tabela
+    # nova devolve 500 numa tela que ate ontem funcionava.
+    $saidaTabelas = (& $venvPy "scripts\migrar_tabelas_novas.py" 2>&1 | Out-String)
+    $codigoTabelas = $LASTEXITCODE
     $ErrorActionPreference = $anterior
     Pop-Location
+    if ($codigoTabelas -ne 0) {
+        Write-Host " ERRO ao criar tabelas novas" -ForegroundColor Red
+        $saidaTabelas.Trim().Split("`n") | Select-Object -Last 4 | ForEach-Object {
+            Write-Host "        $($_.Trim())" -ForegroundColor Yellow
+        }
+    } elseif ($saidaTabelas -match "criei") {
+        Write-Host " tabelas novas criadas" -ForegroundColor Green
+        $saidaTabelas.Trim().Split("`n") | Where-Object { $_ -match "criei" } | ForEach-Object {
+            Write-Host "      $($_.Trim())" -ForegroundColor DarkGray
+        }
+    }
     if ($codigo -ne 0) {
         Write-Host " falhou (seguindo mesmo assim)" -ForegroundColor Yellow
         Write-Host "      A migracao e opcional: ela so reordena colunas de analises antigas." -ForegroundColor DarkGray

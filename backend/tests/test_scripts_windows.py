@@ -59,3 +59,26 @@ def test_a_crase_de_continuacao_termina_a_linha(script: Path):
             # crase seguida de espaço no meio da linha só é válida dentro de string
             if sem_comentario.count('"') % 2 == 0 and "`n" not in sem_comentario:
                 pytest.fail(f"{script.name} linha {n}: crase de continuacao nao termina a linha:\n  {linha}")
+
+
+def test_o_iniciar_roda_as_migracoes_de_tabela_nova():
+    """Tabela acrescentada depois que o schema do cliente nasceu não aparece sozinha.
+
+    Sem esta chamada no script de subir, toda tabela nova que eu acrescentar
+    vira um 500 numa tela que até ontem funcionava — e a pessoa não tem como
+    adivinhar que faltou rodar um script.
+    """
+    iniciar = RAIZ / "iniciar.ps1"
+    assert iniciar.exists()
+    conteudo = iniciar.read_text(encoding="ascii")
+    assert "migrar_tabelas_novas.py" in conteudo
+
+
+def test_toda_migracao_do_projeto_e_chamada_por_algum_script():
+    """Script de migração que ninguém roda é igual a não existir."""
+    migracoes = {p.name for p in (RAIZ / "backend" / "scripts").glob("migrar_*.py")}
+    chamadas = " ".join(s.read_text(encoding="ascii") for s in SCRIPTS)
+    esquecidas = sorted(m for m in migracoes if m not in chamadas)
+    # `migrar_para_agencia.py` é de uso manual e único, não entra na subida.
+    esquecidas = [m for m in esquecidas if m != "migrar_para_agencia.py"]
+    assert not esquecidas, f"migração que nenhum script chama: {esquecidas}"
