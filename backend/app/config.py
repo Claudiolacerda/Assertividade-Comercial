@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     # Autenticação
     jwt_secret: str = "troque-esta-chave-em-producao"
+    # Cifra os tokens de CRM guardados no banco. Vazia: derivada do jwt_secret
+    # (veja o aviso em security.py — trocar um invalida os tokens salvos).
+    chave_criptografia: str = ""
     jwt_algoritmo: str = "HS256"
     jwt_expira_minutos: int = 60 * 12
 

@@ -349,14 +349,15 @@ def test_o_pdf_do_mes_sai_do_resultado_gravado(client, org):
     """
     from pathlib import Path as _P
 
-    from app.models import Arquivo
-    from app.db import sessao_tenant
-
     dados = org()
     a = subir(client, dados).json()
-    with sessao_tenant(dados["schema"]) as st:
-        for arq in st.query(Arquivo).all():
-            _P(arq.caminho).unlink(missing_ok=True)
+    pasta = _P(settings.dir_uploads) / dados["usuario"]["empresas"][0]["slug"]
+    apagados = 0
+    for arquivo in pasta.rglob("*"):
+        if arquivo.is_file() and arquivo.suffix.lower() in (".csv", ".xlsx"):
+            arquivo.unlink()
+            apagados += 1
+    assert apagados, "o teste precisa ter mesmo apagado os arquivos da análise"
     resp = client.get(f"/api/analises/{a['id']}/pdf", headers=cab(dados))
     assert resp.status_code == 200 and resp.content[:5] == b"%PDF-"
 

@@ -114,6 +114,8 @@ def main() -> int:
             falta_t = sorted(esperadas_t - tem)
             if falta_t:
                 print(f"{FALTA}{schema}: faltam as tabelas {', '.join(falta_t)}")
+                print("      O schema é de uma versão anterior do sistema. Crie o que falta com:")
+                print("        .venv\\Scripts\\python.exe scripts\\migrar_tabelas_novas.py")
             else:
                 with engine.connect() as con:
                     n = con.execute(text(f'select count(*) from "{schema}".analises')).scalar()

@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../api";
 import { IconeCheck } from "../components/Icones";
 import { mensagemDoErro } from "../erros";
+import type { Conexao } from "../tipos";
 
 function Soltar({ id, titulo, ajuda, aceita, arquivos, onArquivos }) {
   const [sobre, setSobre] = useState(false);
@@ -76,20 +77,40 @@ export default function Upload() {
   const [mes, setMes] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  /* 0 = planilha. Só aparece a escolha quando existe conexão ligada: quem não
+     usa CRM não precisa saber que isso existe para enviar uma planilha. */
+  const [conexoes, setConexoes] = useState<Conexao[]>([]);
+  const [conexaoId, setConexaoId] = useState(0);
+
+  useEffect(() => {
+    api
+      .conexoes()
+      .then((lista) => setConexoes(lista.filter((c) => c.ativa)))
+      .catch(() => setConexoes([])); // sem conexões a tela segue igual à de sempre
+  }, []);
 
   async function enviar(e) {
     e.preventDefault();
     setErro("");
-    if (!meta.length || !reunioes.length) {
-      setErro("Envie os dois arquivos: o relatório da Meta e a planilha comercial.");
+    if (!meta.length) {
+      setErro("Envie o relatório da Meta: é dele que vem o investimento em tráfego.");
+      return;
+    }
+    if (!conexaoId && !reunioes.length) {
+      setErro("Envie a planilha comercial ou escolha um CRM para puxar os dados.");
+      return;
+    }
+    if (conexaoId && !mes) {
+      setErro("Para puxar do CRM, diga qual mês analisar.");
       return;
     }
     setEnviando(true);
     try {
       const analise = await api.enviarAnalise({
         arquivosMeta: meta,
-        arquivosReunioes: reunioes,
+        arquivosReunioes: conexaoId ? [] : reunioes,
         mesReferencia: mes || undefined,
+        conexaoId: conexaoId || undefined,
       });
       navegar(`/analises/${analise.id}`);
     } catch (err) {
@@ -121,14 +142,40 @@ export default function Upload() {
             arquivos={meta}
             onArquivos={(a) => { setMeta(a); setErro(""); }}
           />
-          <Soltar
-            id="arquivos-reunioes"
-            titulo="2. Planilha de assertividade comercial"
-            ajuda="XLSX ou CSV com cliente, etapa do funil e datas"
-            aceita=".csv,.xlsx,.xlsm,.xls"
-            arquivos={reunioes}
-            onArquivos={(a) => { setReunioes(a); setErro(""); }}
-          />
+          {conexoes.length > 0 && (
+            <div>
+              <label htmlFor="origem-comercial">2. De onde vêm os dados comerciais</label>
+              <select
+                id="origem-comercial"
+                value={conexaoId}
+                onChange={(e) => { setConexaoId(Number(e.target.value)); setErro(""); }}
+              >
+                <option value={0}>Enviar planilha</option>
+                {conexoes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    Puxar de {c.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {conexaoId ? (
+            <div className="aviso">
+              Os negócios do mês serão puxados do CRM na hora da análise, e gravados como
+              planilha para você conferir depois.{" "}
+              <Link to="/conexoes">Ver conexões</Link>
+            </div>
+          ) : (
+            <Soltar
+              id="arquivos-reunioes"
+              titulo={`${conexoes.length > 0 ? "" : "2. "}Planilha de assertividade comercial`}
+              ajuda="XLSX ou CSV com cliente, etapa do funil e datas"
+              aceita=".csv,.xlsx,.xlsm,.xls"
+              arquivos={reunioes}
+              onArquivos={(a) => { setReunioes(a); setErro(""); }}
+            />
+          )}
           {/* Dois caminhos, porque são duas pessoas diferentes. Quem não tem CRM
               precisa de uma planilha para preencher. Quem tem HubSpot não quer
               preencher nada: quer saber o que marcar na tela de exportação. */}
@@ -150,10 +197,14 @@ export default function Upload() {
           </div>
 
           <div style={{ maxWidth: 240 }}>
-            <label htmlFor="mes">Mês de referência (opcional)</label>
+            <label htmlFor="mes">
+              Mês de referência {conexaoId ? "(obrigatório para o CRM)" : "(opcional)"}
+            </label>
             <input id="mes" type="month" value={mes} onChange={(e) => setMes(e.target.value)} />
             <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "6px 0 0" }}>
-              Em branco, o sistema descobre pelo conteúdo da planilha.
+              {conexaoId
+                ? "É o período que será pedido ao CRM."
+                : "Em branco, o sistema descobre pelo conteúdo da planilha."}
             </p>
           </div>
         </div>

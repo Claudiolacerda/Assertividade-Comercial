@@ -23,7 +23,7 @@ from ..core.pdf_projecao import gerar_pdf as gerar_pdf_projecao
 from ..core.projecao import projetar
 from ..db import get_db, sessao_tenant
 from ..deps import Atual, admin_atual, usuario_atual
-from ..models import Analise, Arquivo, Empresa
+from ..models import Analise, Arquivo, ConexaoCrm, Empresa
 from ..schemas import AnaliseDetalhe, AnaliseResumo, ConfigAnaliseIn, FunilIn
 
 router = APIRouter(prefix="/api/analises", tags=["análises"])
@@ -75,6 +75,37 @@ def _salvar(arquivo: UploadFile, destino: Path, extensoes: set[str]) -> tuple[Pa
     return caminho, tamanho, md5.hexdigest()
 
 
+def _md5_do_arquivo(caminho: Path) -> str:
+    md5 = hashlib.md5()
+    with Path(caminho).open("rb") as f:
+        while pedaco := f.read(1024 * 1024):
+            md5.update(pedaco)
+    return md5.hexdigest()
+
+
+def _puxar_do_crm(atual: Atual, conexao_id: int, mes: str, destino: Path) -> Path:
+    """Busca o mês no CRM e devolve o CSV gravado, para a análise seguir igual.
+
+    O arquivo fica no disco como qualquer upload: é o que permite reprocessar
+    a análise depois e é a prova do que o CRM respondeu naquele dia.
+    """
+    from .conexoes import importar_para_arquivo
+
+    with sessao_tenant(atual.schema) as st:
+        conexao = st.get(ConexaoCrm, conexao_id)
+        if conexao is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Conexão de CRM não encontrada."
+            )
+        if not conexao.ativa:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"A conexão {conexao.nome!r} está desligada.",
+            )
+        caminho, _ = importar_para_arquivo(conexao, mes, destino, atual.schema)
+        return caminho
+
+
 def _resumir(res) -> dict[str, float]:
     return {k: res.kpi(k) for k in KPIS_EVOLUCAO if k in res.kpis}
 
@@ -124,12 +155,34 @@ def _serie_mensal(st) -> tuple[list[dict], int]:
 @router.post("", response_model=AnaliseDetalhe, status_code=status.HTTP_201_CREATED)
 def criar_analise(
     arquivos_meta: list[UploadFile] = File(..., description="CSV/XLSX exportado do Gerenciador de Anúncios"),
-    arquivos_reunioes: list[UploadFile] = File(..., description="Planilha de assertividade comercial"),
+    arquivos_reunioes: list[UploadFile] | None = File(None, description="Planilha de assertividade comercial"),
     mes_referencia: str | None = Form(None, description='"2026-09" ou vazio para detectar automaticamente'),
+    conexao_id: int | None = Form(None, description="Puxar as reuniões deste CRM em vez de enviar planilha"),
     atual: Atual = Depends(usuario_atual),
     db: Session = Depends(get_db),
 ):
-    """Recebe as planilhas, roda a análise e guarda o resultado no schema da empresa."""
+    """Recebe as planilhas, roda a análise e guarda o resultado no schema da empresa.
+
+    O lado comercial pode vir de dois lugares: a planilha enviada ou uma
+    conexão de CRM já cadastrada. O lado da Meta vem sempre por arquivo —
+    nenhuma conexão de CRM traz investimento em anúncio.
+    """
+    arquivos_reunioes = [a for a in (arquivos_reunioes or []) if a and a.filename]
+    if bool(arquivos_reunioes) == bool(conexao_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Envie a planilha de reuniões OU escolha uma conexão de CRM — "
+                "um dos dois, não os dois."
+            ),
+        )
+    if conexao_id and not mes_referencia:
+        # Sem mês não há período para pedir ao CRM, e "tudo" não é resposta:
+        # seria o histórico inteiro da conta a cada análise.
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Para puxar do CRM é preciso dizer qual mês analisar.",
+        )
     if mes_referencia:
         mes_referencia = mes_referencia.strip()
         try:
@@ -149,6 +202,9 @@ def criar_analise(
         for arq in arquivos_reunioes:
             caminho, tam, md5 = _salvar(arq, provisoria, EXT_REUNIOES)
             salvos.append((caminho, tam, md5, "reunioes"))
+        if conexao_id:
+            caminho = _puxar_do_crm(atual, conexao_id, mes_referencia, provisoria)
+            salvos.append((caminho, caminho.stat().st_size, _md5_do_arquivo(caminho), "reunioes"))
 
         cfg = ConfigAnalise.from_dict(atual.empresa.config_analise)
         if mes_referencia:

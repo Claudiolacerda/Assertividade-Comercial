@@ -233,3 +233,44 @@ export interface PreviaZap {
   numero?: string | null;
   envio_automatico: boolean;
 }
+
+/* ---- Conexões com CRM ---------------------------------------------------- */
+export interface Conexao {
+  id: number;
+  nome: string;
+  provedor: string;
+  config: Record<string, any>;
+  ativa: boolean;
+  /* O token em si nunca chega aqui: o servidor só diz se existe um guardado. */
+  tem_token: boolean;
+  ultima_importacao: string | null;
+  ultimo_erro: string | null;
+}
+
+export interface ConexaoEntrada {
+  nome: string;
+  provedor: string;
+  token?: string;
+  config?: Record<string, any>;
+}
+
+export interface Provedor {
+  nome: string;
+  rotulo: string;
+  ajuda: string;
+}
+
+export interface Provedores {
+  colunas: string[];
+  provedores: Provedor[];
+}
+
+export interface TesteConexao {
+  ok: boolean;
+  quantidade: number;
+  paginas: number;
+  colunas_preenchidas: string[];
+  colunas_vazias: string[];
+  avisos: string[];
+  amostra: Record<string, any>[];
+}

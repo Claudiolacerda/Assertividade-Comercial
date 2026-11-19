@@ -184,6 +184,37 @@ class Analise(BaseTenant):
     arquivos: Mapped[list[Arquivo]] = relationship(back_populates="analise", cascade="all, delete-orphan")
 
 
+class ConexaoCrm(BaseTenant):
+    """Uma conta de CRM ligada a esta empresa.
+
+    Fica no schema do cliente, e não no público, de propósito: o token é da
+    conta de CRM DELE, e o isolamento por schema que já protege as análises
+    passa a proteger a credencial pelo mesmo mecanismo. Nenhuma consulta aqui
+    nomeia schema, então não há caminho para uma empresa ler a conexão da outra.
+    """
+
+    __tablename__ = "conexoes_crm"
+    __table_args__ = (UniqueConstraint("nome", name="uq_conexao_nome"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nome: Mapped[str] = mapped_column(String(80), nullable=False)
+    provedor: Mapped[str] = mapped_column(String(40), nullable=False)  # pipedrive | generico
+    # Cifrado com a chave do servidor (app/security.cifrar). Nunca sai por API:
+    # os esquemas de saída não têm este campo, e é assim que ele não vaza por
+    # um `model_validate` distraído.
+    token_cifrado: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    # Endereço, mapa de campos, paginação — o que o conector precisa saber.
+    # Não guarda segredo: o token mora na coluna cifrada acima.
+    config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    ultima_importacao: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    ultimo_erro: Mapped[str | None] = mapped_column(Text, nullable=True)
+    criada_por: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    criada_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Cadencia(BaseTenant):
     """Um fluxo de cadência desenhado no canvas.
 

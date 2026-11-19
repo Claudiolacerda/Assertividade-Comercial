@@ -18,3 +18,5 @@ reportlab==4.*
 anthropic==1.*
 pytest==8.*
 httpx==0.27.*
+# Cifra os tokens de CRM guardados no banco (app/security.py).
+cryptography==50.*

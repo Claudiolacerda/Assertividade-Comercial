@@ -213,3 +213,50 @@ class CadenciaDetalhe(BaseModel):
     fluxo: dict[str, Any]
     origem: dict[str, Any] | None = None
     atualizada_em: datetime
+
+
+# ---- Conexões com CRM ------------------------------------------------------ #
+class ConexaoIn(BaseModel):
+    nome: str = Field(min_length=1, max_length=80)
+    provedor: str = Field(min_length=1, max_length=40)
+    token: str = ""
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class ConexaoUp(BaseModel):
+    nome: str | None = Field(default=None, min_length=1, max_length=80)
+    # Vazio quer dizer "mantém o token que já está salvo".
+    token: str = ""
+    config: dict[str, Any] | None = None
+    ativa: bool | None = None
+
+
+class ConexaoOut(BaseModel):
+    """O que a tela vê. Note que `token` NÃO existe aqui — e é de propósito.
+
+    Um `model_validate` em cima do modelo traria o campo cifrado junto no dia
+    em que alguém acrescentasse `from_attributes`. Por isso a construção é
+    explícita, no `de()` abaixo: o que sai é só o que está escrito.
+    """
+
+    id: int
+    nome: str
+    provedor: str
+    config: dict[str, Any]
+    ativa: bool
+    tem_token: bool
+    ultima_importacao: datetime | None = None
+    ultimo_erro: str | None = None
+
+    @classmethod
+    def de(cls, conexao) -> "ConexaoOut":
+        return cls(
+            id=conexao.id,
+            nome=conexao.nome,
+            provedor=conexao.provedor,
+            config=conexao.config or {},
+            ativa=conexao.ativa,
+            tem_token=bool(conexao.token_cifrado),
+            ultima_importacao=conexao.ultima_importacao,
+            ultimo_erro=conexao.ultimo_erro,
+        )

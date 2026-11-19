@@ -6,6 +6,7 @@ import { useAuth } from "./auth";
 import Analise from "./pages/Analise";
 import Cadencia from "./pages/Cadencia";
 import Carteira from "./pages/Carteira";
+import Conexoes from "./pages/Conexoes";
 import Configuracao from "./pages/Configuracao";
 import Entrada from "./pages/Entrada";
 import Equipe from "./pages/Equipe";
@@ -136,6 +137,11 @@ function Produto() {
             Cadência
           </NavLink>
         )}
+        {!ehCliente && (
+          <NavLink to="/conexoes" className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
+            Conexões
+          </NavLink>
+        )}
         <NavLink to="/configuracao" className={({ isActive }) => `nav-item${isActive ? " ativo" : ""}`}>
           Configuração
         </NavLink>
@@ -163,6 +169,7 @@ function Produto() {
           <Route path="/nova" element={<Upload />} />
           <Route path="/analises/:id" element={<Analise />} />
           <Route path="/cadencia" element={<Cadencia />} />
+          <Route path="/conexoes" element={<Conexoes />} />
           <Route path="/configuracao" element={<Configuracao />} />
           <Route path="/equipe" element={<Equipe />} />
           <Route path="*" element={<Navigate to="/" replace />} />

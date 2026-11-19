@@ -2,10 +2,14 @@ import type {
   Analise,
   AnaliseResumo,
   Cadencia,
+  Conexao,
+  ConexaoEntrada,
   Empresa,
   Organizacao,
   PreviaZap,
+  Provedores,
   RespostaToken,
+  TesteConexao,
   TipoOrganizacao,
   Usuario,
 } from "./tipos";
@@ -190,17 +194,42 @@ export const api = {
     arquivosMeta,
     arquivosReunioes,
     mesReferencia,
+    conexaoId,
   }: {
     arquivosMeta: File[];
-    arquivosReunioes: File[];
+    arquivosReunioes?: File[];
     mesReferencia?: string;
+    conexaoId?: number;
   }) => {
     const form = new FormData();
     arquivosMeta.forEach((a) => form.append("arquivos_meta", a));
-    arquivosReunioes.forEach((a) => form.append("arquivos_reunioes", a));
+    (arquivosReunioes || []).forEach((a) => form.append("arquivos_reunioes", a));
     if (mesReferencia) form.append("mes_referencia", mesReferencia);
+    if (conexaoId) form.append("conexao_id", String(conexaoId));
     return requisitar<Analise>("/analises", { method: "POST", body: form });
   },
+
+  // ---- conexões com CRM ----
+  provedoresCrm: () => requisitar<Provedores>("/conexoes/provedores"),
+
+  conexoes: () => requisitar<Conexao[]>("/conexoes"),
+
+  criarConexao: (dados: ConexaoEntrada) =>
+    requisitar<Conexao>("/conexoes", { method: "POST", body: JSON.stringify(dados) }),
+
+  editarConexao: (id: number, dados: Partial<ConexaoEntrada> & { ativa?: boolean }) =>
+    requisitar<Conexao>(`/conexoes/${id}`, { method: "PUT", body: JSON.stringify(dados) }),
+
+  excluirConexao: (id: number) => requisitar(`/conexoes/${id}`, { method: "DELETE" }),
+
+  testarConexao: (id: number) =>
+    requisitar<TesteConexao>(`/conexoes/${id}/testar`, { method: "POST" }),
+
+  importarConexao: (id: number, mes: string) =>
+    requisitar<{ arquivo: string; quantidade: number; avisos: string[] }>(
+      `/conexoes/${id}/importar?mes=${mes}`,
+      { method: "POST" },
+    ),
 
   baixarExcel: (id: number, nome: string) => baixar(`/analises/${id}/excel`, nome),
 

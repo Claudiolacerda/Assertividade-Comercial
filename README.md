@@ -277,6 +277,22 @@ Cada empresa tem a sua, editável em **Configuração** (só o admin):
 
 ---
 
+## Ligando no CRM do cliente
+
+Além da planilha, o Neriah puxa os negócios direto do CRM por API. Tem conector
+pronto para **Pipedrive** e um **configurável** para qualquer API REST que
+devolva JSON — que é como se liga um CRM sem documentação pública.
+
+O conector não fala com o motor: ele escreve um CSV e o motor analisa esse CSV,
+como faria com uma planilha. Nenhum número muda por ter vindo da API, e fica o
+arquivo para conferir de onde saiu cada número.
+
+Como configurar, o que pedir ao suporte do CRM e as armadilhas do mapa de
+campos: **[docs/CONECTORES.md](docs/CONECTORES.md)**.
+
+> Cliente que já existia antes desta versão precisa da tabela nova:
+> `cd backend && .venv\Scripts\python.exe scripts\migrar_tabelas_novas.py`
+
 ## O que a planilha do cliente precisa ter
 
 **Mínimo:** uma coluna de cliente e uma de etapa/status. Nome de coluna o sistema reconhece
